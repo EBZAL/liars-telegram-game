@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-006-CHALLENGE-RESOLUTION-PRIMITIVES
-active_task: null
+active_task: T-007-ROULETTE-SHOT-RESOLUTION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -57,6 +57,7 @@ stages:
       - T-004-TURN-ACTION-ELIGIBILITY
       - T-005-PLAY-CARDS-STATE-TRANSITION
       - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -435,6 +436,63 @@ tasks:
       - AC-34: Tooling
       - AC-35: Scope
       - AC-36: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-007-ROULETTE-SHOT-RESOLUTION:
+    title: Roulette Shot Resolution
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest pure canonical state transition for one Player's Russian Roulette Shot
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+    acceptance_criteria:
+      - AC-01: Shot resolution contract
+      - AC-02: Pure Player-level transition
+      - AC-03: No caller outcome authority
+      - AC-04: ALIVE required
+      - AC-05: Canonical sequence length
+      - AC-06: Canonical sequence composition
+      - AC-07: Integer Shot index
+      - AC-08: Shot index range
+      - AC-09: Consumed-prefix invariant
+      - AC-10: Current outcome authority
+      - AC-11: Exact one-step progress
+      - AC-12: Sequence persistent
+      - AC-13: No reshuffle
+      - AC-14: Blank keeps Player alive
+      - AC-15: T17
+      - AC-16: Lethal eliminates
+      - AC-17: T18 turn integration
+      - AC-18: Lethal still consumes one position
+      - AC-19: T19 five Blank progression
+      - AC-20: T19 sixth lethal
+      - AC-21: Exhausted Revolver rejected
+      - AC-22: No Shot after elimination
+      - AC-23: Early lethal
+      - AC-24: Hand unchanged
+      - AC-25: RoundStatus unchanged
+      - AC-26: Player ID unchanged
+      - AC-27: Revolver sequence container not mutated
+      - AC-28: Input immutability
+      - AC-29: Fresh changed state
+      - AC-30: Deterministic
+      - AC-31: No forbidden nondeterminism
+      - AC-32: No new dependencies
+      - AC-33: No Match/Round flow
+      - AC-34: Regression
+      - AC-35: Tooling
+      - AC-36: Evidence scope
+      - AC-37: Control files
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
