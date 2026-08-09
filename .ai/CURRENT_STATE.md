@@ -1,16 +1,25 @@
 # Current State
 
 **Current Stage:**
-STAGE-01 — Domain Foundation
+STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-None
+T-001-DOMAIN-FOUNDATION
 
 **Current Active Task:**
 None
 
 **Verified Product Capabilities:**
-None yet — no product implementation has been verified.
+- npm/TypeScript workspace foundation
+- isolated packages/game-core
+- canonical CardRank/Card primitives
+- canonical 20-card Liar Deck composition
+- canonical 3-card Table Deck composition
+- PlayerCount validation for 2/3/4
+- base Revolver composition 1 LETHAL + 5 BLANK
+- injected RandomSource
+- deterministic non-mutating shuffle
+- strict TypeScript/typecheck and automated tests operational
 
 **Active Blockers:**
 None
@@ -40,4 +49,4 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read the durably initialized repository, then select the first bounded task, determine profile/risk, run the Pre-Execution Consistency Gate, and only after PASS may approve READY eligibility.
+Project Architect must re-read this State Sync commit, then define the first bounded STAGE-02 task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.

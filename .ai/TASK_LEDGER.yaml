@@ -2,9 +2,9 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-01
-last_verified_task: null
-active_task: T-001-DOMAIN-FOUNDATION
+current_stage: STAGE-02
+last_verified_task: T-001-DOMAIN-FOUNDATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -35,12 +35,18 @@ stages:
 
   STAGE-01:
     title: Domain Foundation
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-001-DOMAIN-FOUNDATION
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-001-DOMAIN-FOUNDATION VERIFIED
+        - implementation commit 756583ed9168a4cc23fba469308d00ef946ee3b4
+        - .ai/evidence/T-001-DOMAIN-FOUNDATION.md
+        - npm ci PASS
+        - npm run typecheck PASS
+        - npm test PASS
 
   STAGE-02:
     title: Canonical Core Engine
@@ -102,8 +108,18 @@ tasks:
   T-001-DOMAIN-FOUNDATION:
     title: Domain Foundation
     stage: STAGE-01
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 756583ed9168a4cc23fba469308d00ef946ee3b4
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 756583ed9168a4cc23fba469308d00ef946ee3b4
+      evidence:
+        - .ai/evidence/T-001-DOMAIN-FOUNDATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Establish the minimal TypeScript domain/test foundation for the canonical game Core.

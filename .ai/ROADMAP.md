@@ -14,9 +14,14 @@
 * successful durable PROJECT_INITIALIZATION sync.
 
 ## STAGE-01 — Domain Foundation
-**Status**: NOT_STARTED
+**Status**: COMPLETE
 **Goals**: minimal TypeScript foundation, isolated game domain package, deterministic RNG/test support, foundational card/deck/player contracts
-**Exit Gate**: domain independent of Telegram/network/persistence/UI; deterministic tests operational; foundational deck/player invariants verified.
+**Exit Gate**: PASS
+**Evidence basis**:
+* T-001-DOMAIN-FOUNDATION VERIFIED;
+* implementation commit `756583ed9168a4cc23fba469308d00ef946ee3b4`;
+* automated tests/typecheck PASS;
+* isolated deterministic domain foundation established.
 
 ## STAGE-02 — Canonical Core Engine
 **Status**: NOT_STARTED
