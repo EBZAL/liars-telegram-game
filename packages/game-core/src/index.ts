@@ -10,3 +10,4 @@ export * from './turn-rules.js';
 export * from './play-transition.js';
 export * from './challenge-rules.js';
 export * from './roulette-rules.js';
+export * from './round-transition.js';
