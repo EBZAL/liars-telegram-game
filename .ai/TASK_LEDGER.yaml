@@ -444,7 +444,7 @@ tasks:
   T-007-ROULETTE-SHOT-RESOLUTION:
     title: Roulette Shot Resolution
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: 5b51b514d6c2ae602dc382ee3a4c237abe3dacb3
     workflow_profile: STANDARD
     risk_level: MEDIUM
