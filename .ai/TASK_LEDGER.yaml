@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-002-MATCH-ROUND-INITIALIZATION
-active_task: null
+active_task: T-003-PLAY-RULE-PRIMITIVES
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -53,6 +53,7 @@ stages:
     status: IN_PROGRESS
     required_tasks:
       - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -164,35 +165,44 @@ tasks:
         quality_review: PASS
         risk_controls: PASS
         regression_impact: COVERED
+
+  T-003-PLAY-RULE-PRIMITIVES:
+    title: Play Rule Primitives
+    stage: STAGE-02
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: MEDIUM
-    objective: Implement the first bounded canonical Game Core transition initializeMatch
+    objective: Implement the bounded pure canonical rule primitives required before stateful PLAY_CARDS and CALL_LIAR transitions
     dependencies:
       - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
     acceptance_criteria:
-      - AC-01: Initialization boundary
-      - AC-02: Player validation
-      - AC-03: Fixed randomized seat order
-      - AC-04: Initial Player state
-      - AC-05: Independent persistent revolver initialization
-      - AC-06: Random first starter
-      - AC-07: Round 1 baseline
-      - AC-08: Canonical Table Rank
-      - AC-09: Canonical shuffled Round deck
-      - AC-10: 4-player dealing / T23
-      - AC-11: 3-player dealing / T24
-      - AC-12: 2-player dealing / T25
-      - AC-13: No card duplication/loss
-      - AC-14: Deterministic initialization
-      - AC-15: No caller-input mutation
-      - AC-16: Independent mutable containers
-      - AC-17: No forbidden nondeterminism
-      - AC-18: No new dependencies
-      - AC-19: Existing T-001 regression
-      - AC-20: Tooling verification
-      - AC-21: Scope
-      - AC-22: Control documents unchanged
+      - AC-01: Pure play-rule module
+      - AC-02: Card truth
+      - AC-03: T01 Pure Truth
+      - AC-04: T02 Joker Truth
+      - AC-05: T03 Mixed Truth
+      - AC-06: T04 Mixed Lie
+      - AC-07: Claim rank derivation
+      - AC-08: Claim count derivation
+      - AC-09: Joker cannot be Claim rank
+      - AC-10: Valid card selection
+      - AC-11: T06 zero-card Play
+      - AC-12: T07 four-card Play
+      - AC-13: Hand-size ceiling
+      - AC-14: Unknown card rejection
+      - AC-15: Duplicate selection rejection
+      - AC-16: Authoritative Card objects
+      - AC-17: No mutation
+      - AC-18: Existing canonical type safety retained
+      - AC-19: No forbidden nondeterminism
+      - AC-20: No new dependencies
+      - AC-21: Full regression
+      - AC-22: Tooling
+      - AC-23: Scope
+      - AC-24: Control documents
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
