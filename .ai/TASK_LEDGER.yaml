@@ -513,7 +513,8 @@ tasks:
   T-008-NEXT-ROUND-INITIALIZATION:
     title: Next Round Initialization
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: afa0ad4782b33ac73c681a55bd01b4864ab97790
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the bounded deterministic transition that initializes the next canonical Round after Challenge and Roulette have already been resolved
