@@ -30,6 +30,7 @@ A pure, deterministic resolver `resolveRouletteShot` has been implemented in `ro
 - **Immutability & Structural Isolation**: Input `PlayerState` and `RevolverState` are not mutated. Unchanged fields (`hand`, `sequence`, `id`, `roundStatus`) are preserved via structural sharing while fresh state containers are returned.
 
 ## Verification Commands & Results
+- npm ci: PASS
 - `npm run typecheck`: PASS
 - `npm test`: PASS (114 total tests across 7 test files, 13 new focused tests for roulette-rules)
 - No new dependencies added.
