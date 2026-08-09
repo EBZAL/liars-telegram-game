@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-01
 last_verified_task: null
-active_task: null
+active_task: T-001-DOMAIN-FOUNDATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -35,8 +35,9 @@ stages:
 
   STAGE-01:
     title: Domain Foundation
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-001-DOMAIN-FOUNDATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -97,4 +98,35 @@ stages:
       status: NOT_EVALUATED
       evidence: []
 
-tasks: {}
+tasks:
+  T-001-DOMAIN-FOUNDATION:
+    title: Domain Foundation
+    stage: STAGE-01
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Establish the minimal TypeScript domain/test foundation for the canonical game Core.
+    dependencies: []
+    acceptance_criteria:
+      - AC-01: Minimal npm workspace with package-lock.json and .gitignore
+      - AC-02: packages/game-core exists as standalone TS package with strict checking and ESM
+      - AC-03: game-core has no runtime dependency on React/Telegram/CF/networking/persistence/UI
+      - AC-04: Canonical CardRank/Card primitives exist for KING/QUEEN/ACE/JOKER
+      - AC-05: Liar Deck factory produces exactly 20 uniquely identified cards with 6K/6Q/6A/2J
+      - AC-06: Deck factory returns independent mutable containers
+      - AC-07: Table Deck factory produces exactly one KING, one QUEEN and one ACE
+      - AC-08: PlayerCount validation accepts exactly 2, 3 and 4
+      - AC-09: Base Revolver composition contains exactly 1 LETHAL and 5 BLANK outcomes
+      - AC-10: Injected RandomSource contract exists with test support
+      - AC-11: Copy-based shuffle does not mutate input and is deterministic
+      - AC-12: No direct Math.random() in production game-core
+      - AC-13: Automated tests explicitly verify AC-04 through AC-12
+      - AC-14: npm ci succeeds from committed lockfile
+      - AC-15: TypeScript typecheck passes
+      - AC-16: Automated test suite passes in non-watch mode
+      - AC-17: No forbidden behavior added
+      - AC-18: Architecture/project files unmodified
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
