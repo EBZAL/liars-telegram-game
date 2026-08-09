@@ -7,3 +7,4 @@ export * from './game-state.js';
 export * from './match.js';
 export * from './play-rules.js';
 export * from './turn-rules.js';
+export * from './play-transition.js';

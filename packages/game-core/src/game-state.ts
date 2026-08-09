@@ -24,13 +24,25 @@ export interface PlayerState {
 
 export type TableRank = Exclude<CardRank, 'JOKER'>;
 
+export type PlayId = number;
+
+export interface PlayState {
+  readonly playId: PlayId;
+  readonly playerId: PlayerId;
+  readonly cardIds: readonly string[];
+  readonly count: 1 | 2 | 3;
+  readonly claimedRank: TableRank;
+  readonly resolved: boolean;
+}
+
 export interface RoundState {
   readonly roundNumber: number;
   readonly tableRank: TableRank;
   readonly currentPlayerId: PlayerId;
-  readonly previousPlay: null;
+  readonly previousPlay: PlayState | null;
   readonly centralPile: readonly Card[];
   readonly undealtCards: readonly Card[];
+  readonly playSequence: number;
 }
 
 export interface MatchState {

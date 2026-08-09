@@ -76,7 +76,8 @@ export function initializeMatch(
     currentPlayerId: firstRoundStarter,
     previousPlay: null,
     centralPile: [],
-    undealtCards
+    undealtCards,
+    playSequence: 1
   };
 
   return {
