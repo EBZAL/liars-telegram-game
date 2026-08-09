@@ -1,6 +1,6 @@
 # Liar's Deck — مشخصات Canonical قوانین و منطق بازی
 
-**نسخه سند:** v2 — Audited / Implementation-Ready  
+**نسخه سند:** v3 — Audited / Project Rules / Implementation-Ready  
 **تاریخ ممیزی:** 2026-08-09  
 **هدف:** مرجع قطعی Game Rules برای Project Architect و Executor هنگام ساخت نسخه‌ی 2 تا 4 نفره در Telegram Mini App.  
 **دامنه:** فقط **PC Liar's Deck Basic / Classic** با درنظرگرفتن اینکه آپدیت رسمی **Liar's Deck Remastered (2 Jul 2026)** اعلام کرده تجربه‌ی اصلی Gameplay حفظ شده است. Devil، Chaos، Liar's Deck 2، Dice، Poker و Slots خارج از Scope هستند.
