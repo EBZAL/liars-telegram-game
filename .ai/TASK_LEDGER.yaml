@@ -311,7 +311,8 @@ tasks:
   T-005-PLAY-CARDS-STATE-TRANSITION:
     title: Play Cards State Transition
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 35a59f2333064b2fce232f094bc8c5e3907978a3
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the first stateful canonical gameplay transition PLAY_CARDS
