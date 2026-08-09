@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-007-ROULETTE-SHOT-RESOLUTION
-active_task: null
+active_task: T-008-NEXT-ROUND-INITIALIZATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -58,6 +58,7 @@ stages:
       - T-005-PLAY-CARDS-STATE-TRANSITION
       - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
       - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -504,6 +505,71 @@ tasks:
       - AC-35: Tooling
       - AC-36: Evidence scope
       - AC-37: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-008-NEXT-ROUND-INITIALIZATION:
+    title: Next Round Initialization
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the bounded deterministic transition that initializes the next canonical Round after Challenge and Roulette have already been resolved
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+    acceptance_criteria:
+      - AC-01: Next-Round transition
+      - AC-02: Post-Shot boundary
+      - AC-03: Resolved Play required
+      - AC-04: Unknown loser rejected
+      - AC-05: Living set authority
+      - AC-06: Winner boundary
+      - AC-07: Zero-Living invalid
+      - AC-08: T20 surviving loser starter
+      - AC-09: T21 eliminated loser fallback
+      - AC-10: Fallback wraparound
+      - AC-11: Multiple eliminated skips
+      - AC-12: Round number
+      - AC-13: Fresh Table shuffle
+      - AC-14: TableRank safety
+      - AC-15: T28 repeat allowed
+      - AC-16: Fresh full Liar deck
+      - AC-17: Fixed deterministic deal order
+      - AC-18: Five Cards each
+      - AC-19: Eliminated gets zero Cards
+      - AC-20: T22 safe-empty return
+      - AC-21: Pending-empty return
+      - AC-22: Living WITH_CARDS refresh
+      - AC-23: 4-Living partition
+      - AC-24: 3-Living partition
+      - AC-25: 2-Living partition
+      - AC-26: Full Card conservation
+      - AC-27: Central pile cleared
+      - AC-28: Previous Play cleared
+      - AC-29: Play sequence continuity
+      - AC-30: First new Play identity
+      - AC-31: Revolver persistence
+      - AC-32: No Revolver reshuffle/reset
+      - AC-33: Fixed seat order preserved
+      - AC-34: firstRoundStarter preserved
+      - AC-35: winner/status unchanged
+      - AC-36: Prototype-safe Players
+      - AC-37: Input immutability
+      - AC-38: Determinism
+      - AC-39: No forbidden nondeterminism/dependencies
+      - AC-40: Regression
+      - AC-41: Tooling
+      - AC-42: Scope
+      - AC-43: Evidence completeness
+      - AC-44: Control files
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
