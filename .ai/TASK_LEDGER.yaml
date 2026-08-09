@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-001-DOMAIN-FOUNDATION
-active_task: T-002-MATCH-ROUND-INITIALIZATION
+last_verified_task: T-002-MATCH-ROUND-INITIALIZATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -152,8 +152,18 @@ tasks:
   T-002-MATCH-ROUND-INITIALIZATION:
     title: Match and Round Initialization
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 7210018af68b5218a397642fd44a8003b15e2a9b
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 7210018af68b5218a397642fd44a8003b15e2a9b
+      evidence:
+        - .ai/evidence/T-002-MATCH-ROUND-INITIALIZATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the first bounded canonical Game Core transition initializeMatch

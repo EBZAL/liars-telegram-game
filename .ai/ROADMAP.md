@@ -24,9 +24,14 @@
 * isolated deterministic domain foundation established.
 
 ## STAGE-02 — Canonical Core Engine
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Goals**: full canonical game state machine, GAME_RULES behavior, challenge/empty-hand/roulette/round flow
 **Exit Gate**: canonical GAME_RULES T01–T31 covered and passing; no unresolved Core rule ambiguity; deterministic state transitions.
+**Progress**:
+- T-002-MATCH-ROUND-INITIALIZATION VERIFIED
+- deterministic Match / Round-1 initialization established
+- canonical 2/3/4-player initial dealing verified
+- remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening
 **Status**: NOT_STARTED
