@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-004-TURN-ACTION-ELIGIBILITY
-active_task: null
+active_task: T-005-PLAY-CARDS-STATE-TRANSITION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -55,6 +55,7 @@ stages:
       - T-002-MATCH-ROUND-INITIALIZATION
       - T-003-PLAY-RULE-PRIMITIVES
       - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -302,6 +303,60 @@ tasks:
       - AC-27: Tooling
       - AC-28: Scope
       - AC-29: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-005-PLAY-CARDS-STATE-TRANSITION:
+    title: Play Cards State Transition
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the first stateful canonical gameplay transition PLAY_CARDS
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+    acceptance_criteria:
+      - AC-01: PlayState contract
+      - AC-02: PreviousPlay type
+      - AC-03: Deterministic Play identity
+      - AC-04: Initialization compatibility
+      - AC-05: Pure PLAY transition
+      - AC-06: Current actor authority
+      - AC-07: T-004 action integration
+      - AC-08: Authoritative selection
+      - AC-09: Canonical Claim rank
+      - AC-10: Canonical Claim count
+      - AC-11: No caller Claim authority
+      - AC-12: Hand removal
+      - AC-13: Central pile append
+      - AC-14: PreviousPlay creation
+      - AC-15: PreviousPlay replacement
+      - AC-16: No truth disclosure
+      - AC-17: Non-final hand status
+      - AC-18: Final-card status
+      - AC-19: Final Play remains challengeable state
+      - AC-20: No-challenge safe transition / T12
+      - AC-21: Safe transition is targeted
+      - AC-22: Cyclic next Player
+      - AC-23: Skip behavior
+      - AC-24: Challenge target survives skipped seats foundation
+      - AC-25: 1v1 forced-call integration
+      - AC-26: 3-player forced-call integration
+      - AC-27: Card conservation
+      - AC-28: Revolver untouched
+      - AC-29: Life status untouched
+      - AC-30: Input immutability
+      - AC-31: Prototype-safe IDs
+      - AC-32: No nondeterminism/dependencies
+      - AC-33: Regression
+      - AC-34: Tooling
+      - AC-35: Scope
+      - AC-36: Control files
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
