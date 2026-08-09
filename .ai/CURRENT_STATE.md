@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-004-TURN-ACTION-ELIGIBILITY
+T-005-PLAY-CARDS-STATE-TRANSITION
 
 **Current Active Task:**
 None
@@ -71,6 +71,40 @@ None
 - out-of-turn actor receives no legal actions
 - prototype-safe Player IDs remain supported
 - T08 No Pass verified
+- canonical PlayState / previousPlay state contract
+- deterministic monotonic Play identity foundation
+- RoundState previousPlay now supports PlayState | null
+- pure authoritative PLAY_CARDS state transition
+- PLAY legality derived from authoritative Turn rules
+- card-selection intent resolved against authoritative current Hand
+- caller-owned request arrays are not retained by returned MatchState
+- PlayState cardIds are derived into a fresh Core-owned array
+- post-return caller request mutation cannot alter authoritative state
+- Claim rank derived from TableRank
+- Claim count derived from authoritative played-card count
+- selected Cards removed from authoritative Hand
+- selected Cards appended exactly once to central pile
+- previousPlay creation and replacement
+- normal PLAY does not precompute/reveal truth or lie
+- non-final Player remains WITH_CARDS
+- final-card Player becomes EMPTY_PENDING_CHALLENGE
+- final Play remains previousPlay and is not immediately safe
+- T12 no-challenge branch verified:
+  - prior EMPTY_PENDING_CHALLENGE Player becomes EMPTY_SAFE when next eligible Player chooses PLAY_CARDS
+- cyclic next-player advancement uses updated authoritative Player state
+- ineligible seats are skipped without clearing the new previousPlay
+- 1v1 mandatory-call state integration established
+- 3-player mandatory-call state integration established
+- canonical 20-card conservation after PLAY verified:
+  - total 20
+  - unique IDs 20
+  - 6 KING
+  - 6 QUEEN
+  - 6 ACE
+  - 2 JOKER
+- Revolver state unchanged by PLAY
+- lifeStatus unchanged by PLAY
+- prototype-safe Player IDs preserved
 
 **Active Blockers:**
 None

@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-004-TURN-ACTION-ELIGIBILITY
-active_task: T-005-PLAY-CARDS-STATE-TRANSITION
+last_verified_task: T-005-PLAY-CARDS-STATE-TRANSITION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -311,8 +311,18 @@ tasks:
   T-005-PLAY-CARDS-STATE-TRANSITION:
     title: Play Cards State Transition
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: ca23d488b4a6744a5385adb5701d986b9540b2f5
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: ca23d488b4a6744a5385adb5701d986b9540b2f5
+      evidence:
+        - .ai/evidence/T-005-PLAY-CARDS-STATE-TRANSITION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the first stateful canonical gameplay transition PLAY_CARDS

@@ -42,6 +42,17 @@
 - T05 and T08 covered
 - mandatory CALL_LIAR trigger/action restriction foundation established
 - T10/T13/T14 full stateful transitions remain unimplemented
+- T-005-PLAY-CARDS-STATE-TRANSITION VERIFIED
+- authoritative immutable PLAY_CARDS state transition established
+- deterministic PlayState / previousPlay identity foundation established
+- authoritative Hand → central-pile card movement established
+- canonical Claim derivation integrated into committed Play state
+- final-card EMPTY_PENDING_CHALLENGE behavior established
+- T12 no-challenge EMPTY_SAFE transition verified
+- 20-card unique/composition conservation after PLAY verified
+- caller request aliasing into authoritative MatchState prevented
+- T09/T10/T11 foundations only; full CALL_LIAR behavior remains unimplemented
+- T13/T14 forced-call integration only; full challenge transitions remain unimplemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening
