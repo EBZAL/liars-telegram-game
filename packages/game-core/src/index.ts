@@ -3,3 +3,5 @@ export * from './deck.js';
 export * from './player-count.js';
 export * from './revolver.js';
 export * from './randomness.js';
+export * from './game-state.js';
+export * from './match.js';
