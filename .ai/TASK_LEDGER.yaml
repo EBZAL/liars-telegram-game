@@ -152,7 +152,7 @@ tasks:
   T-002-MATCH-ROUND-INITIALIZATION:
     title: Match and Round Initialization
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: 0bd61d3ac1a2e4d1d3bb61c84a2f349cc04a86d2
     workflow_profile: STANDARD
     risk_level: MEDIUM
