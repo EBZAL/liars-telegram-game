@@ -9,22 +9,28 @@
 - `packages/game-core/src/turn-rules.ts` (created)
 - `packages/game-core/tests/turn-rules.test.ts` (created)
 
-## Canonical Rules Covered
+## Canonical Coverage
 
-Completed canonical behavior:
-- §5 Turn order / cyclic seat order
-- §9 Turn actions (PLAY_CARDS, CALL_LIAR)
-- §11 skipped seats / challenge-window context
-- §14.1–14.5 Empty Hand / mandatory call trigger detection
-- §23 2/3/4-player eligibility notes
-- §24 invariants 10, 11, 20, 21, 23, 24
-- T05 — First Turn cannot challenge
-- T08 — No Pass
+Verified behavior:
+- fixed cyclic seat-order traversal
+- normal turn eligibility and skip behavior
+- First Turn permits PLAY_CARDS only
+- CALL_LIAR forbidden when no previous Play exists
+- PASS is not a canonical action
+- ordinary later turn action set is PLAY_CARDS or CALL_LIAR
+- mandatory-call trigger detection when exactly one ALIVE Player has cards
+- forced caller action restriction to CALL_LIAR
+- T05 complete
+- T08 complete
 
-Context incorporated but NOT claimed complete:
-- T10 — skipped-seat eligibility behavior only; previousPlay/challenge-target persistence deferred
-- T13 — mandatory-call trigger/action restriction only; full challenge transition deferred
-- T14 — mandatory-call trigger/action restriction only; full challenge transition deferred
+Source context incorporated but NOT claimed complete:
+- §11 / T10: skipped-seat eligibility prerequisite only; previousPlay/challenge-target persistence deferred
+- §14 / T13: 1v1 mandatory-call trigger/action restriction only; full final-card/challenge transition deferred
+- §14 / T14: 3-player mandatory-call trigger/action restriction only; full challenge transition deferred
+- §24 invariant 20: Empty Hand != Elimination is architectural/domain context; no empty-hand state transition is implemented here
+- §24 invariant 21: final empty-hand Play remains challengeable is NOT implemented here
+- §24 invariant 23: EMPTY_SAFE skip behavior is supported by eligibility rules; transition into EMPTY_SAFE is deferred
+- §24 invariant 24: mandatory-call trigger/action restriction is supported; CALL_LIAR execution is deferred
 
 ## T05 / T08 Mapping
 - T05: Verified by checking that when `hasPreviousPlay = false`, the only allowed action is `PLAY_CARDS` (no `CALL_LIAR` allowed).
