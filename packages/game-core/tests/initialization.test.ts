@@ -61,6 +61,17 @@ describe('Match and Round Initialization', () => {
     expect(['KING', 'QUEEN', 'ACE']).toContain(match.round.tableRank);
   });
 
+  it('Compile-time: TableRank excludes JOKER', () => {
+    // This is purely a type check; if TableRank allows JOKER, typecheck fails.
+    import('../src/game-state.js').then(({}) => {
+      type AssertNotJoker<T extends 'KING' | 'QUEEN' | 'ACE'> = T;
+      type Check = AssertNotJoker<import('../src/game-state.js').TableRank>;
+      // @ts-expect-error
+      type CheckFail = AssertNotJoker<'JOKER'>;
+    });
+    expect(true).toBe(true);
+  });
+
   it('AC-04/05/16: Initial Player state, independent persistent revolver', () => {
     const match = initializeMatch(['p1', 'p2'], new PredictableRandom(42));
     
@@ -85,7 +96,24 @@ describe('Match and Round Initialization', () => {
     expect(p1.hand).not.toBe(p2.hand);
   });
 
-  it('AC-10/13: 4-player dealing (T23)', () => {
+  function expectFullDeckPartition(allCards: { id: string, rank: string }[]) {
+    expect(allCards).toHaveLength(20);
+
+    const uniqueIds = new Set(allCards.map(c => c.id));
+    expect(uniqueIds.size).toBe(20);
+    
+    const kings = allCards.filter(c => c.rank === 'KING').length;
+    const queens = allCards.filter(c => c.rank === 'QUEEN').length;
+    const aces = allCards.filter(c => c.rank === 'ACE').length;
+    const jokers = allCards.filter(c => c.rank === 'JOKER').length;
+
+    expect(kings).toBe(6);
+    expect(queens).toBe(6);
+    expect(aces).toBe(6);
+    expect(jokers).toBe(2);
+  }
+
+  it('AC-10/13: 4-player dealing (T23) has full partition invariant', () => {
     const match = initializeMatch(['A', 'B', 'C', 'D'], new PredictableRandom(10));
     
     const pA = match.players['A'].hand;
@@ -100,25 +128,10 @@ describe('Match and Round Initialization', () => {
     expect(pD).toHaveLength(5);
     expect(undealt).toHaveLength(0);
 
-    const allCards = [...pA, ...pB, ...pC, ...pD, ...undealt];
-    expect(allCards).toHaveLength(20);
-
-    const uniqueIds = new Set(allCards.map(c => c.id));
-    expect(uniqueIds.size).toBe(20);
-    
-    // Check canonical composition
-    const kings = allCards.filter(c => c.rank === 'KING').length;
-    const queens = allCards.filter(c => c.rank === 'QUEEN').length;
-    const aces = allCards.filter(c => c.rank === 'ACE').length;
-    const jokers = allCards.filter(c => c.rank === 'JOKER').length;
-
-    expect(kings).toBe(6);
-    expect(queens).toBe(6);
-    expect(aces).toBe(6);
-    expect(jokers).toBe(2);
+    expectFullDeckPartition([...pA, ...pB, ...pC, ...pD, ...undealt]);
   });
 
-  it('AC-11: 3-player dealing (T24)', () => {
+  it('AC-11/13: 3-player dealing (T24) has full partition invariant', () => {
     const match = initializeMatch(['A', 'B', 'C'], new PredictableRandom(10));
     expect(match.round.undealtCards).toHaveLength(5);
     
@@ -128,10 +141,10 @@ describe('Match and Round Initialization', () => {
       ...match.players['C'].hand,
       ...match.round.undealtCards
     ];
-    expect(allCards).toHaveLength(20);
+    expectFullDeckPartition(allCards);
   });
 
-  it('AC-12: 2-player dealing (T25)', () => {
+  it('AC-12/13: 2-player dealing (T25) has full partition invariant', () => {
     const match = initializeMatch(['A', 'B'], new PredictableRandom(10));
     expect(match.round.undealtCards).toHaveLength(10);
     
@@ -140,7 +153,26 @@ describe('Match and Round Initialization', () => {
       ...match.players['B'].hand,
       ...match.round.undealtCards
     ];
-    expect(allCards).toHaveLength(20);
+    expectFullDeckPartition(allCards);
+  });
+
+  it('__proto__ Player ID dictionary safety and serialization', () => {
+    const r = new PredictableRandom();
+    const match = initializeMatch(['p1', '__proto__'], r);
+    
+    // It should exist as an own property, not inherited
+    expect(Object.prototype.hasOwnProperty.call(match.players, '__proto__')).toBe(true);
+    
+    const protoPlayer = match.players['__proto__'];
+    expect(protoPlayer).toBeDefined();
+    expect(protoPlayer.id).toBe('__proto__');
+    expect(protoPlayer.hand.length).toBe(5);
+
+    // Serialization should retain it
+    const serialized = JSON.stringify(match);
+    const parsed = JSON.parse(serialized);
+    expect(parsed.players['__proto__']).toBeDefined();
+    expect(parsed.players['__proto__'].id).toBe('__proto__');
   });
 
   it('AC-14: Deterministic initialization', () => {

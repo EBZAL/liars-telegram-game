@@ -19,9 +19,11 @@ export interface PlayerState {
   readonly revolver: RevolverState;
 }
 
+export type TableRank = Exclude<CardRank, 'JOKER'>;
+
 export interface RoundState {
   readonly roundNumber: number;
-  readonly tableRank: CardRank;
+  readonly tableRank: TableRank;
   readonly currentPlayerId: PlayerId;
   readonly previousPlay: null;
   readonly centralPile: readonly Card[];

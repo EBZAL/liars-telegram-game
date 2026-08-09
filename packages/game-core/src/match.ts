@@ -1,4 +1,4 @@
-import { MatchState, PlayerId, PlayerState, RoundState } from './game-state.js';
+import { MatchState, PlayerId, PlayerState, RoundState, TableRank } from './game-state.js';
 import { RandomSource, shuffle } from './randomness.js';
 import { parsePlayerCount } from './player-count.js';
 import { createBaseRevolver } from './revolver.js';
@@ -33,14 +33,18 @@ export function initializeMatch(
   // Table Rank
   const tableDeck = createTableDeck();
   const shuffledTableDeck = shuffle(tableDeck, random);
-  const tableRank = shuffledTableDeck[0].rank;
+  const topRank = shuffledTableDeck[0].rank;
+  if (topRank === 'JOKER') {
+    throw new Error('Invariant failure: Table Rank cannot be JOKER');
+  }
+  const tableRank: TableRank = topRank;
 
   // Round Liar Deck
   const liarDeck = createLiarDeck();
   const shuffledLiarDeck = shuffle(liarDeck, random);
 
   // Deal cards and build players
-  const players: Record<PlayerId, PlayerState> = {};
+  const players = Object.create(null) as Record<PlayerId, PlayerState>;
   
   let currentCardIndex = 0;
   for (const id of seatOrder) {
