@@ -10,13 +10,21 @@
 - `packages/game-core/tests/turn-rules.test.ts` (created)
 
 ## Canonical Rules Covered
+
+Completed canonical behavior:
 - §5 Turn order / cyclic seat order
 - §9 Turn actions (PLAY_CARDS, CALL_LIAR)
 - §11 skipped seats / challenge-window context
-- §14.1–14.5 Empty Hand / mandatory call
+- §14.1–14.5 Empty Hand / mandatory call trigger detection
 - §23 2/3/4-player eligibility notes
 - §24 invariants 10, 11, 20, 21, 23, 24
-- §25 T05 (First Turn), T08 (No Pass), T10, T13, T14
+- T05 — First Turn cannot challenge
+- T08 — No Pass
+
+Context incorporated but NOT claimed complete:
+- T10 — skipped-seat eligibility behavior only; previousPlay/challenge-target persistence deferred
+- T13 — mandatory-call trigger/action restriction only; full challenge transition deferred
+- T14 — mandatory-call trigger/action restriction only; full challenge transition deferred
 
 ## T05 / T08 Mapping
 - T05: Verified by checking that when `hasPreviousPlay = false`, the only allowed action is `PLAY_CARDS` (no `CALL_LIAR` allowed).
@@ -77,6 +85,7 @@
 
 ## Known Limitations
 - Does not mutate MatchState, create plays, or resolve challenges. Full T13/T14 challenge sequences are deferred.
+- T10 full behavior is NOT complete in T-004 because previousPlay/challenge-target lifecycle is intentionally outside this task.
 
 ## Scope Confirmation
 Confirmed fully IN_SCOPE. No architecture changes required. No product scope drift. No UI or persistence logic implemented.
