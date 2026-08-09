@@ -377,7 +377,7 @@ tasks:
   T-006-CHALLENGE-RESOLUTION-PRIMITIVES:
     title: Challenge Resolution Primitives
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: a479f534fbe5d94c4d6cb1ab21192d676c6848a7
     workflow_profile: STANDARD
     risk_level: MEDIUM
