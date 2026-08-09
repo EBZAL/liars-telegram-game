@@ -253,7 +253,7 @@ tasks:
   T-004-TURN-ACTION-ELIGIBILITY:
     title: Turn Action Eligibility
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: 59030c30fff29f2bbecf23eb19158f121046e1ae
     workflow_profile: STANDARD
     risk_level: MEDIUM
