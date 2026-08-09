@@ -110,10 +110,11 @@ describe('Domain Foundation Contracts', () => {
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 describe('Source Verification (AC-12)', () => {
   it('Production source must not contain direct Math.random() calls', () => {
-    const srcDir = path.resolve(import.meta.dirname, '../src');
+    const srcDir = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '../src');
     const files = fs.readdirSync(srcDir).filter((f: string) => f.endsWith('.ts'));
     
     for (const file of files) {
