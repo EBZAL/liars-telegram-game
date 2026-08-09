@@ -1,43 +1,43 @@
-# Current Project State
+# Current State
 
-Last updated: -
+**Current Stage:**
+STAGE-01 — Domain Foundation
 
-## Current Stage
-UNINITIALIZED
-
-## Last Verified Task
+**Last Verified Task:**
 None
 
-## Current Active Task
+**Current Active Task:**
 None
 
-## Current Objective
--
+**Verified Product Capabilities:**
+None yet — no product implementation has been verified.
 
-## Verified Capabilities
-Only include evidence-backed capabilities.
+**Active Blockers:**
+None
 
--
+**Known Failure / Issue:**
+None currently evidenced.
 
-## Active Blockers
--
+**Open Risks:**
+* Core rule correctness
+* 2/3/4-player edge cases
+* realtime concurrency
+* timeout/reconnect races
+* Telegram identity/trust boundary
+* hidden information leakage
+* free-tier operational constraints
 
-## Open Risks
--
+**Active Architectural Constraints:**
+* GAME_RULES v3 authority
+* deterministic isolated Engine
+* approved Cloudflare/TypeScript stack
+* one Durable Object per Room
+* server authority
+* Local-only selection
+* Living-only Pause/Resume
+* one active alarm
+* no D1/VPS/custom domain MVP
+* no separate Bot Backend
 
-## Active Architectural Constraints
--
-
-## Known Failure / Issue
--
-
-## Next Approved Action
-Initialize architecture, roadmap, and task ledger.
-
-## State Consistency
-This file is a summary.
-
-Canonical task status lives in:
-`.ai/TASK_LEDGER.yaml`
-
-If this summary conflicts with the Ledger, Git, tests, or evidence, the Architect determines the correction and Gravity persists it through State Sync.
+**Next Approved Action:**
+Project Architect must re-read the durably initialized repository, then select the first bounded task, determine profile/risk, run the Pre-Execution Consistency Gate, and only after PASS may approve READY eligibility.

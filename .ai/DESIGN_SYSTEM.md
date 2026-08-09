@@ -1,47 +1,38 @@
 # Design System
 
-Status: NOT_APPLICABLE_OR_UNINITIALIZED
+**Direction:**
+mobile-first
+Telegram-friendly
+responsive
+readable
+visually polished
+original presentation
 
-## Design Direction
--
+Do not copy copyrighted/proprietary Liar's Bar:
+* characters
+* artwork
+* UI
+* sounds
+* assets
 
-## Tokens
+**Visual Direction:**
+original dark / theatrical card-room atmosphere
+clean high-contrast cards
+clear gameplay hierarchy
 
-### Color Roles
--
+**Required Gameplay Clarity:**
+* Current Turn
+* Table Rank
+* Last Play
+* Player hand
+* Player hand counts
+* LIAR action
+* Timer
+* empty/eliminated state
+* roulette result/progress
+* Winner
 
-### Typography
--
-
-### Spacing
--
-
-### Radius
--
-
-### Elevation
--
-
-## Breakpoints
--
-
-## Core Components
--
-
-## Required States
-- default
-- hover/focus
-- disabled
-- loading
-- empty
-- error
-- success
-
-## Accessibility
--
-
-## Visual Verification
--
-
-## UI Invariants
--
+2/3/4-player layouts must be distinct and readable.
+Telegram safe-area/theme integration must be supported.
+Presentation state/animations never become authoritative Game state.
+Detailed colors/typefaces/animation specifications are TBD for the UI stage.
