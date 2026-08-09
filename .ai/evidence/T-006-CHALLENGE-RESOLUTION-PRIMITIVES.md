@@ -50,3 +50,41 @@ A pure, deterministic resolver `resolveLiarChallenge` has been implemented. It t
 - No dependencies were added.
 - No forbiddden APIs (Math.random, Date.now, crypto.randomUUID) were used.
 - `MatchState` and `Revolver` remain completely unmodified during resolution.
+
+## Acceptance Criteria Results
+- AC-01 PASS — ChallengeResolution exposes the required result fields (playId, callerId, accusedPlayerId, revealedCards, playWasTruthful, challengerWasCorrect, roundLoserId, shooterId).
+- AC-02 PASS — resolveLiarChallenge is a pure MatchState + callerId resolver.
+- AC-03 PASS — no caller-provided target/play/card/truth/loser authority exists.
+- AC-04 PASS — previousPlay=null rejected.
+- AC-05 PASS — out-of-turn caller rejected.
+- AC-06 PASS — CALL_LIAR must be in authoritative allowed actions.
+- AC-07 PASS — ordinary legal CALL resolves.
+- AC-08 PASS — forced 1v1 and 3p CALL states resolve.
+- AC-09 PASS — only previousPlay targeted / T09.
+- AC-10 PASS — skipped EMPTY_SAFE seat does not erase target / T10.
+- AC-11 PASS — EMPTY_PENDING_CHALLENGE final Play resolves / T11.
+- AC-12 PASS — resolved previousPlay rejected.
+- AC-13 PASS — accused derived from previousPlay.playerId.
+- AC-14 PASS — implementation guard verified by code inspection; tests explicitly cover missing/eliminated/EMPTY_SAFE accused.
+- AC-15 PASS — count/cardIds invariant enforced.
+- AC-16 PASS — claimedRank/tableRank invariant enforced.
+- AC-17 PASS — duplicate target IDs rejected.
+- AC-18 PASS — target Cards resolved from authoritative centralPile.
+- AC-19 PASS — missing target Card rejected.
+- AC-20 PASS — duplicate occurrence of a target Card in centralPile rejected.
+- AC-21 PASS — unrelated pile Cards excluded from reveal/evaluation.
+- AC-22 PASS — reveal follows previousPlay.cardIds order.
+- AC-23 PASS — reveal array and Card snapshots detached from MatchState.
+- AC-24 PASS — T-003 isPlayTruthful used with authoritative Table Rank.
+- AC-25 PASS — mixed valid/Joker/invalid Play resolves as Lie.
+- AC-26 PASS — T15 Lie → accused loses/shoots.
+- AC-27 PASS — T16 Truth → caller loses/shoots.
+- AC-28 PASS — MatchState remains unmodified.
+- AC-29 PASS — previousPlay.resolved remains unmodified.
+- AC-30 PASS — Revolver state is neither resolved nor mutated.
+- AC-31 PASS — no elimination, winner or Round flow implemented.
+- AC-32 PASS — no new dependency or forbidden nondeterminism.
+- AC-33 PASS — prior Core regression suite passes.
+- AC-34 PASS — npm ci / typecheck / test pass.
+- AC-35 PASS — resolver remains pure; stateful CALL/Roulette/etc. deferred.
+- AC-36 PASS — only normal Ledger/Evidence lifecycle control changes.
