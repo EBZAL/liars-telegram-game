@@ -51,7 +51,26 @@
 
 ## Known Limitations
 - Revolver does not yet have shot logic (explicitly deferred by task constraints).
-- Deck cards ID sequence uses an internal process-lifetime incrementor which is deterministic per factory session, sufficient for this foundation layer but could be revised if the engine needs globally stable ids across matches later (not required by canonical rules currently).
+
+## Corrective Implementation (RETURN_TO_EXECUTOR)
+**Original Implementation SHA:** `e3cf83a9977efca40b4ba966dae4e9d94c969d45`
+**Architect Finding:** Global mutable card ID state needs removal; AC-12 automated check needs to be added.
+**Corrective Implementation SHA:** `4976205760dce47978077141a94664870804ecfa`
+
+### Files Changed:
+- `packages/game-core/src/deck.ts`
+- `packages/game-core/tests/domain.test.ts`
+- `packages/game-core/package.json`
+- `package-lock.json`
+
+### Verification Commands & Results:
+1. **`npm ci`**: PASS (added 2 packages, audited 82 packages in 5s)
+2. **`npm run typecheck`**: PASS (tsc --noEmit exited 0)
+3. **`npm test`**: PASS (8 tests passed, including AC-12 source scan)
+
+### Fixes Confirmed:
+- Proof AC-12 is automated: Added a vitest block that runs `fs.readdirSync` on `src/` and checks `expect(content).not.toMatch(/Math\.random/)`.
+- Confirmation no global mutable Card ID state remains: Removed `cardIdCounter`. Card IDs are now deterministically generated strictly by the factory using `kind-rank-index` pattern.
 
 ## Scope Confirmation
 Confirmed fully IN_SCOPE. No architecture changes required. No product scope drift.
