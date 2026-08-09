@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+T-007-ROULETTE-SHOT-RESOLUTION
 
 **Current Active Task:**
 None
@@ -138,6 +138,41 @@ None
 - resolver does not mutate MatchState
 - resolver does not mutate previousPlay.resolved
 - resolver does not resolve or mutate Revolver
+- pure deterministic RouletteShotResolution primitive
+- pure PlayerState-level resolveRouletteShot transition
+- Shot outcome derived exclusively from persistent authoritative Revolver sequence
+- no caller authority over outcome, shot index, elimination or sequence
+- canonical Revolver invariant enforced:
+  - exactly 6 positions
+  - exactly 1 LETHAL
+  - exactly 5 BLANK
+- nextShotIndex must be a finite integer in 0..5
+- ALIVE consumed-prefix must contain only BLANK outcomes
+- current outcome = sequence[nextShotIndex]
+- every successful Shot advances nextShotIndex exactly once
+- Revolver sequence/order persists unchanged
+- no Revolver reshuffle or reset during Shot
+- T17 verified:
+  - BLANK keeps Player ALIVE
+  - index advances exactly one
+  - sequence remains unchanged
+- T18 elimination state effect and turn-ineligibility are verified (Future-Round no-deal behavior remains unimplemented)
+- T19 verified:
+  - five sequential BLANK outcomes preserve progress
+  - index advances 0→1→2→3→4→5
+  - sixth unresolved outcome is LETHAL for canonical five-Blank-prefix sequence
+  - sixth Shot eliminates and advances index to 6
+  - further Shot attempt is rejected
+- early LETHAL behavior verified
+- already ELIMINATED Player cannot shoot again
+- exhausted Revolver cannot shoot
+- Player id unchanged by Shot
+- roundStatus unchanged by Shot
+- hand unchanged by Shot
+- input Player/Revolver/Hand/sequence are not mutated
+- updated PlayerState and RevolverState are fresh changed state containers
+- Shot resolution is deterministic
+- npm ci / typecheck / 114-test suite PASS
 
 **Active Blockers:**
 None

@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-006-CHALLENGE-RESOLUTION-PRIMITIVES
-active_task: T-007-ROULETTE-SHOT-RESOLUTION
+last_verified_task: T-007-ROULETTE-SHOT-RESOLUTION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -444,8 +444,18 @@ tasks:
   T-007-ROULETTE-SHOT-RESOLUTION:
     title: Roulette Shot Resolution
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 5b51b514d6c2ae602dc382ee3a4c237abe3dacb3
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 5b51b514d6c2ae602dc382ee3a4c237abe3dacb3
+      evidence:
+        - .ai/evidence/T-007-ROULETTE-SHOT-RESOLUTION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest pure canonical state transition for one Player's Russian Roulette Shot

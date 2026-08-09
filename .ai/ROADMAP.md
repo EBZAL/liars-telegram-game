@@ -65,8 +65,23 @@
 - 1v1 / 3p forced-CALL resolver compatibility established
 - stateful CALL_LIAR persistence remains unimplemented
 - previousPlay.resolved persistence remains unimplemented
-- T13/T14 full challenge+Roulette flow remains unimplemented
-- Roulette / elimination / next-Round flow remains unimplemented
+- T-007-ROULETTE-SHOT-RESOLUTION VERIFIED
+- persistent authoritative Revolver Shot consumption established
+- canonical sequence/composition/index invariants established
+- consumed-prefix invariant established
+- Shot outcome derived without new randomness or reshuffle
+- exact one-position Revolver advancement established
+- T17 Blank progression verified
+- T18 LETHAL → ELIMINATED state effect and turn-ineligibility verified
+- T19 five-Blanks/sixth-Lethal progression verified
+- early-Lethal behavior verified
+- post-elimination and exhausted-Revolver Shot rejection established
+- Player Hand / RoundStatus remain unchanged by Shot primitive
+- Challenge → Shot MatchState integration remains unimplemented
+- future-Round no-deal integration remains unimplemented
+- T20/T21 remain unimplemented
+- Round Reset / next-Round dealing / starter selection remain unimplemented
+- Winner flow remains unimplemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening
