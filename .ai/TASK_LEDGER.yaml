@@ -102,8 +102,8 @@ tasks:
   T-001-DOMAIN-FOUNDATION:
     title: Domain Foundation
     stage: STAGE-01
-    status: IN_PROGRESS
-    implementation_commit: 4976205760dce47978077141a94664870804ecfa
+    status: IMPLEMENTED
+    implementation_commit: 756583ed9168a4cc23fba469308d00ef946ee3b4
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Establish the minimal TypeScript domain/test foundation for the canonical game Core.

@@ -72,5 +72,21 @@
 - Proof AC-12 is automated: Added a vitest block that runs `fs.readdirSync` on `src/` and checks `expect(content).not.toMatch(/Math\.random/)`.
 - Confirmation no global mutable Card ID state remains: Removed `cardIdCounter`. Card IDs are now deterministically generated strictly by the factory using `kind-rank-index` pattern.
 
+## Corrective Implementation 2 (RETURN_TO_EXECUTOR - PORTABILITY FIX)
+**Previous Implementation SHA:** `4976205760dce47978077141a94664870804ecfa`
+**Architect Finding:** AC-12 test uses `import.meta.dirname` which is unavailable on early Node 20 releases. Replace with Node-20.0-compatible ESM mechanism `fileURLToPath(new URL('.', import.meta.url))`.
+**Corrective Implementation SHA:** `756583ed9168a4cc23fba469308d00ef946ee3b4`
+
+### Files Changed:
+- `packages/game-core/tests/domain.test.ts`
+
+### Verification Commands & Results:
+1. **`npm ci`**: PASS
+2. **`npm run typecheck`**: PASS
+3. **`npm test`**: PASS
+
+### Fixes Confirmed:
+- Confirmation `import.meta.dirname` is no longer used: Replaced with `fileURLToPath(new URL('.', import.meta.url))`. Node >=20.0.0 compatibility is restored.
+
 ## Scope Confirmation
 Confirmed fully IN_SCOPE. No architecture changes required. No product scope drift.
