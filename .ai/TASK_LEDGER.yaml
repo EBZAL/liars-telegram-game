@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-005-PLAY-CARDS-STATE-TRANSITION
-active_task: null
+active_task: T-006-CHALLENGE-RESOLUTION-PRIMITIVES
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -56,6 +56,7 @@ stages:
       - T-003-PLAY-RULE-PRIMITIVES
       - T-004-TURN-ACTION-ELIGIBILITY
       - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -364,6 +365,61 @@ tasks:
       - AC-30: Input immutability
       - AC-31: Prototype-safe IDs
       - AC-32: No nondeterminism/dependencies
+      - AC-33: Regression
+      - AC-34: Tooling
+      - AC-35: Scope
+      - AC-36: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-006-CHALLENGE-RESOLUTION-PRIMITIVES:
+    title: Challenge Resolution Primitives
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement a pure authoritative resolver for CALL_LIAR challenge semantics
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+    acceptance_criteria:
+      - AC-01: ChallengeResolution contract
+      - AC-02: Pure resolver
+      - AC-03: No caller target authority
+      - AC-04: First Turn rejected
+      - AC-05: Out-of-turn caller rejected
+      - AC-06: Ineligible caller rejected
+      - AC-07: Ordinary CALL allowed
+      - AC-08: Forced CALL allowed
+      - AC-09: Only previousPlay targeted / T09
+      - AC-10: Skipped seat target / T10
+      - AC-11: Final Play challengeable / T11
+      - AC-12: Unresolved target required
+      - AC-13: Accused derived
+      - AC-14: Accused validity
+      - AC-15: Count invariant
+      - AC-16: Claim-rank invariant
+      - AC-17: Target IDs unique
+      - AC-18: Target Cards authoritative
+      - AC-19: Missing target Card rejected
+      - AC-20: Duplicate central target rejected
+      - AC-21: Reveal only target Cards
+      - AC-22: Reveal order
+      - AC-23: Reveal isolation
+      - AC-24: Canonical truth evaluation
+      - AC-25: Mixed Play Lie
+      - AC-26: Correct Challenge / T15
+      - AC-27: Incorrect Challenge / T16
+      - AC-28: No MatchState mutation
+      - AC-29: No resolved-state mutation
+      - AC-30: Revolver untouched
+      - AC-31: No elimination/round flow
+      - AC-32: Deterministic / no dependencies
       - AC-33: Regression
       - AC-34: Tooling
       - AC-35: Scope
