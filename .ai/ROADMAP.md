@@ -51,8 +51,22 @@
 - T12 no-challenge EMPTY_SAFE transition verified
 - 20-card unique/composition conservation after PLAY verified
 - caller request aliasing into authoritative MatchState prevented
-- T09/T10/T11 foundations only; full CALL_LIAR behavior remains unimplemented
-- T13/T14 forced-call integration only; full challenge transitions remain unimplemented
+- T-006-CHALLENGE-RESOLUTION-PRIMITIVES VERIFIED
+- pure authoritative CALL_LIAR challenge resolver established
+- previousPlay-only challenge targeting established
+- exact authoritative reveal-card reconciliation established
+- detached reveal snapshots established
+- canonical Truth/Lie challenge evaluation established
+- T09 latest-Play targeting semantics verified
+- T10 skipped-seat challenge targeting verified
+- T11 final-Play challengeability resolution verified
+- T15 correct-challenge loser/shooter identity verified
+- T16 incorrect-challenge loser/shooter identity verified
+- 1v1 / 3p forced-CALL resolver compatibility established
+- stateful CALL_LIAR persistence remains unimplemented
+- previousPlay.resolved persistence remains unimplemented
+- T13/T14 full challenge+Roulette flow remains unimplemented
+- Roulette / elimination / next-Round flow remains unimplemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening

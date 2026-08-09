@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-005-PLAY-CARDS-STATE-TRANSITION
+T-006-CHALLENGE-RESOLUTION-PRIMITIVES
 
 **Current Active Task:**
 None
@@ -105,6 +105,39 @@ None
 - Revolver state unchanged by PLAY
 - lifeStatus unchanged by PLAY
 - prototype-safe Player IDs preserved
+- pure deterministic ChallengeResolution contract
+- pure resolveLiarChallenge(MatchState, callerId) resolver
+- CALL_LIAR legality derived from authoritative Turn rules
+- caller has no authority over target Play, accused, reveal Cards, truth, loser or shooter
+- challenge target is always current unresolved previousPlay
+- resolved previousPlay is rejected
+- accused is derived from previousPlay.playerId
+- malformed missing / eliminated / EMPTY_SAFE / self-accused targets are rejected
+- previousPlay count/cardIds consistency enforced
+- previousPlay claimedRank/tableRank consistency enforced
+- duplicate previousPlay Card IDs rejected
+- target Cards are reconciled exactly against authoritative centralPile
+- missing target Card rejected
+- duplicate central-pile occurrence of a target Card rejected
+- only previousPlay Cards are revealed/evaluated
+- reveal order follows previousPlay.cardIds
+- revealedCards are detached value snapshots and do not alias MatchState
+- truth/lie evaluation reuses canonical TableRank/Joker semantics
+- mixed Play with one invalid Card resolves as Lie
+- T09 challenge-target semantics verified:
+  - only latest previousPlay is challenged
+- T10 skipped-seat challenge targeting verified:
+  - skipped ineligible seats do not erase previousPlay
+- T11 final-Play challengeability resolution verified:
+  - EMPTY_PENDING_CHALLENGE final Play resolves normally
+- T15 correct challenge result identity verified:
+  - Lie → accused is round loser / shooter
+- T16 incorrect challenge result identity verified:
+  - Truth → caller is round loser / shooter
+- forced-CALL legality/resolver compatibility exists, but full challenge + Roulette flow remains unimplemented
+- resolver does not mutate MatchState
+- resolver does not mutate previousPlay.resolved
+- resolver does not resolve or mutate Revolver
 
 **Active Blockers:**
 None

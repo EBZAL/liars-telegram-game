@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-005-PLAY-CARDS-STATE-TRANSITION
-active_task: T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+last_verified_task: T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -377,8 +377,18 @@ tasks:
   T-006-CHALLENGE-RESOLUTION-PRIMITIVES:
     title: Challenge Resolution Primitives
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: a479f534fbe5d94c4d6cb1ab21192d676c6848a7
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: a479f534fbe5d94c4d6cb1ab21192d676c6848a7
+      evidence:
+        - .ai/evidence/T-006-CHALLENGE-RESOLUTION-PRIMITIVES.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement a pure authoritative resolver for CALL_LIAR challenge semantics
