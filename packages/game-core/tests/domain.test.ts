@@ -33,16 +33,26 @@ describe('Domain Foundation Contracts', () => {
     expect(ids.size).toBe(20);
   });
 
-  it('AC-06: Deck factory returns independent mutable containers', () => {
+  it('AC-06: Deck factory returns independent mutable containers with deterministic IDs', () => {
     const deck1 = createLiarDeck();
+    const table = createTableDeck(); // unrelated call in between
     const deck2 = createLiarDeck();
     
+    // Independent containers:
     expect(deck1).not.toBe(deck2);
-    expect(deck1[0].id).not.toBe(deck2[0].id);
+    expect(deck1[0]).not.toBe(deck2[0]);
 
+    // Modifying one doesn't modify the other:
     deck1.pop();
     expect(deck1.length).toBe(19);
     expect(deck2.length).toBe(20);
+
+    // Deterministic IDs (equivalent calls produce same IDs):
+    expect(deck2[0].id).toBe('liar-KING-1');
+
+    // IDs remain unique within one deck:
+    const ids = new Set(deck2.map(c => c.id));
+    expect(ids.size).toBe(20);
   });
 
   it('AC-07: Table Deck factory produces exactly one KING, one QUEEN and one ACE', () => {
@@ -95,5 +105,20 @@ describe('Domain Foundation Contracts', () => {
     
     // Actually shuffled with logic (reverse shift):
     expect(shuffled1).toEqual([2, 3, 4, 5, 1]);
+  });
+});
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+describe('Source Verification (AC-12)', () => {
+  it('Production source must not contain direct Math.random() calls', () => {
+    const srcDir = path.resolve(import.meta.dirname, '../src');
+    const files = fs.readdirSync(srcDir).filter((f: string) => f.endsWith('.ts'));
+    
+    for (const file of files) {
+      const content = fs.readFileSync(path.join(srcDir, file), 'utf-8');
+      expect(content).not.toMatch(/Math\.random/);
+    }
   });
 });

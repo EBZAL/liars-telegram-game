@@ -1,26 +1,24 @@
 import { Card, CardRank } from './cards.js';
 
-let cardIdCounter = 0;
-
-function createCard(rank: CardRank): Card {
-  return { id: `c_${++cardIdCounter}`, rank };
+function createCard(kind: string, rank: CardRank, index: number): Card {
+  return { id: `${kind}-${rank}-${index}`, rank };
 }
 
 export function createLiarDeck(): Card[] {
   const deck: Card[] = [];
   
-  for (let i = 0; i < 6; i++) deck.push(createCard('KING'));
-  for (let i = 0; i < 6; i++) deck.push(createCard('QUEEN'));
-  for (let i = 0; i < 6; i++) deck.push(createCard('ACE'));
-  for (let i = 0; i < 2; i++) deck.push(createCard('JOKER'));
+  for (let i = 1; i <= 6; i++) deck.push(createCard('liar', 'KING', i));
+  for (let i = 1; i <= 6; i++) deck.push(createCard('liar', 'QUEEN', i));
+  for (let i = 1; i <= 6; i++) deck.push(createCard('liar', 'ACE', i));
+  for (let i = 1; i <= 2; i++) deck.push(createCard('liar', 'JOKER', i));
   
   return deck;
 }
 
 export function createTableDeck(): Card[] {
   return [
-    createCard('KING'),
-    createCard('QUEEN'),
-    createCard('ACE')
+    createCard('table', 'KING', 1),
+    createCard('table', 'QUEEN', 1),
+    createCard('table', 'ACE', 1)
   ];
 }
