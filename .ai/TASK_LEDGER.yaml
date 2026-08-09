@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-001-DOMAIN-FOUNDATION
-active_task: null
+active_task: T-002-MATCH-ROUND-INITIALIZATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -50,8 +50,9 @@ stages:
 
   STAGE-02:
     title: Canonical Core Engine
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-002-MATCH-ROUND-INITIALIZATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -143,6 +144,43 @@ tasks:
       - AC-16: Automated test suite passes in non-watch mode
       - AC-17: No forbidden behavior added
       - AC-18: Architecture/project files unmodified
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-002-MATCH-ROUND-INITIALIZATION:
+    title: Match and Round Initialization
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the first bounded canonical Game Core transition initializeMatch
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+    acceptance_criteria:
+      - AC-01: Initialization boundary
+      - AC-02: Player validation
+      - AC-03: Fixed randomized seat order
+      - AC-04: Initial Player state
+      - AC-05: Independent persistent revolver initialization
+      - AC-06: Random first starter
+      - AC-07: Round 1 baseline
+      - AC-08: Canonical Table Rank
+      - AC-09: Canonical shuffled Round deck
+      - AC-10: 4-player dealing / T23
+      - AC-11: 3-player dealing / T24
+      - AC-12: 2-player dealing / T25
+      - AC-13: No card duplication/loss
+      - AC-14: Deterministic initialization
+      - AC-15: No caller-input mutation
+      - AC-16: Independent mutable containers
+      - AC-17: No forbidden nondeterminism
+      - AC-18: No new dependencies
+      - AC-19: Existing T-001 regression
+      - AC-20: Tooling verification
+      - AC-21: Scope
+      - AC-22: Control documents unchanged
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
