@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { applyPlayCards } from '../src/play-transition.js';
 import { MatchState, PlayerState } from '../src/game-state.js';
 import { Card } from '../src/cards.js';
+import { initializeMatch } from '../src/match.js';
 
 describe('applyPlayCards State Transition', () => {
   let baseState: MatchState;
@@ -319,5 +320,68 @@ describe('applyPlayCards State Transition', () => {
     expect(state3.players['A']!.hand).toHaveLength(0);
     expect(state3.players['B']!.hand).toHaveLength(1);
     expect(state3.players['C']!.hand).toHaveLength(1);
+  });
+
+  it('Aliasing regression test: returned state does not alias requested array', () => {
+    const request = ['c1'];
+    const nextState = applyPlayCards(baseState, 'A', request);
+    
+    expect(nextState.round.previousPlay!.cardIds).not.toBe(request);
+    
+    // Mutate request after return
+    request.push('c2');
+    
+    // Confirm no mutation of authoritative state
+    expect(nextState.round.previousPlay!.cardIds).toEqual(['c1']);
+    expect(nextState.players['A']!.hand).toHaveLength(1); // 'c2' still in hand
+    expect(nextState.round.centralPile).toHaveLength(1);
+    expect(nextState.round.centralPile[0]!.id).toBe('c1');
+  });
+
+  it('AC-27: Real 20-card conservation test', () => {
+    const mockRandom = {
+      nextInt: (max: number) => 0, // Always 0
+    };
+
+    const state = initializeMatch(['A', 'B', 'C'], mockRandom);
+    
+    const actorId = state.round.currentPlayerId;
+    const actor = state.players[actorId]!;
+    expect(actor).toBeDefined();
+    
+    // Select one card from actor
+    const playedCardId = actor.hand[0]!.id;
+    
+    const nextState = applyPlayCards(state, actorId, [playedCardId]);
+
+    // Gather all cards
+    const allCards: Card[] = [
+      ...nextState.players['A']!.hand,
+      ...nextState.players['B']!.hand,
+      ...nextState.players['C']!.hand,
+      ...nextState.round.centralPile,
+      ...nextState.round.undealtCards
+    ];
+
+    expect(allCards).toHaveLength(20);
+
+    const uniqueIds = new Set(allCards.map(c => c.id));
+    expect(uniqueIds.size).toBe(20);
+
+    let kings = 0, queens = 0, aces = 0, jokers = 0;
+    for (const c of allCards) {
+      if (c.rank === 'KING') kings++;
+      if (c.rank === 'QUEEN') queens++;
+      if (c.rank === 'ACE') aces++;
+      if (c.rank === 'JOKER') jokers++;
+    }
+
+    expect(kings).toBe(6);
+    expect(queens).toBe(6);
+    expect(aces).toBe(6);
+    expect(jokers).toBe(2);
+
+    expect(nextState.players[actorId]!.hand.find(c => c.id === playedCardId)).toBeUndefined();
+    expect(nextState.round.centralPile.filter(c => c.id === playedCardId)).toHaveLength(1);
   });
 });

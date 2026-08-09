@@ -27,6 +27,7 @@ export function applyPlayCards(
 
   // 2. Authoritative card selection
   const selectedCards = validatePlaySelection(actor.hand, requestedCardIds);
+  const selectedCardIds = selectedCards.map(c => c.id);
 
   // 3. Claim derivation
   const claim = deriveClaim(state.round.tableRank, selectedCards);
@@ -51,7 +52,8 @@ export function applyPlayCards(
   }
 
   // 5. Remove cards from actor hand
-  const newHand = actor.hand.filter(c => !requestedCardIds.includes(c.id));
+  const selectedIdSet = new Set(selectedCardIds);
+  const newHand = actor.hand.filter(c => !selectedIdSet.has(c.id));
   const newRoundStatus = newHand.length === 0 ? 'EMPTY_PENDING_CHALLENGE' : 'WITH_CARDS';
   
   players[actorId] = {
@@ -68,7 +70,7 @@ export function applyPlayCards(
   const newPlay: PlayState = {
     playId: playSequence,
     playerId: actorId,
-    cardIds: requestedCardIds,
+    cardIds: selectedCardIds,
     count: claim.count,
     claimedRank: claim.rank,
     resolved: false
