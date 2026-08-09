@@ -102,7 +102,7 @@ tasks:
   T-001-DOMAIN-FOUNDATION:
     title: Domain Foundation
     stage: STAGE-01
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: e3cf83a9977efca40b4ba966dae4e9d94c969d45
     workflow_profile: STANDARD
     risk_level: MEDIUM
