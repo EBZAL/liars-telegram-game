@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-002-MATCH-ROUND-INITIALIZATION
-active_task: T-003-PLAY-RULE-PRIMITIVES
+last_verified_task: T-003-PLAY-RULE-PRIMITIVES
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -201,8 +201,18 @@ tasks:
   T-003-PLAY-RULE-PRIMITIVES:
     title: Play Rule Primitives
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: b42081d41e5e20eff8782a427d2608e675a504de
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: b42081d41e5e20eff8782a427d2608e675a504de
+      evidence:
+        - .ai/evidence/T-003-PLAY-RULE-PRIMITIVES.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the bounded pure canonical rule primitives required before stateful PLAY_CARDS and CALL_LIAR transitions

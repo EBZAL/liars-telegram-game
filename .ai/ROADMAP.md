@@ -31,6 +31,10 @@
 - T-002-MATCH-ROUND-INITIALIZATION VERIFIED
 - deterministic Match / Round-1 initialization established
 - canonical 2/3/4-player initial dealing verified
+- T-003-PLAY-RULE-PRIMITIVES VERIFIED
+- canonical truth/lie and Claim derivation primitives established
+- authoritative card-selection validation established
+- T01-T04 and T06-T07 covered
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening

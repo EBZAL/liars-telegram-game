@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-002-MATCH-ROUND-INITIALIZATION
+T-003-PLAY-RULE-PRIMITIVES
 
 **Current Active Task:**
 None
@@ -35,6 +35,22 @@ None
 - 2p: 10 dealt / 10 undealt
 - deterministic injected-random initialization
 - prototype-safe serializable Player state dictionary
+- canonical Card truth evaluation
+- canonical whole-Play truth/lie evaluation
+- T01 Pure Truth verified
+- T02 Joker Truth verified
+- T03 Mixed Truth verified
+- T04 Mixed Lie verified
+- canonical Claim rank derived from TableRank
+- canonical Claim count derived from played-card count
+- PlayCount restricted to 1/2/3
+- authoritative hand-based card selection validation
+- zero-card Play rejection
+- four-card Play rejection
+- unknown-card rejection
+- duplicate-card rejection
+- hand-size ceiling enforcement
+- selection validation preserves authoritative Card objects
 
 **Active Blockers:**
 None
