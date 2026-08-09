@@ -1,0 +1,31 @@
+schema_version: '1.0'
+architect_os_version: 0.6.0
+project_status: UNINITIALIZED
+current_stage: STAGE-00
+last_verified_task: null
+active_task: null
+status_definitions:
+  NOT_STARTED: Task exists but is not approved for execution.
+  READY: Architect approved the task; repository writer persisted it for execution.
+  IN_PROGRESS: Executor has started the task; a task-start state commit should make
+    this durable when push is authorized.
+  IMPLEMENTED: Executor completed implementation, committed evidence metadata, and
+    awaits Architect verification.
+  VERIFIED: Architect verified acceptance criteria/evidence and Gravity persisted
+    that decision.
+  BLOCKED: 'Architect-approved durable state: task cannot proceed due to an unresolved
+    blocker.'
+  FAILED: 'Architect-approved durable state: task verification/implementation is invalid
+    and requires a new decision.'
+  CANCELLED: Task intentionally abandoned.
+  ARCHITECTURE_CHANGE_REQUIRED: Task cannot proceed without an approved architecture
+    change.
+stages:
+  STAGE-00:
+    title: Discovery & Architecture
+    status: NOT_STARTED
+    required_tasks: []
+    exit_gate:
+      status: NOT_EVALUATED
+      evidence: []
+tasks: {}
