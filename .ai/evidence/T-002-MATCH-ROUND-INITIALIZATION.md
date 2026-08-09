@@ -51,6 +51,28 @@
 ## Determinism Evidence
 Tests demonstrate that initializing the match with the same scripted `PredictableRandom` pseudo-random source creates a deeply equivalent match state (AC-14). No external non-determinism leaks into the core Game Domain package.
 
+## Corrective Implementation (RETURN_TO_EXECUTOR)
+Original implementation SHA: 0bd61d3ac1a2e4d1d3bb61c84a2f349cc04a86d2
+
+Architect decision: RETURN_TO_EXECUTOR
+
+Findings:
+- TableRank type allowed JOKER
+- Player dictionary was not prototype-safe
+- AC-13 coverage incomplete for 2p/3p
+
+Corrective implementation SHA: 7210018af68b5218a397642fd44a8003b15e2a9b
+
+Verification:
+- npm ci: PASS
+- npm run typecheck: PASS
+- npm test: PASS
+
+Regression proof:
+- __proto__ player retained and serializable: Confirmed by new test
+- TableRank narrowed: Confirmed by new typecheck assertion and runtime guard
+- full deck partition invariant verified for 2/3/4 players: Confirmed by `expectFullDeckPartition` helper
+
 ## Known Limitations
 - Readonly serialization constraints were accommodated for pure game logic, no class instances were used (pure POJOs with standard interfaces). Map was avoided in favor of `Record<PlayerId, PlayerState>` to ensure trivial standard JSON serialization for the durable objects integration in later stages.
 
