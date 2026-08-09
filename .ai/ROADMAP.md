@@ -77,11 +77,26 @@
 - early-Lethal behavior verified
 - post-elimination and exhausted-Revolver Shot rejection established
 - Player Hand / RoundStatus remain unchanged by Shot primitive
-- Challenge → Shot MatchState integration remains unimplemented
-- future-Round no-deal integration remains unimplemented
-- T20/T21 remain unimplemented
-- Round Reset / next-Round dealing / starter selection remain unimplemented
-- Winner flow remains unimplemented
+- T-008-NEXT-ROUND-INITIALIZATION VERIFIED
+- deterministic post-Shot next-Round initialization established
+- T20 surviving-loser starter verified
+- T21 eliminated-loser cyclic fallback starter verified
+- T22 safe-empty Player return verified
+- ALIVE EMPTY_PENDING_CHALLENGE return established
+- Living-only next-Round dealing established
+- Eliminated-player no-deal behavior established for continuing Matches
+- canonical 4/3/2-Living Round partitions verified
+- fresh full 20-card Round redistribution verified
+- fresh Table Rank shuffle established
+- T28 repeated Table Rank legal
+- previousPlay / centralPile Round cleanup established
+- match-wide playSequence continuity across Round reset established
+- persistent Revolver state across Round reset established
+- one-Living next-Round creation rejected pending winner resolution
+- stateful CALL_LIAR integration remains unimplemented
+- previousPlay.resolved persistence remains unimplemented
+- Challenge → Shot → Winner/New-Round atomic transition remains unimplemented
+- T26 winner flow remains unimplemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening

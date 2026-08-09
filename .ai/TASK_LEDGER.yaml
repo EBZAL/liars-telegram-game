@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-007-ROULETTE-SHOT-RESOLUTION
-active_task: T-008-NEXT-ROUND-INITIALIZATION
+last_verified_task: T-008-NEXT-ROUND-INITIALIZATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -513,8 +513,18 @@ tasks:
   T-008-NEXT-ROUND-INITIALIZATION:
     title: Next Round Initialization
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: afa0ad4782b33ac73c681a55bd01b4864ab97790
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: afa0ad4782b33ac73c681a55bd01b4864ab97790
+      evidence:
+        - .ai/evidence/T-008-NEXT-ROUND-INITIALIZATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the bounded deterministic transition that initializes the next canonical Round after Challenge and Roulette have already been resolved

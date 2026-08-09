@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-007-ROULETTE-SHOT-RESOLUTION
+T-008-NEXT-ROUND-INITIALIZATION
 
 **Current Active Task:**
 None
@@ -172,7 +172,69 @@ None
 - input Player/Revolver/Hand/sequence are not mutated
 - updated PlayerState and RevolverState are fresh changed state containers
 - Shot resolution is deterministic
-- npm ci / typecheck / 114-test suite PASS
+- pure deterministic initializeNextRound transition
+- post-Shot / post-Challenge boundary:
+  - previousPlay must exist
+  - previousPlay must already be resolved
+  - Challenge and Shot are not re-executed
+- next-Round participation derives from lifeStatus only
+- winner boundary:
+  - one Living Player rejects next-Round initialization
+  - zero Living Players rejects invalid state
+- T20 verified:
+  - surviving round loser starts next Round
+- T21 verified:
+  - eliminated round loser falls forward to the next ALIVE Player
+  - fallback uses fixed cyclic seatOrder
+  - wraparound supported
+  - multiple eliminated seats skipped
+- Round number increments exactly once
+- fresh canonical Table Deck shuffle each Round
+- Table Rank remains KING / QUEEN / ACE
+- T28 verified:
+  - consecutive identical Table Rank is legal
+- fresh canonical 20-card Liar Deck each Round
+- Living Players dealt in fixed seatOrder order
+- every Living Player:
+  - receives exactly 5 fresh Cards
+  - roundStatus resets to WITH_CARDS
+  - lifeStatus remains ALIVE
+  - Revolver persists unchanged
+- T22 verified:
+  - prior ALIVE EMPTY_SAFE Player returns WITH_CARDS with 5 Cards
+- ALIVE EMPTY_PENDING_CHALLENGE also returns WITH_CARDS with 5 Cards
+- every Eliminated Player:
+  - remains ELIMINATED
+  - receives no Cards
+  - hand becomes empty
+  - Revolver persists unchanged
+  - is not revived
+- 4 Living: 20 dealt / 0 undealt
+- 3 Living: 15 dealt / 5 undealt
+- 2 Living: 10 dealt / 10 undealt
+- next-Round Card conservation verified:
+  - total 20
+  - unique IDs 20
+  - 6 KING
+  - 6 QUEEN
+  - 6 ACE
+  - 2 JOKER
+- centralPile resets to empty
+- previousPlay resets to null
+- match-wide Play identity continuity preserved:
+  - playSequence carries unchanged across Round reset
+  - first PLAY of new Round consumes preserved next Play ID
+- Revolver sequences and nextShotIndex persist without reset/reshuffle
+- seatOrder preserved
+- firstRoundStarter preserved
+- winnerId remains null on valid next-Round path
+- Match status remains IN_PROGRESS
+- prototype-safe Player dictionary preserved
+- __proto__ Player ID remains supported
+- input state is not mutated
+- transition is deterministic
+- npm ci / typecheck / 137-test suite PASS
+- T20/T21/T22 and T28 next-Round semantics are verified (transition assumes Challenge and Shot were already resolved; T26 winner determination and atomic stateful CALL_LIAR → Challenge → Shot → Winner/New-Round integration remain unimplemented)
 
 **Active Blockers:**
 None
