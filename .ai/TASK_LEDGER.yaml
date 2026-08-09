@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-003-PLAY-RULE-PRIMITIVES
-active_task: null
+active_task: T-004-TURN-ACTION-ELIGIBILITY
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -54,6 +54,7 @@ stages:
     required_tasks:
       - T-002-MATCH-ROUND-INITIALIZATION
       - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -249,3 +250,48 @@ tasks:
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
 
+  T-004-TURN-ACTION-ELIGIBILITY:
+    title: Turn Action Eligibility
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest pure Game Core layer required before stateful PLAY_CARDS / CALL_LIAR transitions
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+    acceptance_criteria:
+      - AC-01: Turn action type
+      - AC-02: No PASS / T08
+      - AC-03: RoundStatus extension
+      - AC-04: Normal eligibility
+      - AC-05: Eliminated skip
+      - AC-06: Empty-safe skip
+      - AC-07: Empty-pending skip
+      - AC-08: Zero-hand guard
+      - AC-09: Fixed cyclic traversal
+      - AC-10: Wrap-around
+      - AC-11: Skip chain
+      - AC-12: No self-return
+      - AC-13: No eligible successor
+      - AC-14: Unknown starting seat
+      - AC-15: Living-with-cards counting
+      - AC-16: First Turn / T05
+      - AC-17: Ordinary later turn
+      - AC-18: 1v1 mandatory-call trigger
+      - AC-19: 3-player mandatory-call trigger
+      - AC-20: No forced call on first turn
+      - AC-21: Out-of-turn actor
+      - AC-22: Ineligible current actor
+      - AC-23: Input immutability
+      - AC-24: Prototype-safe Player IDs
+      - AC-25: No nondeterminism / dependencies
+      - AC-26: Regression
+      - AC-27: Tooling
+      - AC-28: Scope
+      - AC-29: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
