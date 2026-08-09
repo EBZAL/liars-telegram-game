@@ -169,7 +169,8 @@ tasks:
   T-003-PLAY-RULE-PRIMITIVES:
     title: Play Rule Primitives
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: b42081d41e5e20eff8782a427d2608e675a504de
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the bounded pure canonical rule primitives required before stateful PLAY_CARDS and CALL_LIAR transitions
