@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-003-PLAY-RULE-PRIMITIVES
+T-004-TURN-ACTION-ELIGIBILITY
 
 **Current Active Task:**
 None
@@ -51,6 +51,26 @@ None
 - duplicate-card rejection
 - hand-size ceiling enforcement
 - selection validation preserves authoritative Card objects
+- RoundStatus now supports EMPTY_PENDING_CHALLENGE
+- canonical TurnActionType is PLAY_CARDS | CALL_LIAR only
+- PASS is not a canonical turn action
+- normal turn eligibility requires ALIVE + WITH_CARDS + non-empty hand
+- ELIMINATED Players are skipped
+- EMPTY_SAFE Players are skipped
+- EMPTY_PENDING_CHALLENGE Players are skipped as normal turn actors
+- zero-hand Players are defensively ineligible
+- fixed cyclic next-eligible traversal
+- cyclic wrap-around
+- multi-seat eligibility skipping
+- no self-return when seeking next eligible Player
+- deterministic living-with-cards counting in seat order
+- T05 First Turn cannot challenge verified
+- ordinary later turn permits PLAY_CARDS or CALL_LIAR
+- mandatory-call trigger detection when exactly one ALIVE Player holds cards and a previous Play exists
+- forced caller is restricted to CALL_LIAR
+- out-of-turn actor receives no legal actions
+- prototype-safe Player IDs remain supported
+- T08 No Pass verified
 
 **Active Blockers:**
 None

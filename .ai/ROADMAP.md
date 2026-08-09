@@ -35,6 +35,13 @@
 - canonical truth/lie and Claim derivation primitives established
 - authoritative card-selection validation established
 - T01-T04 and T06-T07 covered
+- T-004-TURN-ACTION-ELIGIBILITY VERIFIED
+- fixed cyclic eligibility and next-player traversal established
+- EMPTY_PENDING_CHALLENGE domain status established
+- canonical action set PLAY_CARDS / CALL_LIAR established; PASS excluded
+- T05 and T08 covered
+- mandatory CALL_LIAR trigger/action restriction foundation established
+- T10/T13/T14 full stateful transitions remain unimplemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening
