@@ -4,7 +4,10 @@ import { RevolverOutcome } from './revolver.js';
 export type PlayerId = string;
 
 export type LifeStatus = 'ALIVE' | 'ELIMINATED';
-export type RoundStatus = 'WITH_CARDS' | 'EMPTY_SAFE';
+export type RoundStatus =
+  | 'WITH_CARDS'
+  | 'EMPTY_PENDING_CHALLENGE'
+  | 'EMPTY_SAFE';
 
 export interface RevolverState {
   readonly sequence: readonly RevolverOutcome[];
