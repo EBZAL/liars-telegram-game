@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-010-FORCED-CALL-PLAY-ORCHESTRATION
-active_task: null
+active_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -61,6 +61,7 @@ stages:
       - T-008-NEXT-ROUND-INITIALIZATION
       - T-009-CALL-LIAR-MATCH-TRANSITION
       - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -746,6 +747,75 @@ tasks:
       - AC-42: Full regression
       - AC-43: Tooling
       - AC-44: Scope / Evidence / Control lifecycle
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-011-SYSTEM-TIMEOUT-AUTO-PLAY:
+    title: System Timeout Auto Play
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the pure authoritative Core effect of SYSTEM_TIMEOUT when the turn deadline expires with no committed PLAY/CALL action, choosing exactly one random Card from the current Player's Hand via unbiased injected RandomSource, automatically executing that one-card PLAY via applyPlayCardsCommand, and preserving downstream automatic forced-CALL, Challenge, Shot, and Winner behavior.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+    acceptance_criteria:
+      - AC-01: SYSTEM_TIMEOUT Core API
+      - AC-02: No actor input
+      - AC-03: No selection input
+      - AC-04: Active Match required
+      - AC-05: Valid current Player
+      - AC-06: CALL-only invariant
+      - AC-07: PLAY legality
+      - AC-08: Authoritative Hand
+      - AC-09: One direct random index
+      - AC-10: No filtering/bias
+      - AC-11: Exactly one Card
+      - AC-12: Reuse T-010
+      - AC-13: Same RandomSource
+      - AC-14: T29 selected Card
+      - AC-15: T29 Hand decrease
+      - AC-16: T29 Claim count
+      - AC-17: T29 Claim rank
+      - AC-18: T29 challengeability
+      - AC-19: T30 one-card invariant
+      - AC-20: T31 truthful selectable
+      - AC-21: T31 Lie selectable
+      - AC-22: T31 Joker selectable
+      - AC-23: Random max
+      - AC-24: Ordinary RNG count
+      - AC-25: First-turn timeout
+      - AC-26: Later optional-CALL timeout
+      - AC-27: T12 preservation
+      - AC-28: Forced CALL integration
+      - AC-29: Newest Play target
+      - AC-30: Forced BLANK continuation
+      - AC-31: Forced LETHAL/T26
+      - AC-32: Winner no reset
+      - AC-33: Metadata retention
+      - AC-34: Single authoritative state
+      - AC-35: No duplicate PLAY
+      - AC-36: No duplicate Challenge/Shot
+      - AC-37: Prototype safety
+      - AC-38: Input immutability
+      - AC-39: Determinism
+      - AC-40: No forbidden nondeterminism
+      - AC-41: No timer/Room scope
+      - AC-42: Full regression
+      - AC-43: Tooling
+      - AC-44: Evidence completeness
+      - AC-45: Control lifecycle
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
