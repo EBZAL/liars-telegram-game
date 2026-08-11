@@ -13,4 +13,6 @@ export * from './roulette-rules.js';
 export * from './round-transition.js';
 export * from './call-liar-transition.js';
 export * from './play-command-transition.js';
+export * from './system-timeout-transition.js';
+
 
