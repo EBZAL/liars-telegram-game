@@ -4,7 +4,7 @@
 STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
-T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+T-012-TWO-PLAYER-FLOW-HARDENING
 
 **Current Active Task:**
 None
@@ -423,6 +423,98 @@ None
 - Revision/dedupe, Pause/Resume, persistence, networking and Telegram/UI remain outside Core.
 - Original-PC exact timeout auto-selection algorithm remains SOURCE_GAP.
 - Exactly one random authoritative Hand Card is the explicit Project Override.
+- T-012 Two-Player Flow Hardening VERIFIED.
+- Dedicated heads-up scenario hardening suite established.
+- Task remained test-only: YES
+- Product defect discovered: NONE
+- 2-player real initialization:
+  - exactly 5 Cards per Player
+  - exactly 10 undealt
+  - full canonical 20-card partition
+  - 6 KING / 6 QUEEN / 6 ACE / 2 JOKER
+  - unique Card IDs
+- Canonical pre-final 1v1 fixture hardening:
+  - 20 authoritative Cards conserved
+  - hands 1 + 1
+  - centralPile 8
+  - undealt 10
+  - coherent unresolved previousPlay
+  - previousPlay Card references centralPile
+  - fixed canonical deck composition preserved
+- Ordinary heads-up command flow:
+  - turns alternate cyclically
+  - no forced CALL while both retain Cards
+- Empty Hand:
+  - empty Hand alone never wins Match
+  - final-card outcome proceeds through forced CALL / Challenge / Shot
+- Automatic final-card CALL:
+  - opponent becomes forced caller
+  - forced Challenge targets newly created final Play
+- Four canonical matrix branches VERIFIED:
+  - Truth + Blank
+  - Lie + Blank
+  - Truth + Lethal
+  - Lie + Lethal
+- Truth branch: caller loses Challenge/shoots
+- Lie branch: accused loses Challenge/shoots
+- BLANK continuation:
+  - exactly one Shot
+  - shooter nextShotIndex advances exactly one
+  - surviving round loser starts next Round
+  - both Living Players receive fresh 5-card Hands
+  - exactly 10 undealt
+  - new Round partition remains 20 unique Cards
+  - post-reset composition remains 6K/6Q/6A/2J
+  - centralPile resets
+  - previousPlay resets
+  - metadata from resolved command remains returned
+- Revolver persistence:
+  - revolver sequences persist across Round reset
+  - non-shooter index unchanged
+  - shooter index persists advanced
+- Cross-Round same-Player progression:
+  - Player B loses/shoots at index 0 in Round 1
+  - survives BLANK and enters next Round at index 1
+  - Player B later loses again through canonical command flow
+  - second Shot consumes index 1
+  - nextShotIndex becomes 2
+  - no revolver reset or reshuffle
+- Play identity:
+  - playSequence remains monotonic across Round boundary
+- LETHAL:
+  - shooter eliminated
+  - exactly one Living Player remains
+  - Match FINISHED immediately
+  - correct winnerId
+  - no new Round
+  - no fresh deal
+  - no next-Round RNG
+- AC-26 interpretation:
+  - eliminated Player receives no fresh Hand because no Round reset occurs
+  - terminal winner contract was not changed merely to clear pre-existing Hand contents
+- FINISHED guards:
+  - subsequent applyPlayCardsCommand rejected
+  - subsequent applySystemTimeout rejected before RNG
+- 1v1 SYSTEM_TIMEOUT integration:
+  - ordinary timeout auto-plays one Card
+  - final-card timeout flows into automatic forced CALL
+- Input immutability VERIFIED for:
+  - ordinary PLAY
+  - forced final-card PLAY
+  - SYSTEM_TIMEOUT
+- Determinism VERIFIED for:
+  - ordinary heads-up flow
+  - forced terminal MATCH_WON flow
+- Prototype safety:
+  - __proto__ PlayerId regression PASS
+- Latest verification:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 204 tests across 12 test files
+- No dependency change.
+- No product source change.
+- No forbidden nondeterminism.
 
 **STAGE-02 — Canonical Core Engine:**
 COMPLETE
@@ -447,11 +539,18 @@ No currently evidenced unresolved pure-Core GAME_RULES ambiguity remains.
 
 Core deterministic-transition requirement PASS.
 
-**Latest Full Regression Evidence:**
-npm ci PASS
-npm run typecheck PASS
-npm test PASS
-189 tests
+**STAGE-03 — Player-Count & Rule Hardening:**
+IN_PROGRESS
+
+**Stage Exit Gate:**
+NOT_EVALUATED
+
+**Stage-03 Progress:**
+- T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED (2-player hardening complete)
+- 3-player dedicated hardening not yet completed.
+- 4-player dedicated hardening not yet completed.
+- selected-but-unconfirmed timeout-policy Stage-03 gate not yet independently hardened.
+- invariant/property Stage-03 gate not yet completed.
 
 **Boundary Wording:**
 The Core implements the SYSTEM_TIMEOUT effect,
@@ -492,6 +591,6 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this Stage-02 completion State Sync, then inspect STAGE-03 goals and current repository state, select the smallest bounded Player-Count & Rule Hardening task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.
+Project Architect must re-read this verification State Sync, then inspect the remaining STAGE-03 exit-gate gaps and select the smallest next bounded hardening task. No next implementation task may begin before Architect Consistency/Risk Gate approval.
 
 

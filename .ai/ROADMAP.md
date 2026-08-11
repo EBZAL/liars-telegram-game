@@ -171,9 +171,35 @@
 - actual 30-second deadline scheduling, TURN_DEADLINE alarms, stale-alarm handling, late-command arbitration, revision/dedupe, Pause/Resume, networking and persistence remain later Room/Application work and are not Stage-02 Core gaps
 
 ## STAGE-03 — Player-Count & Rule Hardening
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Goals**: exhaustive 2/3/4-player flows, timeout behavior, edge/invariant testing
 **Exit Gate**: 2-player suite PASS; 3-player suite PASS; 4-player suite PASS; selected-but-unconfirmed timeout policy PASS; invariant/property tests PASS.
+**Progress**:
+- T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED
+- dedicated 2-player scenario suite PASS
+- real 2-player 5/5/10 initialization and full deck partition verified
+- ordinary cyclic heads-up turns verified
+- Empty Hand confirmed not to be a win condition
+- final-card automatic forced CALL verified
+- canonical Truth/Lie × Blank/Lethal matrix verified
+- canonical 20-card pre-final fixtures established for heads-up hardening
+- post-BLANK 5/5/10 deck reset and 6K/6Q/6A/2J composition verified
+- surviving loser next-Round starter verified
+- persistent Revolver behavior verified
+- same Player second Shot across a Round boundary verified
+- monotonic Play identity across Rounds verified
+- immediate LETHAL winner/no reset/no next-Round RNG verified
+- FINISHED command guards verified
+- ordinary and final-card SYSTEM_TIMEOUT heads-up integration verified
+- representative immutability verified
+- ordinary and forced-terminal determinism verified
+- __proto__ heads-up regression verified
+- T-012 remained test-only; no product defect discovered
+- latest full regression: 204 tests / 12 test files PASS
+- 3-player suite remains pending
+- 4-player suite remains pending
+- selected-but-unconfirmed timeout-policy hardening remains pending
+- invariant/property testing remains pending
 
 ## STAGE-04 — Authoritative Multiplayer
 **Status**: NOT_STARTED

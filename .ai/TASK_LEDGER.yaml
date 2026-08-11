@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-03
-last_verified_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
-active_task: T-012-TWO-PLAYER-FLOW-HARDENING
+last_verified_task: T-012-TWO-PLAYER-FLOW-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -856,10 +856,18 @@ tasks:
   T-012-TWO-PLAYER-FLOW-HARDENING:
     title: Two-Player Flow Hardening
     stage: STAGE-03
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 7f906082d0581ebb3fd59143d0c2ab7a1f2749a6
-    evidence:
-      - .ai/evidence/T-012-TWO-PLAYER-FLOW-HARDENING.md
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 7f906082d0581ebb3fd59143d0c2ab7a1f2749a6
+      evidence:
+        - .ai/evidence/T-012-TWO-PLAYER-FLOW-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Create a dedicated 2-player canonical flow hardening suite that verifies the already-established Game Core behaves coherently across complete heads-up scenarios.
