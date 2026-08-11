@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-010-FORCED-CALL-PLAY-ORCHESTRATION
+T-011-SYSTEM-TIMEOUT-AUTO-PLAY
 
 **Current Active Task:**
 None
@@ -342,7 +342,87 @@ None
 - input MatchState/requestedCardIds not mutated
 - transition deterministic
 - npm ci PASS, typecheck PASS, 171-test suite PASS
-- SYSTEM_TIMEOUT is not implemented. T29 no-selection timeout auto-Play remains unimplemented; T30 exactly-one-card timeout behavior remains unimplemented; T31 unbiased timeout random-selection behavior remains unimplemented; No authoritative 30-second timer/deadline orchestration exists yet in Core; Room command envelope, actionId, expectedRevision, turnId, Durable Object, SQLite persistence, alarms, Pause/Resume, network transport, recipient projections, Telegram and UI remain outside this task.
+- authoritative pure SYSTEM_TIMEOUT Core effect established via applySystemTimeout
+- SYSTEM_TIMEOUT authority:
+  - actor derived from round.currentPlayerId
+  - no actor input
+  - no selected-card input
+  - no UI/draft selection input
+- local selected-but-unconfirmed cards remain outside Engine authority
+- current Player must:
+  - exist
+  - be ALIVE
+  - be WITH_CARDS
+  - have non-empty authoritative Hand
+- malformed current Player states reject before RNG:
+  - missing Player
+  - ELIMINATED Player
+  - empty Hand
+  - wrong RoundStatus
+- mandatory CALL-only state rejects SYSTEM_TIMEOUT auto-PLAY before RNG consumption
+- PLAY_CARDS must be authoritative legal action before fallback selection
+- timeout fallback selection:
+  - exactly one direct random index: random.nextInt(currentHand.length)
+  - no rank/truth/Joker filtering
+  - no weighted selection
+  - exactly one authoritative Hand Card
+- same injected RandomSource is forwarded into verified applyPlayCardsCommand
+- T29 verified:
+  - no committed action timeout effect
+  - exactly one random current-Hand Card auto-played
+  - ordinary 5-card Hand decreases to 4
+  - claim count = 1
+  - claim rank = tableRank
+  - timeout Play remains normally challengeable
+- T30 verified:
+  - timeout never auto-plays multiple Cards
+- T31 verified:
+  - truthful Card selectable by index
+  - lying Card selectable by index
+  - Joker selectable by index
+  - no intentional truth/Joker bias
+- first-Turn timeout one-card PLAY verified
+- later ordinary Turn where PLAY and CALL are both legal:
+  - timeout fallback chooses one-card PLAY
+  - does not automatically choose CALL_LIAR
+- T12 semantics preserved through timeout PLAY:
+  - old Challenge Window closes
+  - prior EMPTY_PENDING_CHALLENGE Player becomes EMPTY_SAFE
+  - new timeout Play becomes previousPlay
+- timeout final-card PLAY integrates through T-010:
+  - automatic forced CALL
+  - newest timeout-created Play challenged
+  - exactly one Challenge
+  - exactly one Roulette Shot
+- forced BLANK path:
+  - Shot index advances exactly one
+  - Match continues
+  - canonical next Round starts
+- forced LETHAL / T26 path:
+  - Match FINISHED immediately
+  - sole Living winner
+  - no new Round
+  - total RNG calls = exactly 1 when Hand size is 1 (timeout index selection only)
+  - no next-Round RNG consumed
+- timeout metadata retained across downstream Round Reset:
+  - timedOutPlayerId
+  - autoPlayedCardId
+  - createdPlay
+  - forcedCall challenge
+  - forcedCall shot
+  - terminal/winner metadata
+- prototype-safe __proto__ current Player path verified
+- input MatchState remains immutable
+- transition remains deterministic
+- npm ci PASS, typecheck PASS, 189 total tests PASS
+- Core does NOT determine whether 30 seconds elapsed.
+- No clock, deadline, remaining-time calculation, alarm scheduling or alarm generation exists in T-011.
+- Room/Application layer must later validate that the authoritative deadline is due before invoking SYSTEM_TIMEOUT.
+- Late-command arbitration remains unimplemented at Room layer.
+- TURN_DEADLINE alarm handling remains unimplemented.
+- Revision/dedupe, Pause/Resume, persistence, networking and Telegram/UI remain outside Core.
+- Original-PC exact timeout auto-selection algorithm remains SOURCE_GAP.
+- Exactly one random authoritative Hand Card is the explicit Project Override.
 
 **Active Blockers:**
 None
@@ -356,9 +436,6 @@ None currently evidenced.
 * realtime concurrency
 * timeout/reconnect races
 * Telegram identity/trust boundary
-
-**Next Approved Action:**
-Project Architect must re-read this State Sync commit, then determine the remaining STAGE-02 canonical Core gaps, select the next smallest bounded task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.
 * hidden information leakage
 * free-tier operational constraints
 
@@ -375,4 +452,5 @@ Project Architect must re-read this State Sync commit, then determine the remain
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this State Sync commit, then select the next smallest bounded STAGE-02 task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.
+Project Architect must re-read this State Sync commit and perform the STAGE-02 Exit Gate assessment against the canonical GAME_RULES T01–T31 coverage, Core determinism, architecture boundaries, and any remaining unresolved Core-rule gap. No next implementation task may begin unless the Architect first determines that additional Stage-02 work is required and passes a new Consistency Gate.
+

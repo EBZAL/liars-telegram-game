@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-010-FORCED-CALL-PLAY-ORCHESTRATION
-active_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+last_verified_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -755,8 +755,18 @@ tasks:
   T-011-SYSTEM-TIMEOUT-AUTO-PLAY:
     title: System Timeout Auto Play
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: fae82d03259d8d95133b54ec88ea579c756f27dc
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: fae82d03259d8d95133b54ec88ea579c756f27dc
+      evidence:
+        - .ai/evidence/T-011-SYSTEM-TIMEOUT-AUTO-PLAY.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the pure authoritative Core effect of SYSTEM_TIMEOUT when the turn deadline expires with no committed PLAY/CALL action, choosing exactly one random Card from the current Player's Hand via unbiased injected RandomSource, automatically executing that one-card PLAY via applyPlayCardsCommand, and preserving downstream automatic forced-CALL, Challenge, Shot, and Winner behavior.

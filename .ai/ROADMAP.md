@@ -129,10 +129,33 @@
 - PLAY/Challenge/Shot metadata retained after automatic Round reset
 - single authoritative command result MatchState established
 - prototype-safe participant behavior retained
-- SYSTEM_TIMEOUT remains unimplemented
-- T29/T30/T31 remain unimplemented
-- timer/deadline orchestration remains unimplemented
-- Room/network/persistence/projection/Telegram/UI remain future work
+- T-011-SYSTEM-TIMEOUT-AUTO-PLAY VERIFIED
+- pure authoritative SYSTEM_TIMEOUT Core effect established
+- timeout actor derived from authoritative currentPlayerId
+- local pre-confirm selection ignored by Core authority
+- mandatory CALL-only timeout auto-PLAY rejected
+- exact one-card random authoritative-Hand fallback established
+- timeout RNG begins with nextInt(currentHand.length)
+- no truth/Lie/Joker selection bias introduced
+- T29 verified
+- T30 verified
+- T31 verified
+- first-turn timeout fallback verified
+- ordinary later PLAY/CALL turn timeout chooses one-card PLAY
+- T12 semantics preserved through timeout PLAY
+- timeout final-card PLAY reuses T-010 forced-CALL orchestration
+- timeout forced BLANK continuation verified
+- timeout forced LETHAL/T26 winner verified
+- exactly-one-Shot integration verified
+- winner path proves zero next-Round RNG
+- malformed current Player cases reject before RNG
+- prototype-safe timeout path verified
+- Core timeout effect is deterministic
+- Core contains no deadline/clock/alarm implementation
+- authoritative 30-second scheduling remains Room/Application responsibility
+- TURN_DEADLINE alarm, stale alarm handling and late-command arbitration remain Stage-04/runtime work
+- original-PC exact auto-selection algorithm remains Source Gap
+- project one-random-card override implemented
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening
