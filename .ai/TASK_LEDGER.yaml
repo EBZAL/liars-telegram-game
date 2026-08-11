@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-03
 last_verified_task: T-013-THREE-PLAYER-FLOW-HARDENING
-active_task: null
+active_task: T-014-FOUR-PLAYER-FLOW-HARDENING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -92,6 +92,7 @@ stages:
     required_tasks:
       - T-012-TWO-PLAYER-FLOW-HARDENING
       - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1010,6 +1011,87 @@ tasks:
       - AC-46: npm ci / typecheck / test all PASS.
       - AC-47: Evidence accurately maps all ACs and any product defect.
       - AC-48: Control lifecycle remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-014-FOUR-PLAYER-FLOW-HARDENING:
+    title: Four-Player Flow Hardening
+    stage: STAGE-03
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Create a dedicated 4-player canonical flow hardening suite proving that the already-VERIFIED pure Game Core composes correctly across real 4-player initialization, 20 dealt / 0 undealt cards, four-seat cyclic turn order, multiple EMPTY_SAFE seat skipping, latest-Play challenge targeting, 4-player sole-holder mandatory CALL, Truth/Lie x Blank/Lethal forced-resolution matrix, 4-player Blank Round reset, 4 -> 3 Living transition after first elimination, 4 -> 3 deck-count transition, eliminated-seat skipping, round-starter fallback, and 4-player SYSTEM_TIMEOUT integration.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+    acceptance_criteria:
+      - AC-01: Dedicated four-player scenario suite exists.
+      - AC-02: Real 4-player initialization verifies 5/5/5/5.
+      - AC-03: Four-player initialization has zero undealt Cards.
+      - AC-04: Initial 20-card unique 6K/6Q/6A/2J partition verified.
+      - AC-05: Ordinary four-seat cyclic PLAY flow P1->P2->P3->P4->P1 verified.
+      - AC-06: Canonical multi-EMPTY_SAFE 20-card fixture established.
+      - AC-07: Multiple EMPTY_SAFE seats are skipped through eligibility.
+      - AC-08: Fixed seatOrder remains unchanged while empty seats are skipped.
+      - AC-09: Latest Play remains correct Challenge target across skipped empty seat.
+      - AC-10: Canonical four-player sole-holder forced-CALL fixture established.
+      - AC-11: Sole remaining card-holder D automatically CALLs C final Play.
+      - AC-12: Forced CALL targets C newly-created final Play.
+      - AC-13: Truth + Blank four-player branch verified.
+      - AC-14: Lie + Blank four-player branch verified.
+      - AC-15: Truth + Lethal four-player branch verified.
+      - AC-16: Lie + Lethal four-player branch verified.
+      - AC-17: All four automatic branches resolve exactly one Shot-index advance.
+      - AC-18: Four-player Blank reset deals 5/5/5/5 with zero undealt.
+      - AC-19: Four-player Blank reset preserves canonical 20-card composition.
+      - AC-20: Previous EMPTY_SAFE Players return WITH_CARDS with five Cards.
+      - AC-21: Surviving round loser starts next Round after Blank.
+      - AC-22: All Revolver sequences persist across Blank Round reset.
+      - AC-23: Only shooter Revolver index advances on Blank.
+      - AC-24: First lethal elimination from four Players does not finish Match.
+      - AC-25: Truth+Lethal D elimination yields A/B/C Living.
+      - AC-26: D-elimination next Round deals 5/5/5 with five undealt.
+      - AC-27: D-elimination 4->3 Round preserves 20 unique 6K/6Q/6A/2J Cards.
+      - AC-28: Eliminated D receives no fresh Hand.
+      - AC-29: Eliminated D starter fallback wraps to A.
+      - AC-30: Lie+Lethal C elimination yields A/B/D Living.
+      - AC-31: C-elimination next Round deals 5/5/5 with five undealt.
+      - AC-32: Eliminated C receives no fresh Hand.
+      - AC-33: Eliminated C starter fallback resolves to D.
+      - AC-34: Post-4->3 command flow actually skips eliminated seat in fixed four-seat cycle.
+      - AC-35: Fixed original four-seat seatOrder persists after elimination.
+      - AC-36: Eliminated shooter Revolver sequence persists and index advances once.
+      - AC-37: Living Player Revolver sequences/indices remain unchanged on lethal reset.
+      - AC-38: First actual next-Round PLAY receives a later unique Play ID.
+      - AC-39: Forced branch metadata remains returned after Round reset.
+      - AC-40: Ordinary four-player SYSTEM_TIMEOUT one-card integration verified.
+      - AC-41: Final-card four-player SYSTEM_TIMEOUT triggers automatic forced CALL.
+      - AC-42: Timeout-created Play is the forced Challenge target.
+      - AC-43: No selected-but-unconfirmed/UI selection model introduced.
+      - AC-44: Representative input immutability verified.
+      - AC-45: Ordinary / forced Blank / 4->3 Lethal deterministic equivalence verified.
+      - AC-46: __proto__ four-player regression verified.
+      - AC-47: Handcrafted fixtures conserve full canonical 20-card state.
+      - AC-48: No Room/network/projection/deadline/UI scope introduced.
+      - AC-49: No forbidden nondeterminism introduced.
+      - AC-50: Task remains test-only unless PRODUCT_DEFECT_DISCOVERED causes Architect re-decision.
+      - AC-51: Full existing regression suite passes.
+      - AC-52: npm ci / typecheck / test all PASS.
+      - AC-53: Evidence accurately maps every AC and actual verification totals.
+      - AC-54: Control lifecycle remains READY->IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
