@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-03
 last_verified_task: T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
-active_task: null
+active_task: T-016-INVARIANT-PROPERTY-HARDENING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -94,6 +94,7 @@ stages:
       - T-013-THREE-PLAYER-FLOW-HARDENING
       - T-014-FOUR-PLAYER-FLOW-HARDENING
       - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-016-INVARIANT-PROPERTY-HARDENING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1184,6 +1185,106 @@ tasks:
       - AC-39: Evidence distinguishes Core-boundary PASS from future Room/UI implementation.
       - AC-40: Evidence accurately maps all ACs and exact verification totals.
       - AC-41: Control lifecycle remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-016-INVARIANT-PROPERTY-HARDENING:
+    title: Invariant & Property Hardening
+    stage: STAGE-03
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Close the final unresolved STAGE-03 implementation bucket by adding a deterministic, dependency-free Core invariant/property hardening suite verifying structural and behavioral properties across a bounded generated state-space using deterministic seed sweeps, bounded legal-command traces, reusable authoritative-state invariant assertions, exhaustive small-domain combinatorics, and deterministic replay equivalence.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+    acceptance_criteria:
+      - AC-01: Dedicated core-invariants.property.test.ts suite exists.
+      - AC-02: No new testing/runtime dependency is added.
+      - AC-03: Property generation is deterministic and reproducible.
+      - AC-04: No forbidden nondeterministic API is used.
+      - AC-05: Initialization covers player counts 2/3/4 x seeds 0..31.
+      - AC-06: Generated seatOrder is always an exact unique permutation of input IDs.
+      - AC-07: First starter/current Player initialization coherence holds across sweep.
+      - AC-08: Every initialized Living Player receives exactly 5 Cards.
+      - AC-09: Initial undealt count property is 10/5/0 for 2/3/4 Players.
+      - AC-10: Every generated authoritative card partition contains exactly 20 Cards.
+      - AC-11: Every generated authoritative card partition has 20 unique IDs.
+      - AC-12: Every generated authoritative partition is exactly 6K/6Q/6A/2J.
+      - AC-13: Every generated tableRank is KING/QUEEN/ACE.
+      - AC-14: Every initialized Revolver contains exactly 1 LETHAL + 5 BLANK.
+      - AC-15: Every initialized Revolver starts at nextShotIndex 0.
+      - AC-16: Same initialization input + same RNG stream produces deep-equal state.
+      - AC-17: Truth/Lie property exhaustively covers every rank tuple of lengths 1..3 x all Table Ranks.
+      - AC-18: Exhaustive truth property matches every-card Table/Joker predicate.
+      - AC-19: deriveClaim always uses Table Rank.
+      - AC-20: deriveClaim count always equals played Card count.
+      - AC-21: Reusable authoritative-state invariant checker exists.
+      - AC-22: Invariant checker enforces fixed seatOrder and Player identity.
+      - AC-23: Invariant checker enforces 20-card conservation after every successful generated transition.
+      - AC-24: Invariant checker enforces canonical 6K/6Q/6A/2J composition after every successful generated transition.
+      - AC-25: previousPlay IDs/count/claim/card-location coherence is invariant-checked.
+      - AC-26: ALIVE roundStatus/Hand coherence is invariant-checked.
+      - AC-27: IN_PROGRESS current Player is always authoritative turn-eligible.
+      - AC-28: IN_PROGRESS implies winner null and >=2 Living Players.
+      - AC-29: FINISHED implies exactly 1 Living Player and winnerId equals that Player.
+      - AC-30: Fresh Round distribution is invariant-checked for Living counts 2/3/4.
+      - AC-31: Eliminated Players receive no fresh Round Hand.
+      - AC-32: Original Revolver sequence persists across generated traces.
+      - AC-33: Revolver nextShotIndex never decreases.
+      - AC-34: At most one Player Revolver index advances per authoritative command.
+      - AC-35: A Shot advances exactly one index by exactly 1.
+      - AC-36: Generated legal trace sweep covers 2/3/4 Players x seeds 0..15.
+      - AC-37: Each generated trace is bounded to at most 24 authoritative commands.
+      - AC-38: Generated actions derive legality from getAllowedTurnActions.
+      - AC-39: Generated PLAY uses actual distinct authoritative Hand Card IDs.
+      - AC-40: Main trace uses public applyPlayCardsCommand/applyCallLiar command paths.
+      - AC-41: Source MatchState remains immutable for every generated command step.
+      - AC-42: Successful PLAY createdPlay.count equals generated selection size.
+      - AC-43: Successful PLAY claim Rank equals pre-command Table Rank.
+      - AC-44: Successful PLAY removes played Cards from Hand and adds them exactly once to centralPile unless a forced terminal/reset follows.
+      - AC-45: Forced CALL challenge targets the newly-created Play.
+      - AC-46: Every Shot satisfies nextShotIndex = shotIndex + 1.
+      - AC-47: challenge.shooterId always equals challenge.roundLoserId.
+      - AC-48: Play IDs are globally monotonic across generated traces and Round resets.
+      - AC-49: playSequence never decreases.
+      - AC-50: Fresh-Round undealt count always equals 20 - (LivingCount x 5).
+      - AC-51: Timeout property sweep covers every authoritative initial Hand index 0..4.
+      - AC-52: Timeout autoPlayedCardId equals Card at injected RNG index.
+      - AC-53: Timeout always creates exactly one-card Play with Table Rank claim.
+      - AC-54: Timeout actor always equals authoritative currentPlayerId.
+      - AC-55: Ordinary timeout consumes exactly one card-selection RNG call with max=current Hand size.
+      - AC-56: Timeout source state remains immutable.
+      - AC-57: Complete deterministic traces replay to deep-equal final state.
+      - AC-58: Complete deterministic traces replay to deep-equal authoritative event log.
+      - AC-59: Prototype-safe generated trace covers __proto__ and constructor Player IDs.
+      - AC-60: players dictionary remains null-prototype through prototype-safe trace.
+      - AC-61: Every GAME_RULES §24 invariant 1–33 is classified in Evidence.
+      - AC-62: Invariant 29 alone is STAGE04_DEFERRED and explicitly retains mandatory T27 work.
+      - AC-63: No other pure-Core invariant is incorrectly deferred.
+      - AC-64: Prior T-012/T-013/T-014/T-015 scenario coverage is not weakened or replaced.
+      - AC-65: No Room/network/deadline/revision/UI/projection scope is introduced.
+      - AC-66: No product source file changes unless task stops for PRODUCT_DEFECT_DISCOVERED.
+      - AC-67: npm ci passes with zero unexpected tracked-file impact.
+      - AC-68: npm run typecheck passes.
+      - AC-69: Full npm test regression passes.
+      - AC-70: Evidence records exact sweep sizes, transition totals, test totals, and invariant matrix.
+      - AC-71: Task remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
