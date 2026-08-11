@@ -12,3 +12,5 @@ export * from './challenge-rules.js';
 export * from './roulette-rules.js';
 export * from './round-transition.js';
 export * from './call-liar-transition.js';
+export * from './play-command-transition.js';
+
