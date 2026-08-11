@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-03
-last_verified_task: T-014-FOUR-PLAYER-FLOW-HARDENING
-active_task: T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+last_verified_task: T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1112,8 +1112,18 @@ tasks:
   T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING:
     title: Selected Unconfirmed Timeout Hardening
     stage: STAGE-03
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 9c92a69a562dbb8a89eecd3d2e6cb056a7cd80ea
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 9c92a69a562dbb8a89eecd3d2e6cb056a7cd80ea
+      evidence:
+        - .ai/evidence/T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Harden and prove the approved architectural boundary for selected-but-unconfirmed cards at timeout, proving that local pre-confirm card highlighting/selection is Local Presentation State only, invisible to the pure Core, ignored during SYSTEM_TIMEOUT, and that confirmed PLAY_CARDS remains the sole authority boundary where explicit card IDs become authoritative.

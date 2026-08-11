@@ -251,11 +251,32 @@
 - ordinary / Blank / lethal determinism verified
 - __proto__ four-player regression verified
 - T-014 remained test-only; no product defect discovered
-- latest full regression: 231 tests / 14 files PASS
+- T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING VERIFIED
+- selected-but-unconfirmed timeout Core authority boundary PASS
+- applySystemTimeout exact MatchState + RandomSource contract verified
+- runtime arity 2 verified
+- exhaustive 8-key state-schema exclusion verified across MatchState/RoundState/PlayerState
+- local pre-confirm selection confirmed non-authoritative
+- same authoritative state + same RNG unaffected by different local highlights
+- local single-card selection cannot override timeout RNG
+- local multi-selection cannot cause multi-card timeout PLAY
+- Truth/Lie/Joker local preference cannot bias timeout selection
+- canonical 20-card Truth/Lie/Joker boundary fixture verified
+- current timeout Player derived from authoritative currentPlayerId
+- local-selection mutation isolation verified
+- timeout source immutability verified
+- ordinary one-call RNG selection behavior verified
+- confirmed PLAY_CARDS explicit-card authority boundary verified
+- no selection/draft Core transition introduced
+- no authoritative draft/selection state introduced
+- no Room/revision/deadline implementation introduced
+- no UI implementation introduced
+- T-015 remained test-only; no product defect discovered
+- latest full regression: 242 tests / 15 test files PASS
 - 2-player suite COMPLETE / VERIFIED
 - 3-player suite COMPLETE / VERIFIED
 - 4-player suite COMPLETE / VERIFIED
-- selected-but-unconfirmed timeout-policy hardening remains pending
+- selected-but-unconfirmed timeout policy COMPLETE / VERIFIED
 - invariant/property testing remains pending
 
 ## STAGE-04 — Authoritative Multiplayer

@@ -4,7 +4,7 @@
 STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
-T-014-FOUR-PLAYER-FLOW-HARDENING
+T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
 
 **Current Active Task:**
 None
@@ -752,11 +752,90 @@ None
   - npm run typecheck PASS
   - npm test PASS
   - 231 tests across 14 test files
-  - four-player-flow.test.ts = 13 tests
-- No dependency change.
+  - No dependency change.
 - No product source change.
 - No forbidden nondeterminism.
 - No Architecture change.
+- T-015 Selected-Unconfirmed Timeout Hardening VERIFIED.
+- Task remained test-only: YES
+- Product defect discovered: NONE
+- Architecture change required: NO
+- STAGE-03 Core selected-but-unconfirmed authority boundary: PASS
+- applySystemTimeout authority contract:
+  - exact type inputs remain MatchState + RandomSource
+  - runtime arity remains 2
+  - no actor/card/local-selection argument exists
+- Authoritative Core state schema:
+  - MatchState contains none of the 8 prohibited local-selection keys
+  - RoundState contains none of the 8 prohibited local-selection keys
+  - PlayerState contains none of the 8 prohibited local-selection keys
+- Prohibited keys exhaustively locked:
+  - selectedCards
+  - selectedCardIds
+  - selectedButUnconfirmedCards
+  - highlightedCards
+  - highlightedCardIds
+  - draftSelection
+  - pendingSelection
+  - localSelection
+- Pre-confirm card selection:
+  - remains Local Presentation State only
+  - does not enter MatchState
+  - does not create a Core transition
+  - does not become authoritative before PLAY_CARDS confirmation
+- Timeout invariance:
+  - equivalent authoritative states
+  - equivalent RNG
+  - different local-only highlights
+  produce deep-equal SYSTEM_TIMEOUT results
+- Local selection cannot:
+  - override RNG-selected Card
+  - bypass RNG
+  - make timeout play multiple Cards
+  - alter claim count
+  - bias Truth selection
+  - bias Lie selection
+  - bias Joker selection
+  - replace timedOutPlayerId
+- SYSTEM_TIMEOUT:
+  - derives actor from state.round.currentPlayerId
+  - chooses Card from authoritative current Hand
+  - uses injected RandomSource
+  - ordinary timeout consumes exactly one card-selection RNG call
+  - RNG max equals authoritative Hand size
+  - createdPlay count remains 1
+  - createdPlay cardIds length remains 1
+- Canonical Truth/Lie/Joker boundary fixture:
+  - full authoritative 20-card partition
+  - 20 unique Cards
+  - 6 KING / 6 QUEEN / 6 ACE / 2 JOKER
+  - A Hand = KING + QUEEN + JOKER
+  - B retains Card
+  - centralPile = 6
+  - undealt = 10
+  - coherent unresolved previousPlay owned by B
+  - same RNG result remains unaffected by local Truth/Lie/Joker preference
+- Confirmed PLAY_CARDS authority boundary:
+  - local highlighting alone has no authoritative effect
+  - confirmed PLAY_CARDS with explicit Card X authoritatively plays X
+  - unconfirmed local X does not cause SYSTEM_TIMEOUT to use X when RNG chooses Y
+  - no SELECT/HIGHLIGHT/DRAFT Core command was introduced
+- Immutability:
+  - local-selection mutation leaves MatchState unchanged
+  - SYSTEM_TIMEOUT leaves source MatchState unchanged
+- End-to-end UI selection: NOT IMPLEMENTED HERE
+- Room deadline/revision behavior: NOT IMPLEMENTED HERE
+- No Room revision/dedupe/deadline implementation added.
+- No UI implementation added.
+- No dependency change.
+- No product source change.
+- No forbidden nondeterminism.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 242 tests across 15 test files
+  - T-015 suite = 11 tests
 
 **STAGE-02 — Canonical Core Engine:**
 COMPLETE
@@ -791,7 +870,7 @@ NOT_EVALUATED
 - 2-player dedicated hardening: VERIFIED / COMPLETE
 - 3-player dedicated hardening: VERIFIED / COMPLETE
 - 4-player dedicated hardening: VERIFIED / COMPLETE
-- selected-but-unconfirmed timeout-policy hardening: PENDING
+- selected-but-unconfirmed timeout-policy hardening: VERIFIED / COMPLETE
 - invariant/property testing: PENDING
 
 **Boundary Wording:**
@@ -833,6 +912,6 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this T-014 verification State Sync and inspect the two remaining STAGE-03 Exit Gate gaps: selected-but-unconfirmed timeout-policy hardening and invariant/property testing. The Architect must select the smallest bounded next task, determine Workflow Profile/Risk, run the Consistency Gate, and only after PASS issue exactly one Executor prompt. No future task is pre-authorized by this State Sync.
+Project Architect must re-read this T-015 verification State Sync. After successful reconciliation, only the invariant/property testing bucket remains unresolved in STAGE-03. The Architect must independently derive the smallest bounded invariant/property hardening task, determine Workflow Profile/Risk, run the Consistency Gate, and only after PASS issue one Executor prompt. No future task is pre-authorized by this State Sync.
 
 
