@@ -1193,7 +1193,8 @@ tasks:
   T-016-INVARIANT-PROPERTY-HARDENING:
     title: Invariant & Property Hardening
     stage: STAGE-03
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: b73e023dd15ee272fb491810ce1964cb382782f6
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Close the final unresolved STAGE-03 implementation bucket by adding a deterministic, dependency-free Core invariant/property hardening suite verifying structural and behavioral properties across a bounded generated state-space using deterministic seed sweeps, bounded legal-command traces, reusable authoritative-state invariant assertions, exhaustive small-domain combinatorics, and deterministic replay equivalence.
