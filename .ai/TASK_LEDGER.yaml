@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-008-NEXT-ROUND-INITIALIZATION
-active_task: T-009-CALL-LIAR-MATCH-TRANSITION
+last_verified_task: T-009-CALL-LIAR-MATCH-TRANSITION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -590,8 +590,18 @@ tasks:
   T-009-CALL-LIAR-MATCH-TRANSITION:
     title: Call Liar Match Transition
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: e17b13a76430e474a6eab1a5793a9043865dcafd
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: e17b13a76430e474a6eab1a5793a9043865dcafd
+      evidence:
+        - .ai/evidence/T-009-CALL-LIAR-MATCH-TRANSITION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the authoritative stateful CALL_LIAR Match transition by atomically composing verified primitives

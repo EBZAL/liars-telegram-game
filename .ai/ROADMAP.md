@@ -92,11 +92,31 @@
 - previousPlay / centralPile Round cleanup established
 - match-wide playSequence continuity across Round reset established
 - persistent Revolver state across Round reset established
-- one-Living next-Round creation rejected pending winner resolution
-- stateful CALL_LIAR integration remains unimplemented
-- previousPlay.resolved persistence remains unimplemented
-- Challenge → Shot → Winner/New-Round atomic transition remains unimplemented
-- T26 winner flow remains unimplemented
+- T-009-CALL-LIAR-MATCH-TRANSITION VERIFIED
+- Core IN_PROGRESS / FINISHED Match lifecycle established
+- authoritative stateful CALL_LIAR transition established
+- Challenge → Shot → Next-Round integration established
+- previousPlay resolved lifecycle integrated
+- shooter == roundLoser invariant enforced
+- T15 correct-challenge path integrated
+- T16 incorrect-challenge path integrated
+- T17 BLANK progression integrated
+- T18 LETHAL elimination integrated
+- T20 surviving-loser next-Round starter integrated
+- T21 eliminated-loser fallback starter integrated
+- T26 immediate last-Living winner implemented
+- winner branch prevents creation of another Round
+- winner branch consumes no next-Round randomness
+- FINISHED Core Match rejects subsequent gameplay transitions
+- Challenge/Shot resolution metadata survives Round Reset
+- 1v1 mandatory-caller stateful CALL execution verified
+- 3-player mandatory-caller stateful CALL execution verified
+- automatic post-PLAY forced CALL dispatch remains unimplemented
+- T13/T14 automatic orchestration remains unimplemented
+- SYSTEM_TIMEOUT remains unimplemented
+- T29/T30/T31 remain unimplemented
+- Room MATCH_FINISHED remains outside Core and unimplemented
+- networking/persistence/projection/events remain future work
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening

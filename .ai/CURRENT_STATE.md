@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-008-NEXT-ROUND-INITIALIZATION
+T-009-CALL-LIAR-MATCH-TRANSITION
 
 **Current Active Task:**
 None
@@ -233,8 +233,50 @@ None
 - __proto__ Player ID remains supported
 - input state is not mutated
 - transition is deterministic
-- npm ci / typecheck / 137-test suite PASS
-- T20/T21/T22 and T28 next-Round semantics are verified (transition assumes Challenge and Shot were already resolved; T26 winner determination and atomic stateful CALL_LIAR → Challenge → Shot → Winner/New-Round integration remain unimplemented)
+- Core Match lifecycle now supports IN_PROGRESS and FINISHED
+- authoritative stateful applyCallLiar transition established
+- CALL_LIAR composition:
+  - verified CALL legality
+  - previousPlay-only Challenge
+  - Truth/Lie resolution
+  - authoritative round loser
+  - authoritative shooter
+  - resolved previousPlay lifecycle
+  - exactly one Roulette Shot
+  - elimination
+  - post-Shot living-count branch
+  - Next Round OR Match Winner
+- challenge.shooterId == challenge.roundLoserId is enforced as an internal invariant
+- T15 integrated: Lie -> accused is round loser/shooter
+- T16 integrated: Truth -> caller is round loser/shooter
+- T17 integrated: BLANK keeps shooter ALIVE, Shot index advances exactly one
+- T18 integrated: LETHAL eliminates shooter
+- continuing Match: >= 2 Living Players routes through verified initializeNextRound
+- T20 integrated: surviving loser starts next Round
+- T21 integrated: eliminated loser falls forward to next Living seat
+- T22/T28 and verified next-Round redistribution remain preserved through CALL integration
+- T26 verified:
+  - if Shot leaves exactly one ALIVE Player:
+    - Match status becomes FINISHED
+    - winnerId = sole ALIVE Player
+    - no new Round is created
+    - no new deal occurs
+    - no Table/deck reshuffle occurs
+    - no next-Round RandomSource consumption occurs
+- winner authority derives solely from sole ALIVE Player after Shot
+- winning final Round preserves resolved previousPlay, current roundNumber, and existing final Round state
+- Challenge result metadata remains available after continuing Round reset: playId, accusedPlayerId, revealedCards, truth result, roundLoserId
+- Shot result metadata remains available: playerId, shotIndex, outcome, nextShotIndex, eliminated
+- Shot metadata contains no authoritative PlayerState alias
+- FINISHED Core Match rejects PLAY_CARDS, Challenge resolution, Next-Round initialization, and CALL_LIAR
+- mandatory-caller stateful CALL execution verified:
+  - 1v1 forced caller
+  - 3-player single-card-holder forced caller
+- prototype-safe Player dictionary preserved through CALL transition (__proto__ participant support verified)
+- input MatchState remains unmutated
+- transition remains deterministic
+- npm ci PASS, typecheck PASS, 155-test suite PASS
+- T13/T14 mandatory-caller legality and stateful CALL execution are established, but PLAY_CARDS does not yet automatically dispatch the forced CALL_LIAR; SYSTEM_TIMEOUT is not implemented (T29/T30/T31 remain unimplemented); Core FINISHED is implemented (Room MATCH_FINISHED lifecycle is not implemented); Networking, persistence, projections and transport events remain outside this task
 
 **Active Blockers:**
 None
@@ -248,6 +290,9 @@ None currently evidenced.
 * realtime concurrency
 * timeout/reconnect races
 * Telegram identity/trust boundary
+
+**Next Approved Action:**
+Project Architect must re-read this State Sync commit, then determine the remaining STAGE-02 canonical Core gaps, select the next smallest bounded task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.
 * hidden information leakage
 * free-tier operational constraints
 
