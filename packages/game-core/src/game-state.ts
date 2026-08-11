@@ -45,8 +45,10 @@ export interface RoundState {
   readonly playSequence: number;
 }
 
+export type MatchStatus = 'IN_PROGRESS' | 'FINISHED';
+
 export interface MatchState {
-  readonly status: 'IN_PROGRESS';
+  readonly status: MatchStatus;
   readonly seatOrder: readonly PlayerId[];
   readonly firstRoundStarter: PlayerId;
   readonly players: Readonly<Record<PlayerId, PlayerState>>;

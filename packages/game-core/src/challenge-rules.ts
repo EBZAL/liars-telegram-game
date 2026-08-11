@@ -18,6 +18,10 @@ export function resolveLiarChallenge(
   state: MatchState,
   callerId: PlayerId
 ): ChallengeResolution {
+  if (state.status !== 'IN_PROGRESS' || state.winnerId !== null) {
+    throw new Error('Match is already FINISHED.');
+  }
+
   // 1. Target Only Previous Play
   const previousPlay = state.round.previousPlay;
   if (previousPlay === null) {

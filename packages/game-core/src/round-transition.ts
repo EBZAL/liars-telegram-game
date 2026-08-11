@@ -8,8 +8,8 @@ export function initializeNextRound(
   random: RandomSource
 ): MatchState {
   // Precondition 1: Winner boundary
-  if (state.winnerId !== null) {
-    throw new Error('Match winner must be resolved before starting another Round.');
+  if (state.status !== 'IN_PROGRESS' || state.winnerId !== null) {
+    throw new Error('Match is already FINISHED.');
   }
 
   // Precondition 2: Resolved previousPlay required

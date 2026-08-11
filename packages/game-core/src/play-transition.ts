@@ -7,6 +7,10 @@ export function applyPlayCards(
   actorId: PlayerId,
   requestedCardIds: readonly string[]
 ): MatchState {
+  if (state.status !== 'IN_PROGRESS' || state.winnerId !== null) {
+    throw new Error('Match is already FINISHED.');
+  }
+
   // 1. Authoritative validation
   const allowedActions = getAllowedTurnActions(
     state.seatOrder,
