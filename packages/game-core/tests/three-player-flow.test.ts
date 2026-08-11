@@ -414,21 +414,38 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       expect(result.forcedCall!.challenge.accusedPlayerId).toBe('B');
       expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
 
-      // Exactly one final PLAY, Challenge and Shot occur
+      // Exactly one final PLAY, Challenge and Shot occur (Finding 7 / AC-36)
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
       expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
     });
   });
 
   describe('5. Four-Branch T14 Matrix (AC-14 through AC-36)', () => {
-    it('Truth + Blank T14 Branch (AC-14, AC-18, AC-19, AC-20, AC-21, AC-22, AC-23, AC-24, AC-34, AC-35)', () => {
+    it('Truth + Blank T14 Branch (AC-14, AC-18, AC-19, AC-20, AC-21, AC-22, AC-23, AC-24, AC-34, AC-35, AC-36)', () => {
       const { state, bCard } = createCanonicalThreePlayerT14State({
         tableRank: 'KING',
         bCardRank: 'KING', // Truth
         cCardRank: 'QUEEN'
       });
 
+      // Capture revolver sequences and indices before Round reset (Finding 2 / AC-23 / AC-24)
+      const aSeqBefore = [...state.players['A']!.revolver.sequence];
+      const bSeqBefore = [...state.players['B']!.revolver.sequence];
+      const cSeqBefore = [...state.players['C']!.revolver.sequence];
+      const aIdxBefore = state.players['A']!.revolver.nextShotIndex;
+      const bIdxBefore = state.players['B']!.revolver.nextShotIndex;
+      const cIdxBefore = state.players['C']!.revolver.nextShotIndex;
+
       const rng = new PredictableRandom(100);
       const result = applyPlayCardsCommand(state, 'B', [bCard.id], rng);
+
+      // Finding 7 / AC-36: Exactly one shot assertion across matrix
+      expect(result.forcedCall).not.toBeNull();
+      expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
 
       // Challenge & Shot assertions
       expect(result.forcedCall!.challenge.playWasTruthful).toBe(true);
@@ -438,8 +455,6 @@ describe('Three-Player Flow Hardening (T-013)', () => {
 
       expect(result.forcedCall!.shot.playerId).toBe('C');
       expect(result.forcedCall!.shot.outcome).toBe('BLANK');
-      expect(result.forcedCall!.shot.shotIndex).toBe(0);
-      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
       expect(result.forcedCall!.shot.eliminated).toBe(false);
 
       expect(result.forcedCall!.terminal).toBe('NEXT_ROUND');
@@ -479,21 +494,32 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       for (const c of allCards) counts[c.rank]++;
       expect(counts).toEqual({ KING: 6, QUEEN: 6, ACE: 6, JOKER: 2 });
 
-      // Revolver persistence (AC-23, AC-24)
-      expect(pC2.revolver.nextShotIndex).toBe(1);
-      expect(pA2.revolver.nextShotIndex).toBe(0);
-      expect(pB2.revolver.nextShotIndex).toBe(0);
+      // Finding 2 / AC-23 / AC-24: Revolver sequences deep-equal pre-reset, shooter index 0 -> 1, non-shooters unchanged
+      expect(pA2.revolver.sequence).toEqual(aSeqBefore);
+      expect(pB2.revolver.sequence).toEqual(bSeqBefore);
+      expect(pC2.revolver.sequence).toEqual(cSeqBefore);
 
-      // Play identity monotonic continuity (AC-34)
+      expect(pC2.revolver.nextShotIndex).toBe(cIdxBefore + 1); // 0 -> 1
+      expect(pA2.revolver.nextShotIndex).toBe(aIdxBefore); // 0
+      expect(pB2.revolver.nextShotIndex).toBe(bIdxBefore); // 0
+
+      // Finding 5 / AC-34: Play identity monotonic continuity by executing actual next Round play
       expect(result.state.round.previousPlay).toBeNull();
       expect(result.state.round.centralPile).toEqual([]);
-      expect(result.state.round.playSequence).toBeGreaterThan(result.createdPlay.playId);
+
+      const finalPlayId = result.createdPlay.playId;
+      const r2StarterId = result.state.round.currentPlayerId; // 'C'
+      const r2CardId = result.state.players[r2StarterId]!.hand[0]!.id;
+
+      const r2PlayRes = applyPlayCardsCommand(result.state, r2StarterId, [r2CardId], new ThrowingRandom());
+      expect(r2PlayRes.createdPlay.playId).toBeGreaterThan(finalPlayId);
+      expect(r2PlayRes.createdPlay.playId).not.toBe(finalPlayId);
 
       // Metadata retention (AC-35)
       expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
     });
 
-    it('Lie + Blank T14 Branch (AC-15, AC-18, AC-19, AC-20, AC-21, AC-22, AC-23, AC-24)', () => {
+    it('Lie + Blank T14 Branch (AC-15, AC-18, AC-19, AC-20, AC-21, AC-22, AC-23, AC-24, AC-36)', () => {
       const { state, bCard } = createCanonicalThreePlayerT14State({
         tableRank: 'KING',
         bCardRank: 'QUEEN', // Lie on KING table
@@ -503,6 +529,13 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       const rng = new PredictableRandom(200);
       const result = applyPlayCardsCommand(state, 'B', [bCard.id], rng);
 
+      // Finding 7 / AC-36: Exactly one shot assertion
+      expect(result.forcedCall).not.toBeNull();
+      expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
+
       // Challenge & Shot assertions
       expect(result.forcedCall!.challenge.playWasTruthful).toBe(false);
       expect(result.forcedCall!.challenge.challengerWasCorrect).toBe(true);
@@ -511,8 +544,6 @@ describe('Three-Player Flow Hardening (T-013)', () => {
 
       expect(result.forcedCall!.shot.playerId).toBe('B');
       expect(result.forcedCall!.shot.outcome).toBe('BLANK');
-      expect(result.forcedCall!.shot.shotIndex).toBe(0);
-      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
       expect(result.forcedCall!.shot.eliminated).toBe(false);
 
       expect(result.forcedCall!.terminal).toBe('NEXT_ROUND');
@@ -536,7 +567,7 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       expect(pC2.revolver.nextShotIndex).toBe(0);
     });
 
-    it('Truth + Lethal T14 Branch — C Eliminated (AC-16, AC-25, AC-26, AC-27, AC-28, AC-29, AC-33)', () => {
+    it('Truth + Lethal T14 Branch — C Eliminated (AC-16, AC-25, AC-26, AC-27, AC-28, AC-29, AC-33, AC-36)', () => {
       const { state, bCard } = createCanonicalThreePlayerT14State({
         tableRank: 'KING',
         bCardRank: 'KING', // Truth
@@ -544,8 +575,23 @@ describe('Three-Player Flow Hardening (T-013)', () => {
         cRevolver: { sequence: ['LETHAL', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK'], nextShotIndex: 0 }
       });
 
+      // Capture revolver sequences and indices before Round reset (Finding 3)
+      const aSeqBefore = [...state.players['A']!.revolver.sequence];
+      const bSeqBefore = [...state.players['B']!.revolver.sequence];
+      const cSeqBefore = [...state.players['C']!.revolver.sequence];
+      const aIdxBefore = state.players['A']!.revolver.nextShotIndex;
+      const bIdxBefore = state.players['B']!.revolver.nextShotIndex;
+      const cIdxBefore = state.players['C']!.revolver.nextShotIndex;
+
       const rng = new PredictableRandom(300);
       const result = applyPlayCardsCommand(state, 'B', [bCard.id], rng);
+
+      // Finding 7 / AC-36: Exactly one shot assertion
+      expect(result.forcedCall).not.toBeNull();
+      expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
 
       // Challenge & Shot assertions
       expect(result.forcedCall!.challenge.playWasTruthful).toBe(true);
@@ -576,22 +622,51 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       expect(pC2.lifeStatus).toBe('ELIMINATED');
       expect(pC2.hand).toHaveLength(0); // Eliminated C gets no new hand (AC-28)
 
-      expect(result.state.round.undealtCards).toHaveLength(10); // 5 + 5 + 10 = 20 total cards (AC-27)
+      // Finding 4 / AC-27: Complete 20-card canonical partition proof for 3->2 reset (5 + 5 + 10 = 20)
+      expect(result.state.round.undealtCards).toHaveLength(10);
+      const allLivingAndUndealtCards = [...pA2.hand, ...pB2.hand, ...result.state.round.undealtCards];
+      expect(allLivingAndUndealtCards).toHaveLength(20);
+      expect(new Set(allLivingAndUndealtCards.map(c => c.id)).size).toBe(20);
+
+      const r2Counts = { KING: 0, QUEEN: 0, ACE: 0, JOKER: 0 };
+      for (const c of allLivingAndUndealtCards) r2Counts[c.rank]++;
+      expect(r2Counts).toEqual({ KING: 6, QUEEN: 6, ACE: 6, JOKER: 2 });
+
+      // Finding 3: Lethal elimination revolver persistence assertions
+      expect(pC2.revolver.sequence).toEqual(cSeqBefore);
+      expect(pC2.revolver.nextShotIndex).toBe(cIdxBefore + 1); // 0 -> 1
+
+      expect(pA2.revolver.sequence).toEqual(aSeqBefore);
+      expect(pB2.revolver.sequence).toEqual(bSeqBefore);
+      expect(pA2.revolver.nextShotIndex).toBe(aIdxBefore);
+      expect(pB2.revolver.nextShotIndex).toBe(bIdxBefore);
 
       // Eliminated C fallback starter resolves to A in [A, B, C] cycle (AC-29)
       expect(result.state.round.currentPlayerId).toBe('A');
 
-      // Post-elimination ordinary turn skips eliminated seat C (AC-33)
-      const aCardInR2 = pA2.hand[0]!.id;
+      // Finding 1 / AC-33: Complete proof of eliminated-seat skip (A -> B -> A)
       const throwingRng = new ThrowingRandom();
-      const resAfterElim = applyPlayCardsCommand(result.state, 'A', [aCardInR2], throwingRng);
 
-      expect(resAfterElim.createdPlay.playerId).toBe('A');
-      expect(resAfterElim.state.round.currentPlayerId).toBe('B'); // Goes from A -> B, skipping eliminated C!
-      expect(resAfterElim.state.seatOrder).toEqual(['A', 'B', 'C']); // seatOrder remains original 3 seats
+      // First transition: A plays a card, current player becomes B
+      const aCardInR2 = pA2.hand[0]!.id;
+      const resAfterAPlay = applyPlayCardsCommand(result.state, 'A', [aCardInR2], throwingRng);
+
+      expect(resAfterAPlay.createdPlay.playerId).toBe('A');
+      expect(resAfterAPlay.state.round.currentPlayerId).toBe('B');
+      expect(resAfterAPlay.state.seatOrder).toEqual(['A', 'B', 'C']);
+      expect(resAfterAPlay.state.players['C']!.lifeStatus).toBe('ELIMINATED');
+
+      // Second transition: B plays a card, current player wraps from B -> A skipping eliminated C!
+      const bCardInR2 = resAfterAPlay.state.players['B']!.hand[0]!.id;
+      const resAfterBPlay = applyPlayCardsCommand(resAfterAPlay.state, 'B', [bCardInR2], throwingRng);
+
+      expect(resAfterBPlay.createdPlay.playerId).toBe('B');
+      expect(resAfterBPlay.state.round.currentPlayerId).toBe('A'); // Turn wraps B -> A, skipping eliminated C!
+      expect(resAfterBPlay.state.seatOrder).toEqual(['A', 'B', 'C']);
+      expect(resAfterBPlay.state.players['C']!.lifeStatus).toBe('ELIMINATED');
     });
 
-    it('Lie + Lethal T14 Branch — B Eliminated (AC-17, AC-25, AC-30, AC-31, AC-32)', () => {
+    it('Lie + Lethal T14 Branch — B Eliminated (AC-17, AC-25, AC-30, AC-31, AC-32, AC-36)', () => {
       const { state, bCard } = createCanonicalThreePlayerT14State({
         tableRank: 'KING',
         bCardRank: 'QUEEN', // Lie on KING table
@@ -601,6 +676,13 @@ describe('Three-Player Flow Hardening (T-013)', () => {
 
       const rng = new PredictableRandom(400);
       const result = applyPlayCardsCommand(state, 'B', [bCard.id], rng);
+
+      // Finding 7 / AC-36: Exactly one shot assertion
+      expect(result.forcedCall).not.toBeNull();
+      expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
 
       expect(result.forcedCall!.challenge.playWasTruthful).toBe(false);
       expect(result.forcedCall!.challenge.roundLoserId).toBe('B');
@@ -672,10 +754,16 @@ describe('Three-Player Flow Hardening (T-013)', () => {
       expect(result.autoPlayedCardId).toBe(bCard.id);
       expect(result.createdPlay.playerId).toBe('B');
 
+      // Finding 8: Strengthened T14 SYSTEM_TIMEOUT forced CALL assertions
       expect(result.forcedCall).not.toBeNull();
       expect(result.forcedCall!.callerId).toBe('C');
       expect(result.forcedCall!.challenge.accusedPlayerId).toBe('B');
+      expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
       expect(result.forcedCall!.shot.outcome).toBe('BLANK');
+      expect(result.forcedCall!.shot.shotIndex).toBe(0);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(1);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(result.forcedCall!.shot.shotIndex + 1);
+
       expect(result.forcedCall!.terminal).toBe('NEXT_ROUND');
       expect(result.state.round.roundNumber).toBe(2);
     });
@@ -703,6 +791,20 @@ describe('Three-Player Flow Hardening (T-013)', () => {
 
       applyPlayCardsCommand(t14State, 'B', [bCard.id], new PredictableRandom(100));
       expect(JSON.stringify(t14State)).toBe(frozenT14Str);
+    });
+
+    it('Finding 6 / AC-40: preserves source MatchState immutability across empty-safe transition sequence (A final PLAY -> B PLAY)', () => {
+      const { state: initialState, aCard, bCards } = createCanonicalThreePlayerEmptySafeScenarioState();
+      
+      const frozenInitial = JSON.stringify(initialState);
+      const throwingRng = new ThrowingRandom();
+
+      const resA = applyPlayCardsCommand(initialState, 'A', [aCard.id], throwingRng);
+      expect(JSON.stringify(initialState)).toBe(frozenInitial);
+
+      const frozenResAState = JSON.stringify(resA.state);
+      applyPlayCardsCommand(resA.state, 'B', [bCards[0].id], throwingRng);
+      expect(JSON.stringify(resA.state)).toBe(frozenResAState);
     });
 
     it('verifies deterministic scenario equivalence for ordinary 3p flow, forced Blank flow, and 3->2 lethal flow', () => {
