@@ -4,11 +4,11 @@
 
 - **Task ID:** T-011-SYSTEM-TIMEOUT-AUTO-PLAY
 - **Stage:** STAGE-02 — Canonical Core Engine
-- **Implementation SHA:** `a57b465d0502b02a447808f94e11e5e26eb471ba`
+- **Implementation SHA:** `fae82d03259d8d95133b54ec88ea579c756f27dc`
 - **Files Modified/Created:**
   - `packages/game-core/src/system-timeout-transition.ts` [NEW]
   - `packages/game-core/src/index.ts` [MODIFY]
-  - `packages/game-core/tests/system-timeout-transition.test.ts` [NEW]
+  - `packages/game-core/tests/system-timeout-transition.test.ts` [NEW/HARDENED]
 
 ---
 
@@ -65,7 +65,7 @@ export interface SystemTimeoutResult extends PlayCardsCommandResult {
 - **AC-02 (No actor input):** PASS — `timedOutPlayerId` derived from `state.round.currentPlayerId`.
 - **AC-03 (No selection input):** PASS — API accepts no UI/draft selection arguments.
 - **AC-04 (Active Match required):** PASS — Throws error on FINISHED match before calling RNG.
-- **AC-05 (Valid current Player):** PASS — Validates player existence, `ALIVE`, `WITH_CARDS`, and non-empty hand.
+- **AC-05 (Valid current Player):** PASS — Validates player existence, `ALIVE`, `WITH_CARDS`, and non-empty hand before RNG call. Missing player ID, `ELIMINATED` status, empty hand (`[]`), and malformed `roundStatus` (e.g. `EMPTY_PENDING_CHALLENGE` / `EMPTY_SAFE`) are all explicitly tested and verified to reject with zero RNG calls.
 - **AC-06 (CALL-only invariant):** PASS — Rejects timeout auto-PLAY when player is in mandatory `CALL_LIAR` state.
 - **AC-07 (PLAY legality):** PASS — Rejects if `PLAY_CARDS` is not an allowed action.
 - **AC-08 (Authoritative Hand):** PASS — Card selected strictly from current player's authoritative `hand`.
@@ -92,17 +92,17 @@ export interface SystemTimeoutResult extends PlayCardsCommandResult {
 - **AC-29 (Newest Play target):** PASS — Forced CALL after timeout challenges newly created timeout Play.
 - **AC-30 (Forced BLANK continuation):** PASS — 1v1 timeout final card + BLANK shot creates canonical next Round.
 - **AC-31 (Forced LETHAL/T26):** PASS — 1v1 timeout final card + LETHAL shot finishes Match immediately.
-- **AC-32 (Winner no reset):** PASS — Winner path creates no new Round and consumes no next-round RNG.
+- **AC-32 (Winner no reset):** PASS — Winner path creates no new Round and explicitly proves exactly 1 total RNG call (the timeout index-selection call) with max=1 and returned=0, with zero subsequent next-Round RNG calls.
 - **AC-33 (Metadata retention):** PASS — `timedOutPlayerId`, `autoPlayedCardId`, `createdPlay`, and `forcedCall` survive Round Reset.
 - **AC-34 (Single authoritative state):** PASS — Only `result.state` contains MatchState.
 - **AC-35 (No duplicate PLAY):** PASS — Hand, pile, and playSequence mutations occur exactly once.
-- **AC-36 (No duplicate Challenge/Shot):** PASS — Exactly one Challenge and one Shot on forced path.
+- **AC-36 (No duplicate Challenge/Shot):** PASS — Exactly one Challenge and one Shot on forced path (explicitly verified: `shotIndex` equals `beforeShotIndex` and `nextShotIndex` equals `beforeShotIndex + 1`).
 - **AC-37 (Prototype safety):** PASS — `__proto__` player ID supported as timed-out player.
 - **AC-38 (Input immutability):** PASS — `MatchState` input is not mutated.
 - **AC-39 (Determinism):** PASS — Equivalent input + RNG sequence produces identical result.
 - **AC-40 (No forbidden nondeterminism):** PASS — Zero `Math.random`, `Date.now`, `performance.now`, `crypto.randomUUID`, `setTimeout`, or `setInterval`.
 - **AC-41 (No timer/Room scope):** PASS — No clock, deadline, alarm, revision, persistence, or network transport implemented.
-- **AC-42 (Full regression):** PASS — All 186 tests across 11 test suites pass.
+- **AC-42 (Full regression):** PASS — All 189 tests across 11 test suites pass.
 - **AC-43 (Tooling):** PASS — `npm ci`, `npm run typecheck`, `npm test` all exit code 0.
 - **AC-44 (Evidence completeness):** PASS — Evidence maps ACs and distinguishes Core effect from Room deadline.
 - **AC-45 (Control lifecycle):** PASS — Ledger and Evidence lifecycle rules respected.
@@ -113,7 +113,7 @@ export interface SystemTimeoutResult extends PlayCardsCommandResult {
 
 ### 1. `npm ci`
 ```text
-added 80 packages, and audited 82 packages in 12s
+added 80 packages, and audited 82 packages in 9s
 ```
 Status: PASS (exited 0)
 
@@ -131,20 +131,20 @@ Status: PASS (exited 0)
 ```text
  RUN  v1.6.1 D:/LiarsTelegram/packages/game-core
 
- ✓ tests/turn-rules.test.ts  (21 tests)
- ✓ tests/play-rules.test.ts  (20 tests)
  ✓ tests/roulette-rules.test.ts  (13 tests)
  ✓ tests/challenge-rules.test.ts  (24 tests)
- ✓ tests/play-transition.test.ts  (17 tests)
- ✓ tests/initialization.test.ts  (11 tests)
- ✓ tests/system-timeout-transition.test.ts  (15 tests)
+ ✓ tests/turn-rules.test.ts  (21 tests)
+ ✓ tests/play-rules.test.ts  (20 tests)
  ✓ tests/call-liar-transition.test.ts  (18 tests)
+ ✓ tests/system-timeout-transition.test.ts  (18 tests)
+ ✓ tests/play-transition.test.ts  (17 tests)
  ✓ tests/play-command-transition.test.ts  (16 tests)
+ ✓ tests/initialization.test.ts  (11 tests)
  ✓ tests/round-transition.test.ts  (23 tests)
  ✓ tests/domain.test.ts  (8 tests)
 
  Test Files  11 passed (11)
-      Tests  186 passed (186)
+      Tests  189 passed (189)
 ```
 Status: PASS (exited 0)
 

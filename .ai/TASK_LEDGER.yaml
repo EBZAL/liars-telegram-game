@@ -755,7 +755,8 @@ tasks:
   T-011-SYSTEM-TIMEOUT-AUTO-PLAY:
     title: System Timeout Auto Play
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: fae82d03259d8d95133b54ec88ea579c756f27dc
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the pure authoritative Core effect of SYSTEM_TIMEOUT when the turn deadline expires with no committed PLAY/CALL action, choosing exactly one random Card from the current Player's Hand via unbiased injected RandomSource, automatically executing that one-card PLAY via applyPlayCardsCommand, and preserving downstream automatic forced-CALL, Challenge, Shot, and Winner behavior.
