@@ -268,7 +268,7 @@ describe('applySystemTimeout Transition', () => {
     });
   });
 
-  describe('Forced CALL Integration (AC-28, AC-29, AC-30, AC-31, AC-32, AC-33)', () => {
+  describe('Forced CALL Integration (AC-28, AC-29, AC-30, AC-31, AC-32, AC-33, AC-36)', () => {
     it('1v1 Timeout on final card + BLANK shot -> automatic forced CALL, exactly 1 shot, creates next Round', () => {
       const pDict = Object.create(null);
       pDict['A'] = {
@@ -303,6 +303,8 @@ describe('applySystemTimeout Transition', () => {
         winnerId: null
       };
 
+      const beforeShotIndex = state1v1.players['A']!.revolver.nextShotIndex;
+
       const rng = new ScriptedRandom([0, 0, 0, 0, 0]); // Index 0 for timeout, rest for next-round shuffle
       const result = applySystemTimeout(state1v1, rng);
 
@@ -312,6 +314,12 @@ describe('applySystemTimeout Transition', () => {
       expect(result.forcedCall!.callerId).toBe('B');
       expect(result.forcedCall!.challenge.accusedPlayerId).toBe('A');
       expect(result.forcedCall!.challenge.playId).toBe(result.createdPlay.playId);
+
+      // FINDING 3: Explicit exactly-one-shot integration assertions (AC-36)
+      expect(result.forcedCall!.shot.shotIndex).toBe(beforeShotIndex);
+      expect(result.forcedCall!.shot.nextShotIndex).toBe(beforeShotIndex + 1);
+      expect(result.forcedCall!.shot.outcome).toBe('BLANK');
+
       expect(result.forcedCall!.terminal).toBe('NEXT_ROUND');
 
       // Metadata survives next round reset
@@ -319,7 +327,7 @@ describe('applySystemTimeout Transition', () => {
       expect(result.state.round.roundNumber).toBe(2);
     });
 
-    it('1v1 Timeout on final card (Lie) + LETHAL shot -> automatic forced CALL, Match FINISHED, sole survivor winner', () => {
+    it('1v1 Timeout on final card (Lie) + LETHAL shot -> automatic forced CALL, Match FINISHED, sole survivor winner (AC-32)', () => {
       const pDict = Object.create(null);
       pDict['A'] = {
         id: 'A',
@@ -353,7 +361,6 @@ describe('applySystemTimeout Transition', () => {
         winnerId: null
       };
 
-      // ThrowingRandom after index 0 proves zero next-round RNG consumed
       const rng = new ScriptedRandom([0]);
       const result = applySystemTimeout(state1v1, rng);
 
@@ -362,6 +369,13 @@ describe('applySystemTimeout Transition', () => {
       expect(result.state.status).toBe('FINISHED');
       expect(result.state.winnerId).toBe('B');
       expect(result.state.round.roundNumber).toBe(1); // No new round
+
+      // FINDING 1 & AC-32: Explicitly prove zero downstream RNG after MATCH_WON
+      expect(rng.calls).toHaveLength(1);
+      expect(rng.calls[0]).toEqual({
+        max: 1,
+        returned: 0
+      });
     });
   });
 
@@ -429,24 +443,146 @@ describe('applySystemTimeout Transition', () => {
       }).toThrow(/mandatory CALL_LIAR state/);
     });
 
-    it('AC-05: Malformed current Player state (missing / ELIMINATED / empty hand) rejected before RNG', () => {
-      const rngSetup = new ScriptedRandom([0]);
-      const initial = initializeMatch(['A', 'B', 'C'], rngSetup);
+    // FINDING 2: Comprehensive zero-RNG tests for all 4 malformed current player cases (AC-05)
+    it('AC-05 Case 1: missing currentPlayerId in players dictionary rejected before RNG', () => {
+      const pDict = Object.create(null);
+      pDict['B'] = {
+        id: 'B',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'WITH_CARDS',
+        hand: [{ id: 'b1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
 
-      // Current player ELIMINATED
-      const malformedState: MatchState = {
-        ...initial,
-        players: {
-          ...initial.players,
-          [initial.round.currentPlayerId]: {
-            ...initial.players[initial.round.currentPlayerId]!,
-            lifeStatus: 'ELIMINATED'
-          }
-        }
+      const stateMissingPlayer: MatchState = {
+        status: 'IN_PROGRESS',
+        seatOrder: ['A', 'B'],
+        firstRoundStarter: 'A',
+        players: pDict,
+        round: {
+          roundNumber: 1,
+          tableRank: 'KING',
+          currentPlayerId: 'A', // 'A' not found in players dictionary
+          previousPlay: null,
+          centralPile: [],
+          undealtCards: [],
+          playSequence: 1
+        },
+        winnerId: null
       };
 
-      const throwingRng = new ThrowingRandom();
-      expect(() => applySystemTimeout(malformedState, throwingRng)).toThrow();
+      expect(() => applySystemTimeout(stateMissingPlayer, new ThrowingRandom())).toThrow(/not eligible/);
+    });
+
+    it('AC-05 Case 2: ELIMINATED current player rejected before RNG', () => {
+      const pDict = Object.create(null);
+      pDict['A'] = {
+        id: 'A',
+        lifeStatus: 'ELIMINATED',
+        roundStatus: 'WITH_CARDS',
+        hand: [{ id: 'a1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+      pDict['B'] = {
+        id: 'B',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'WITH_CARDS',
+        hand: [{ id: 'b1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+
+      const stateEliminated: MatchState = {
+        status: 'IN_PROGRESS',
+        seatOrder: ['A', 'B'],
+        firstRoundStarter: 'A',
+        players: pDict,
+        round: {
+          roundNumber: 1,
+          tableRank: 'KING',
+          currentPlayerId: 'A',
+          previousPlay: null,
+          centralPile: [],
+          undealtCards: [],
+          playSequence: 1
+        },
+        winnerId: null
+      };
+
+      expect(() => applySystemTimeout(stateEliminated, new ThrowingRandom())).toThrow(/not eligible/);
+    });
+
+    it('AC-05 Case 3: empty hand current player rejected before RNG', () => {
+      const pDict = Object.create(null);
+      pDict['A'] = {
+        id: 'A',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'WITH_CARDS',
+        hand: [], // empty hand
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+      pDict['B'] = {
+        id: 'B',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'WITH_CARDS',
+        hand: [{ id: 'b1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+
+      const stateEmptyHand: MatchState = {
+        status: 'IN_PROGRESS',
+        seatOrder: ['A', 'B'],
+        firstRoundStarter: 'A',
+        players: pDict,
+        round: {
+          roundNumber: 1,
+          tableRank: 'KING',
+          currentPlayerId: 'A',
+          previousPlay: null,
+          centralPile: [],
+          undealtCards: [],
+          playSequence: 1
+        },
+        winnerId: null
+      };
+
+      expect(() => applySystemTimeout(stateEmptyHand, new ThrowingRandom())).toThrow(/not eligible/);
+    });
+
+    it('AC-05 Case 4: roundStatus != WITH_CARDS (e.g. EMPTY_PENDING_CHALLENGE) current player rejected before RNG', () => {
+      const pDict = Object.create(null);
+      pDict['A'] = {
+        id: 'A',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'EMPTY_PENDING_CHALLENGE', // malformed roundStatus for current turn actor
+        hand: [{ id: 'a1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+      pDict['B'] = {
+        id: 'B',
+        lifeStatus: 'ALIVE',
+        roundStatus: 'WITH_CARDS',
+        hand: [{ id: 'b1', rank: 'KING' }],
+        revolver: { sequence: [], nextShotIndex: 0 }
+      } as PlayerState;
+
+      const stateWrongRoundStatus: MatchState = {
+        status: 'IN_PROGRESS',
+        seatOrder: ['A', 'B'],
+        firstRoundStarter: 'A',
+        players: pDict,
+        round: {
+          roundNumber: 1,
+          tableRank: 'KING',
+          currentPlayerId: 'A',
+          previousPlay: null,
+          centralPile: [],
+          undealtCards: [],
+          playSequence: 1
+        },
+        winnerId: null
+      };
+
+      expect(() => applySystemTimeout(stateWrongRoundStatus, new ThrowingRandom())).toThrow(/not eligible/);
     });
   });
 
