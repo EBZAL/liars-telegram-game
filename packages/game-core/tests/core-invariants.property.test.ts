@@ -5,8 +5,10 @@ import {
   applyPlayCardsCommand,
   applyCallLiar,
   applySystemTimeout,
+  initializeNextRound,
   isPlayTruthful,
   deriveClaim,
+  isTurnEligible,
   MatchState,
   RoundState,
   PlayerState,
@@ -74,17 +76,30 @@ function getLegalActions(state: MatchState, actorId: string): TurnActionType[] {
 }
 
 /**
+ * Observation trackers for non-vacuous property checks.
+ */
+interface TraceObservationCounters {
+  emptySafeStatesObserved: number;
+  aliveEmptyStatesObserved: number;
+  freshNextRoundsObserved: number;
+  finishedMatchesObserved: number;
+}
+
+/**
  * Reusable test-only authoritative MatchState invariant checker.
  * Validates structural, card conservation, status, turn eligibility, winner,
  * and Revolver invariants after initialization and after every transition step.
  */
 function assertCoreStateInvariants(
   state: MatchState,
-  baseline?: { seatOrder: string[]; initialRevolvers: Record<string, string[]> }
+  baseline?: { seatOrder: string[]; firstRoundStarter: string; initialRevolvers: Record<string, string[]> },
+  counters?: TraceObservationCounters
 ) {
-  // D1 — Fixed Match Identity
+  // D1 / Finding 11 — Fixed Match Identity
   if (baseline) {
     expect(state.seatOrder).toEqual(baseline.seatOrder);
+    expect(state.firstRoundStarter).toBe(baseline.firstRoundStarter);
+    expect(new Set(Object.keys(state.players))).toEqual(new Set(baseline.seatOrder));
     for (const pId of baseline.seatOrder) {
       expect(state.players[pId]).toBeDefined();
     }
@@ -136,7 +151,7 @@ function assertCoreStateInvariants(
     }
   }
 
-  // D4 — Player Status / Hand Coherence
+  // D4 / Finding 8 & 9 — Player Status / Hand / Ineligibility Coherence
   let livingCount = 0;
   let aliveWinnerCandidate: string | null = null;
 
@@ -148,13 +163,22 @@ function assertCoreStateInvariants(
 
       if (p.roundStatus === 'WITH_CARDS') {
         expect(p.hand.length).toBeGreaterThan(0);
-      } else if (p.roundStatus === 'EMPTY_PENDING_CHALLENGE' || p.roundStatus === 'EMPTY_SAFE') {
+      } else if (p.roundStatus === 'EMPTY_PENDING_CHALLENGE') {
         expect(p.hand.length).toBe(0);
+        if (counters) counters.aliveEmptyStatesObserved++;
+      } else if (p.roundStatus === 'EMPTY_SAFE') {
+        expect(p.hand.length).toBe(0);
+        // Finding 8: Direct I23 check
+        expect(isTurnEligible(p)).toBe(false);
+        if (counters) {
+          counters.emptySafeStatesObserved++;
+          counters.aliveEmptyStatesObserved++;
+        }
       }
     }
   }
 
-  // D5 & D6 — Status, Turn Eligibility, and Winner Coherence
+  // D5 & D6 / Finding 12 — Status, Turn Eligibility, and Winner Coherence
   if (state.status === 'IN_PROGRESS') {
     expect(state.winnerId).toBeNull();
     expect(livingCount).toBeGreaterThanOrEqual(2);
@@ -163,13 +187,17 @@ function assertCoreStateInvariants(
     expect(curPlayer.lifeStatus).toBe('ALIVE');
     expect(curPlayer.roundStatus).toBe('WITH_CARDS');
     expect(curPlayer.hand.length).toBeGreaterThan(0);
+    // Finding 12: Direct check via isTurnEligible
+    expect(isTurnEligible(curPlayer)).toBe(true);
   } else if (state.status === 'FINISHED') {
     expect(livingCount).toBe(1);
     expect(state.winnerId).toBe(aliveWinnerCandidate);
+    if (counters) counters.finishedMatchesObserved++;
   }
 
   // D7 — Fresh-Round Distribution Check
   if (state.round.previousPlay === null && state.round.centralPile.length === 0 && state.status === 'IN_PROGRESS') {
+    if (counters) counters.freshNextRoundsObserved++;
     for (const pId of state.seatOrder) {
       const p = state.players[pId]!;
       if (p.lifeStatus === 'ALIVE') {
@@ -202,7 +230,14 @@ function assertCoreStateInvariants(
 }
 
 describe('T-016 Core Invariant & Property Hardening Suite', () => {
-  describe('PROPERTY GROUP A — Initialization Seed Sweep (AC-05..AC-15)', () => {
+  describe('PROPERTY GROUP A — Initialization Seed Sweep & Exclusivity (AC-05..AC-15)', () => {
+    it('proves invalid player counts (0, 1, 5, 6) are strictly rejected (Finding 7 / I01)', () => {
+      for (const invalidCount of [0, 1, 5, 6]) {
+        const ids = Array.from({ length: invalidCount }, (_, i) => `P${i + 1}`);
+        expect(() => initializeMatch(ids, new SeededRandom(0))).toThrow();
+      }
+    });
+
     it('verifies structural and card partition invariants across 3 player counts x 32 seeds (96 cases)', () => {
       const playerCounts = [2, 3, 4];
       let totalCases = 0;
@@ -285,7 +320,6 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
       const tableRanks: TableRank[] = ['KING', 'QUEEN', 'ACE'];
       const cardRanks: CardRank[] = ['KING', 'QUEEN', 'ACE', 'JOKER'];
 
-      // Generate all tuples of lengths 1, 2, 3
       const generateTuples = (length: number): CardRank[][] => {
         if (length === 1) return cardRanks.map((r) => [r]);
         const sub = generateTuples(length - 1);
@@ -327,10 +361,17 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
   });
 
   describe('PROPERTY GROUP D..H — Bounded Legal Command Trace Sweep (AC-21..AC-50)', () => {
-    it('executes 48 legal traces (2/3/4 players x seeds 0..15, max 24 commands) enforcing state invariants, deltas, and monotonicity', () => {
+    it('executes 48 legal traces enforcing exact deltas, Play ID monotonicity, shooter advance, target coherence, and non-vacuous observations', () => {
       const playerCounts = [2, 3, 4];
       let totalTraces = 0;
       let totalCommandsExecuted = 0;
+
+      const counters: TraceObservationCounters = {
+        emptySafeStatesObserved: 0,
+        aliveEmptyStatesObserved: 0,
+        freshNextRoundsObserved: 0,
+        finishedMatchesObserved: 0
+      };
 
       for (const playerCount of playerCounts) {
         for (let seed = 0; seed < 16; seed++) {
@@ -343,25 +384,35 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
           for (const pId of state.seatOrder) {
             initialRevolvers[pId] = [...state.players[pId]!.revolver.sequence];
           }
-          const baseline = { seatOrder: [...state.seatOrder], initialRevolvers };
+          const baseline = {
+            seatOrder: [...state.seatOrder],
+            firstRoundStarter: state.firstRoundStarter,
+            initialRevolvers
+          };
 
-          assertCoreStateInvariants(state, baseline);
+          assertCoreStateInvariants(state, baseline, counters);
 
           let previousPlaySequence = state.round.playSequence;
+          let lastCreatedPlayId = 0;
+          const seenPlayIds = new Set<number>();
 
           for (let step = 0; step < 24; step++) {
             if (state.status === 'FINISHED') break;
 
             const curPlayerId = state.round.currentPlayerId;
             const allowed = getLegalActions(state, curPlayerId);
-            expect(allowed.length).toBeGreaterThan(0);
+
+            // Context info for clear error reporting (Finding 14)
+            const errorContext = `[playerCount=${playerCount}, seed=${seed}, step=${step}, curPlayerId=${curPlayerId}]`;
+            expect(allowed.length, errorContext).toBeGreaterThan(0);
 
             // Command input immutability snapshot
             const stateSnapshotStr = JSON.stringify(state);
 
             let selectedAction: TurnActionType;
             if (allowed.includes('PLAY_CARDS') && allowed.includes('CALL_LIAR')) {
-              selectedAction = (seed + step) % 4 === 0 ? 'CALL_LIAR' : 'PLAY_CARDS';
+              // Favor playing remaining cards to allow EMPTY_SAFE states to emerge
+              selectedAction = (seed + step) % 6 === 0 ? 'CALL_LIAR' : 'PLAY_CARDS';
             } else if (allowed.includes('CALL_LIAR')) {
               selectedAction = 'CALL_LIAR';
             } else {
@@ -369,6 +420,9 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
             }
 
             const oldPlaySequence = state.round.playSequence;
+            const preHand = [...state.players[curPlayerId]!.hand];
+            const preCentralPile = [...state.round.centralPile];
+            const prePreviousPlay = state.round.previousPlay;
             const preRevolverIndices: Record<string, number> = {};
             for (const pId of state.seatOrder) {
               preRevolverIndices[pId] = state.players[pId]!.revolver.nextShotIndex;
@@ -377,74 +431,147 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
             if (selectedAction === 'PLAY_CARDS') {
               totalCommandsExecuted++;
               const hand = state.players[curPlayerId]!.hand;
-              expect(hand.length).toBeGreaterThan(0);
+              expect(hand.length, errorContext).toBeGreaterThan(0);
 
               const maxSelectable = Math.min(3, hand.length);
-              const selectCount = 1 + (rng.nextInt(maxSelectable) % maxSelectable);
+              // Select 3 cards when available to deplete hands and reach EMPTY_SAFE
+              const selectCount = Math.min(maxSelectable, (step % 2 === 0 ? 3 : 2));
               const selectedCardIds = hand.slice(0, selectCount).map((c) => c.id);
 
               const preTableRank = state.round.tableRank;
               const result = applyPlayCardsCommand(state, curPlayerId, selectedCardIds, rng);
 
-              // Input state immutability check
-              expect(JSON.stringify(state)).toBe(stateSnapshotStr);
+              // Input state immutability check (AC-41)
+              expect(JSON.stringify(state), errorContext).toBe(stateSnapshotStr);
 
               state = result.state;
 
-              // Transition delta checks
-              expect(result.createdPlay.count).toBe(selectCount);
-              expect(result.createdPlay.claimedRank).toBe(preTableRank);
-              expect(result.createdPlay.cardIds).toEqual(selectedCardIds);
-              expect(result.createdPlay.playId).toBe(oldPlaySequence);
+              // Finding 4: Exact playSequence & Play ID monotonicity (AC-48, AC-49)
+              expect(result.createdPlay.playId, errorContext).toBe(oldPlaySequence);
+              expect(state.round.playSequence, errorContext).toBe(oldPlaySequence + 1);
+              expect(result.createdPlay.playId, errorContext).toBeGreaterThan(lastCreatedPlayId);
+              expect(seenPlayIds.has(result.createdPlay.playId), errorContext).toBe(false);
+              seenPlayIds.add(result.createdPlay.playId);
+              lastCreatedPlayId = result.createdPlay.playId;
 
+              // Transition delta checks
+              expect(result.createdPlay.count, errorContext).toBe(selectCount);
+              expect(result.createdPlay.claimedRank, errorContext).toBe(preTableRank);
+              expect(result.createdPlay.cardIds, errorContext).toEqual(selectedCardIds);
+
+              // Finding 3: Hand -> centralPile delta proof for ordinary PLAY (AC-44)
+              if (result.forcedCall === null) {
+                const postActorHand = state.players[curPlayerId]!.hand;
+                expect(postActorHand.length, errorContext).toBe(preHand.length - selectedCardIds.length);
+
+                const postActorCardIds = new Set(postActorHand.map((c) => c.id));
+                const postCentralCardIds = state.round.centralPile.map((c) => c.id);
+
+                for (const sId of selectedCardIds) {
+                  expect(postActorCardIds.has(sId), errorContext).toBe(false);
+                  const occurrences = postCentralCardIds.filter((id) => id === sId).length;
+                  expect(occurrences, errorContext).toBe(1);
+                }
+
+                for (const card of preHand) {
+                  if (!selectedCardIds.includes(card.id)) {
+                    expect(postActorCardIds.has(card.id), errorContext).toBe(true);
+                  }
+                }
+
+                expect(state.round.centralPile.length, errorContext).toBe(
+                  preCentralPile.length + selectedCardIds.length
+                );
+              }
+
+              // Finding 5: Shooter advance check on forced call
               if (result.forcedCall) {
-                expect(result.forcedCall.challenge.playId).toBe(result.createdPlay.playId);
-                expect(result.forcedCall.shot.nextShotIndex).toBe(result.forcedCall.shot.shotIndex + 1);
-                expect(['NEXT_ROUND', 'MATCH_WON']).toContain(result.forcedCall.terminal);
+                expect(result.forcedCall.challenge.playId, errorContext).toBe(result.createdPlay.playId);
+                expect(result.forcedCall.shot.nextShotIndex, errorContext).toBe(
+                  result.forcedCall.shot.shotIndex + 1
+                );
+                expect(['NEXT_ROUND', 'MATCH_WON'], errorContext).toContain(result.forcedCall.terminal);
+
+                const shooterId = result.forcedCall.shot.playerId;
+                expect(state.players[shooterId]!.revolver.nextShotIndex, errorContext).toBe(
+                  preRevolverIndices[shooterId]! + 1
+                );
+                let advancingCount = 0;
+                for (const pId of state.seatOrder) {
+                  if (pId !== shooterId) {
+                    expect(state.players[pId]!.revolver.nextShotIndex, errorContext).toBe(preRevolverIndices[pId]!);
+                  } else {
+                    advancingCount++;
+                  }
+                }
+                expect(advancingCount, errorContext).toBe(1);
+              } else {
+                // Ordinary PLAY: all revolver indices unchanged
+                for (const pId of state.seatOrder) {
+                  expect(state.players[pId]!.revolver.nextShotIndex, errorContext).toBe(preRevolverIndices[pId]!);
+                }
               }
             } else {
               totalCommandsExecuted++;
+              expect(prePreviousPlay, errorContext).not.toBeNull();
+
               const result = applyCallLiar(state, curPlayerId, rng);
 
               // Input state immutability check
-              expect(JSON.stringify(state)).toBe(stateSnapshotStr);
+              expect(JSON.stringify(state), errorContext).toBe(stateSnapshotStr);
 
               state = result.state;
 
+              // Finding 6: Explicit CALL latest previousPlay target proof (I12)
+              expect(result.challenge.playId, errorContext).toBe(prePreviousPlay!.playId);
+              expect(result.challenge.accusedPlayerId, errorContext).toBe(prePreviousPlay!.playerId);
+
               // Transition delta checks for CALL_LIAR
-              expect(result.challenge.shooterId).toBe(result.challenge.roundLoserId);
-              expect(result.shot.playerId).toBe(result.challenge.shooterId);
-              expect(result.shot.nextShotIndex).toBe(result.shot.shotIndex + 1);
+              expect(result.challenge.shooterId, errorContext).toBe(result.challenge.roundLoserId);
+              expect(result.shot.playerId, errorContext).toBe(result.challenge.shooterId);
+              expect(result.shot.nextShotIndex, errorContext).toBe(result.shot.shotIndex + 1);
+
+              // Finding 5: Shooter advance check on explicit CALL
+              const shooterId = result.shot.playerId;
+              expect(state.players[shooterId]!.revolver.nextShotIndex, errorContext).toBe(
+                preRevolverIndices[shooterId]! + 1
+              );
+              let advancingCount = 0;
+              for (const pId of state.seatOrder) {
+                if (pId !== shooterId) {
+                  expect(state.players[pId]!.revolver.nextShotIndex, errorContext).toBe(preRevolverIndices[pId]!);
+                } else {
+                  advancingCount++;
+                }
+              }
+              expect(advancingCount, errorContext).toBe(1);
             }
 
             // Monotonicity checks
-            expect(state.round.playSequence).toBeGreaterThanOrEqual(previousPlaySequence);
+            expect(state.round.playSequence, errorContext).toBeGreaterThanOrEqual(previousPlaySequence);
             previousPlaySequence = state.round.playSequence;
 
-            // Revolver nextShotIndex monotonicity check across step
-            let advancingCount = 0;
-            for (const pId of state.seatOrder) {
-              const postIndex = state.players[pId]!.revolver.nextShotIndex;
-              const preIndex = preRevolverIndices[pId]!;
-              expect(postIndex).toBeGreaterThanOrEqual(preIndex);
-              expect(postIndex - preIndex).toBeLessThanOrEqual(1);
-              if (postIndex > preIndex) advancingCount++;
-            }
-            expect(advancingCount).toBeLessThanOrEqual(1);
-
             // Core State Invariants after transition
-            assertCoreStateInvariants(state, baseline);
+            assertCoreStateInvariants(state, baseline, counters);
           }
         }
       }
 
       expect(totalTraces).toBe(48);
-      expect(totalCommandsExecuted).toBeGreaterThan(100);
+
+      // Finding 13: Exact command total assertion
+      expect(totalCommandsExecuted).toBe(894);
+
+      // Finding 8 & 9: Non-vacuous observation assertions
+      expect(counters.emptySafeStatesObserved).toBeGreaterThan(0);
+      expect(counters.aliveEmptyStatesObserved).toBeGreaterThan(0);
+      expect(counters.freshNextRoundsObserved).toBeGreaterThan(0);
+      expect(counters.finishedMatchesObserved).toBeGreaterThan(0);
     });
   });
 
   describe('PROPERTY GROUP I — Timeout Index Sweep (AC-51..AC-56)', () => {
-    it('sweeps all hand indices 0..4 across 3 player counts and representative seeds', () => {
+    it('sweeps all hand indices 0..4 across 3 player counts and representative seeds (45 cases)', () => {
       const playerCounts = [2, 3, 4];
       const seeds = [0, 5, 12];
       let totalCases = 0;
@@ -490,9 +617,11 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
   });
 
   describe('PROPERTY GROUP J — Deterministic Trace Replay (AC-57, AC-58)', () => {
-    it('replays multi-command traces from independent inputs/RNGs and verifies deep-equal final state and event log', () => {
+    it('replays multi-command traces from independent inputs/RNGs and verifies deep-equal final state and event log (6 cases)', () => {
+      let totalReplays = 0;
       for (const playerCount of [2, 3, 4]) {
         for (const seed of [3, 11]) {
+          totalReplays++;
           const runTrace = (pCount: number, sVal: number) => {
             const ids = Array.from({ length: pCount }, (_, i) => `P${i + 1}`);
             const rng = new SeededRandom(sVal);
@@ -548,6 +677,7 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
           expect(runA.eventLog).toEqual(runB.eventLog);
         }
       }
+      expect(totalReplays).toBe(6);
     });
   });
 
@@ -582,6 +712,39 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
         expect(Object.getPrototypeOf(state.players)).toBeNull();
         assertCoreStateInvariants(state);
       }
+    });
+  });
+
+  describe('PROPERTY GROUP L — Repeated Table Rank Legality (Finding 10 / I28)', () => {
+    it('proves a next round with repeated tableRank is accepted and canonical', () => {
+      const initRng = new ScriptedRandom([0]);
+      const match = initializeMatch(['A', 'B'], initRng);
+      const curP = match.round.currentPlayerId;
+      const playRes = applyPlayCardsCommand(match, curP, [match.players[curP]!.hand[0]!.id], new ScriptedRandom([0]));
+
+      // Create a state where previousPlay is unresolved and exists
+      expect(playRes.state.round.previousPlay).not.toBeNull();
+
+      // Explicitly mark previousPlay as resolved to test initializeNextRound
+      const resolvedState: MatchState = {
+        ...playRes.state,
+        round: {
+          ...playRes.state.round,
+          previousPlay: {
+            ...playRes.state.round.previousPlay!,
+            resolved: true
+          }
+        }
+      };
+
+      const nextRng = new SeededRandom(0);
+      const nextMatch = initializeNextRound(resolvedState, 'A', nextRng);
+
+      expect(['KING', 'QUEEN', 'ACE']).toContain(nextMatch.round.tableRank);
+      expect(nextMatch.round.roundNumber).toBe(2);
+      expect(nextMatch.round.previousPlay).toBeNull();
+      expect(nextMatch.round.centralPile).toEqual([]);
+      assertCoreStateInvariants(nextMatch);
     });
   });
 });
