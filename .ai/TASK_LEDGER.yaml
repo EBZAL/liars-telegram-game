@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-009-CALL-LIAR-MATCH-TRANSITION
-active_task: null
+active_task: T-010-FORCED-CALL-PLAY-ORCHESTRATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -60,6 +60,7 @@ stages:
       - T-007-ROULETTE-SHOT-RESOLUTION
       - T-008-NEXT-ROUND-INITIALIZATION
       - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -667,6 +668,73 @@ tasks:
       - AC-50: Scope
       - AC-51: Evidence
       - AC-52: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-010-FORCED-CALL-PLAY-ORCHESTRATION:
+    title: Forced Call Play Orchestration
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the canonical PLAY_CARDS command-level transition that executes the verified PLAY_CARDS primitive, inspects the resulting authoritative state, and if exactly one ALIVE Player still holds Cards, automatically executes that Player's mandatory CALL_LIAR, returning the final authoritative MatchState.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+    acceptance_criteria:
+      - AC-01: Command-level PLAY API
+      - AC-02: Reuse PLAY primitive
+      - AC-03: Created Play snapshot
+      - AC-04: Play snapshot identity
+      - AC-05: Forced detection reuse
+      - AC-06: Ordinary path
+      - AC-07: No RNG ordinary path
+      - AC-08: Forced current-player invariant
+      - AC-09: Forced action invariant
+      - AC-10: Reuse CALL transition
+      - AC-11: No external CALL needed
+      - AC-12: T13 automatic dispatch
+      - AC-13: T13 target
+      - AC-14: T13 BLANK continuation
+      - AC-15: T13 LETHAL winner
+      - AC-16: No next-Round RNG on forced winner
+      - AC-17: T14 automatic dispatch
+      - AC-18: T14 caller
+      - AC-19: T14 target
+      - AC-20: No forced call with >=2 card-holders
+      - AC-21: T12 preserved
+      - AC-22: New-play precedence
+      - AC-23: Already-forced actor cannot PLAY
+      - AC-24: First-turn compatibility
+      - AC-25: Play ID exactly once
+      - AC-26: Hand mutation exactly once
+      - AC-27: Pile mutation exactly once
+      - AC-28: Challenge exactly once
+      - AC-29: Shot exactly once
+      - AC-30: No duplicated Round/winner logic
+      - AC-31: Metadata survives reset
+      - AC-32: Single authoritative returned state
+      - AC-33: Detached createdPlay
+      - AC-34: Detached forced metadata
+      - AC-35: FINISHED rejection
+      - AC-36: Illegal PLAY regression
+      - AC-37: No downstream effects after rejected PLAY
+      - AC-38: Prototype safety
+      - AC-39: Input immutability
+      - AC-40: Determinism
+      - AC-41: No forbidden nondeterminism/dependencies
+      - AC-42: Full regression
+      - AC-43: Tooling
+      - AC-44: Scope / Evidence / Control lifecycle
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
