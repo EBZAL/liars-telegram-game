@@ -856,7 +856,10 @@ tasks:
   T-012-TWO-PLAYER-FLOW-HARDENING:
     title: Two-Player Flow Hardening
     stage: STAGE-03
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 7f90608
+    evidence:
+      - .ai/evidence/T-012-TWO-PLAYER-FLOW-HARDENING.md
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Create a dedicated 2-player canonical flow hardening suite that verifies the already-established Game Core behaves coherently across complete heads-up scenarios.
