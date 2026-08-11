@@ -676,7 +676,8 @@ tasks:
   T-010-FORCED-CALL-PLAY-ORCHESTRATION:
     title: Forced Call Play Orchestration
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: ddc348c44973a3c8f82aa5c262fb4f60690504b5
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the canonical PLAY_CARDS command-level transition that executes the verified PLAY_CARDS primitive, inspects the resulting authoritative state, and if exactly one ALIVE Player still holds Cards, automatically executes that Player's mandatory CALL_LIAR, returning the final authoritative MatchState.
