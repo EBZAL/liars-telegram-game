@@ -857,7 +857,7 @@ tasks:
     title: Two-Player Flow Hardening
     stage: STAGE-03
     status: IMPLEMENTED
-    implementation_commit: 7f90608
+    implementation_commit: 7f906082d0581ebb3fd59143d0c2ab7a1f2749a6
     evidence:
       - .ai/evidence/T-012-TWO-PLAYER-FLOW-HARDENING.md
     workflow_profile: STANDARD
