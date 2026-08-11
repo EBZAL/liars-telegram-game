@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-03
 last_verified_task: T-012-TWO-PLAYER-FLOW-HARDENING
-active_task: null
+active_task: T-013-THREE-PLAYER-FLOW-HARDENING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -91,6 +91,7 @@ stages:
     status: IN_PROGRESS
     required_tasks:
       - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -924,6 +925,80 @@ tasks:
       - AC-38: Full existing regression suite passes.
       - AC-39: npm ci / typecheck / test PASS.
       - AC-40: Evidence accurately maps all ACs and any discovered defect.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-013-THREE-PLAYER-FLOW-HARDENING:
+    title: Three-Player Flow Hardening
+    stage: STAGE-03
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Create a dedicated 3-player canonical flow hardening suite proving that the already-verified Game Core composes correctly across 3-player initialization, ordinary cyclic turns, empty-safe skipping, latest-Play challenge targeting, T14 mandatory CALL after two Players are empty, Truth/Lie x Blank/Lethal resolution, 3-player Round reset, 3 -> 2 Living transition after first elimination, eliminated-seat skipping, Round-starter fallback, and 3-player SYSTEM_TIMEOUT integration.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+    acceptance_criteria:
+      - AC-01: Dedicated 3-player scenario suite exists.
+      - AC-02: Real initialization verifies 5/5/5 with 5 undealt.
+      - AC-03: Initial canonical 20-card unique 6K/6Q/6A/2J partition verified.
+      - AC-04: Ordinary three-seat cyclic turn flow verified through commands.
+      - AC-05: A final-card PLAY does not force CALL while B and C still hold Cards.
+      - AC-06: A becomes EMPTY_PENDING_CHALLENGE after final PLAY.
+      - AC-07: B PLAY closes A's challenge window and makes A EMPTY_SAFE.
+      - AC-08: EMPTY_SAFE A is skipped and current turn advances to C.
+      - AC-09: C can challenge B's newest Play after A is skipped.
+      - AC-10: C never challenges A's closed older Play.
+      - AC-11: Canonical T14 20-card pre-final fixture established.
+      - AC-12: T14 B final PLAY automatically forces C CALL.
+      - AC-13: Forced CALL targets B's newly-created final Play.
+      - AC-14: Truth + Blank T14 branch verified.
+      - AC-15: Lie + Blank T14 branch verified.
+      - AC-16: Truth + Lethal T14 branch verified.
+      - AC-17: Lie + Lethal T14 branch verified.
+      - AC-18: BLANK Shot advances exactly one Revolver position.
+      - AC-19: Surviving round loser starts next Round.
+      - AC-20: 3-player Blank reset deals 5/5/5 with 5 undealt.
+      - AC-21: Post-reset 20-card unique canonical composition verified.
+      - AC-22: EMPTY_SAFE A returns WITH_CARDS with 5 Cards.
+      - AC-23: Revolver sequences persist through 3-player Round reset.
+      - AC-24: Non-shooter Revolver indices remain unchanged.
+      - AC-25: First lethal elimination in 3-player Match does not finish Match.
+      - AC-26: Truth+Lethal C elimination yields A/B Living two-player Round.
+      - AC-27: Truth+Lethal next Round has 5/5 with 10 undealt.
+      - AC-28: Eliminated C receives no new Hand.
+      - AC-29: Eliminated C fallback starter resolves to A in [A,B,C] cycle.
+      - AC-30: Lie+Lethal B elimination yields A/C Living two-player Round.
+      - AC-31: Eliminated B fallback starter resolves to C.
+      - AC-32: Eliminated B receives no new Hand.
+      - AC-33: Post-elimination ordinary turn skips eliminated seat.
+      - AC-34: Play identity remains monotonic across Round reset.
+      - AC-35: Forced branch metadata remains detached/available after reset.
+      - AC-36: Exactly one final PLAY, Challenge and Shot occur in automatic T14 path.
+      - AC-37: Ordinary 3-player SYSTEM_TIMEOUT one-card integration verified.
+      - AC-38: Final-card T14 SYSTEM_TIMEOUT triggers automatic forced CALL.
+      - AC-39: No selected-but-unconfirmed/UI selection model introduced.
+      - AC-40: Representative 3-player input immutability verified.
+      - AC-41: Ordinary, forced-Blank and 3->2 lethal determinism verified.
+      - AC-42: __proto__ PlayerId 3-player regression verified.
+      - AC-43: Handcrafted fixtures conserve canonical 20-card state.
+      - AC-44: No forbidden nondeterminism / Room / projection / UI scope introduced.
+      - AC-45: Full existing regression suite passes.
+      - AC-46: npm ci / typecheck / test all PASS.
+      - AC-47: Evidence accurately maps all ACs and any product defect.
+      - AC-48: Control lifecycle remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
