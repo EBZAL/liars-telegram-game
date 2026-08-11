@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-02
 last_verified_task: T-008-NEXT-ROUND-INITIALIZATION
-active_task: null
+active_task: T-009-CALL-LIAR-MATCH-TRANSITION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -59,6 +59,7 @@ stages:
       - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
       - T-007-ROULETTE-SHOT-RESOLUTION
       - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -581,6 +582,80 @@ tasks:
       - AC-42: Scope
       - AC-43: Evidence completeness
       - AC-44: Control files
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-009-CALL-LIAR-MATCH-TRANSITION:
+    title: Call Liar Match Transition
+    stage: STAGE-02
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the authoritative stateful CALL_LIAR Match transition by atomically composing verified primitives
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+    acceptance_criteria:
+      - AC-01: MatchStatus
+      - AC-02: Stateful CALL API
+      - AC-03: No caller target authority
+      - AC-04: Active Match required
+      - AC-05: No pre-existing winner
+      - AC-06: At least two Living before CALL
+      - AC-07: Reuse Challenge resolver
+      - AC-08: PreviousPlay resolved atomically
+      - AC-09: Shooter authority
+      - AC-10: Reuse Roulette resolver
+      - AC-11: Exactly one Shot
+      - AC-12: Prototype-safe shooter update
+      - AC-13: Post-Shot Living derivation
+      - AC-14: Continuing branch
+      - AC-15: T15 integrated
+      - AC-16: T16 integrated
+      - AC-17: T17 integrated
+      - AC-18: T20 integrated
+      - AC-19: T18 integrated
+      - AC-20: T21 integrated
+      - AC-21: T26
+      - AC-22: T26 status
+      - AC-23: T26 winnerId
+      - AC-24: No next Round after winner
+      - AC-25: No RNG consumption after winner
+      - AC-26: FINISHED invariant
+      - AC-27: IN_PROGRESS invariant
+      - AC-28: Detached Challenge metadata
+      - AC-29: Detached Shot metadata
+      - AC-30: Metadata survives Round Reset
+      - AC-31: Forced 1v1 compatibility
+      - AC-32: Forced 3-player compatibility
+      - AC-33: No claim of auto-dispatch
+      - AC-34: First-turn rejection
+      - AC-35: Out-of-turn rejection
+      - AC-36: Resolved-Play rejection
+      - AC-37: Illegal CALL causes no Shot/RNG
+      - AC-38: Finished PLAY rejected
+      - AC-39: Finished Challenge rejected
+      - AC-40: Finished Next Round rejected
+      - AC-41: Finished CALL rejected
+      - AC-42: Input immutability
+      - AC-43: Revolver correctness retained
+      - AC-44: Next-Round behavior retained
+      - AC-45: Winner branch preserves final Round
+      - AC-46: Determinism
+      - AC-47: No forbidden nondeterminism/dependencies
+      - AC-48: Regression
+      - AC-49: Tooling
+      - AC-50: Scope
+      - AC-51: Evidence
+      - AC-52: Control files
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
