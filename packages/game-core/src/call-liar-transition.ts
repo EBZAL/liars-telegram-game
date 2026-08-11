@@ -45,6 +45,10 @@ export function applyCallLiar(
   // 3. Challenge resolution (validates turn legality, caller identity, unresolved previousPlay)
   const challenge = resolveLiarChallenge(state, callerId);
 
+  if (challenge.shooterId !== challenge.roundLoserId) {
+    throw new Error('Invariant failure: challenge shooter must equal round loser.');
+  }
+
   // 4. Shooter authority & previousPlay resolved lifecycle
   const shooterId = challenge.shooterId;
   const shooterPlayer = state.players[shooterId];
