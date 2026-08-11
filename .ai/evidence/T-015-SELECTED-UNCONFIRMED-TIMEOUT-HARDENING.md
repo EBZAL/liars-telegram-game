@@ -5,26 +5,26 @@
 **Workflow Profile:** `STANDARD`  
 **Risk Level:** `MEDIUM`  
 **Status:** `IMPLEMENTED`  
-**Implementation Commit:** `e079c0a401ea7302d0c1a948431a53dc48be3914`  
+**Implementation Commit:** `9c92a69a562dbb8a89eecd3d2e6cb056a7cd80ea`  
 
 ---
 
 ## 1. Executive Summary
 
-Task `T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING` created a dedicated test hardening suite (`packages/game-core/tests/timeout-selection-boundary.test.ts`) that locks and proves the approved architectural authority boundary for selected-but-unconfirmed cards at timeout.
+Task `T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING` created and strengthened a dedicated test hardening suite (`packages/game-core/tests/timeout-selection-boundary.test.ts`) that locks and proves the approved architectural authority boundary for selected-but-unconfirmed cards at timeout.
 
 ### Boundary Wording & Scope Distinctions:
 - **STAGE-03 Core authority boundary:** **PASS** (Core authority schema, `applySystemTimeout` signature, and confirmed `PLAY_CARDS` boundary fully hardened).
-- **End-to-end UI highlight behavior:** **NOT IMPLEMENTED HERE** (Card highlight UI, selection components, presentation reducers remain Stage-06 UI work).
-- **Room deadline/revision behavior:** **NOT IMPLEMENTED HERE** (30-second timer, `TURN_DEADLINE` alarms, late-command arbitration, revision deduplication remain Stage-04 Authoritative Multiplayer work).
+- **End-to-end UI selection:** **NOT IMPLEMENTED HERE** (Card highlight UI, selection components, presentation reducers remain Stage-06 UI work).
+- **Room deadline/revision:** **NOT IMPLEMENTED HERE** (30-second timer, `TURN_DEADLINE` alarms, late-command arbitration, revision deduplication remain Stage-04 Authoritative Multiplayer work).
 
-### Key Boundary Rules Hardened:
+### Key Boundary Rules & Proof Corrections Hardened:
 - **`applySystemTimeout` signature & arity:** Locked to exactly `(state: MatchState, random: RandomSource): SystemTimeoutResult` with arity 2. No local selection or draft input parameters exist.
-- **Authoritative Core Schema Isolation:** Type and runtime checks verify `MatchState`, `RoundState`, and `PlayerState` expose zero local/presentation selection properties (`selectedCards`, `draftSelection`, `highlightedCards`, etc.).
+- **Exhaustive 8-Key Schema Isolation:** Exhaustive compile-time forbidden-key checks verify that `MatchState`, `RoundState`, and `PlayerState` contain none of the eight prohibited local/presentation selection keys (`selectedCards`, `selectedCardIds`, `selectedButUnconfirmedCards`, `highlightedCards`, `highlightedCardIds`, `draftSelection`, `pendingSelection`, `localSelection`).
+- **Canonical 20-Card Truth/Lie/Joker Fixture:** Truth, Lie, and Joker pre-confirm preferences were tested against a canonical 20-card state (3 cards in hand A, 1 card in hand B, 6 central pile cards, 10 undealt cards; 6 KING, 6 QUEEN, 6 ACE, 2 JOKER; coherent `previousPlay`). Local preferences favoring Truth, Lie, or Joker produce deep-equal timeout outputs when given the same RNG index.
 - **Local State Independence:** Local presentation selection variables exist strictly outside `MatchState`. Local selection mutations do not alter authoritative Core state (`JSON.stringify(match)` preserved).
 - **Timeout Invariance under Local Highlights:** Identical `MatchState` + identical `RandomSource` with different local highlights produce deep-equal `SystemTimeoutResult` outputs (`resultA deepEquals resultB`).
 - **RNG Authority & Disagreement:** Local single-card selection cannot override an RNG-selected Card; local multi-card selection cannot cause timeout to play multiple Cards (`createdPlay.count` remains strictly 1).
-- **Truth/Lie/Joker Unbiased Selection:** Local pre-confirm preferences favoring Truth, Lie, or Joker cards cannot bias or alter timeout selection.
 - **Confirmed `PLAY_CARDS` Authority Boundary:** Local highlighting has zero authoritative effect; confirmed `PLAY_CARDS` via `applyPlayCardsCommand` is the sole boundary where explicit Card IDs become authoritative.
 - **RNG Call Economy:** Ordinary timeout card-selection phase consumes exactly 1 RNG call with `max = currentHand.length`.
 - **Current Player Derivation:** Timeout actor is derived strictly from `state.round.currentPlayerId` and cannot be replaced by local selection owners.
@@ -38,9 +38,9 @@ Task `T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING` created a dedicated test har
 | **AC-01** | Dedicated selected-unconfirmed timeout boundary suite exists | **PASS** | `packages/game-core/tests/timeout-selection-boundary.test.ts` |
 | **AC-02** | `applySystemTimeout` type parameters remain exactly `MatchState` + `RandomSource` | **PASS** | `expectTypeOf<Parameters<typeof applySystemTimeout>>().toEqualTypeOf<[MatchState, RandomSource]>()` |
 | **AC-03** | `applySystemTimeout` runtime arity remains two | **PASS** | `expect(applySystemTimeout.length).toBe(2)` |
-| **AC-04** | `MatchState` exposes no local selected-card field | **PASS** | `expectTypeOf<MatchState>().not.toHaveProperty('selectedCards')` |
-| **AC-05** | `RoundState` exposes no local selected-card field | **PASS** | `expectTypeOf<RoundState>().not.toHaveProperty('selectedCards')` |
-| **AC-06** | `PlayerState` exposes no local selected-card field | **PASS** | `expectTypeOf<PlayerState>().not.toHaveProperty('selectedCards')` |
+| **AC-04** | `MatchState` exposes no local selected-card field | **PASS** | `expectTypeOf<MatchSelectionLeak>().toEqualTypeOf<never>()` |
+| **AC-05** | `RoundState` exposes no local selected-card field | **PASS** | `expectTypeOf<RoundSelectionLeak>().toEqualTypeOf<never>()` |
+| **AC-06** | `PlayerState` exposes no local selected-card field | **PASS** | `expectTypeOf<PlayerSelectionLeak>().toEqualTypeOf<never>()` |
 | **AC-07** | No authoritative pre-confirm selection transition is introduced | **PASS** | Zero pre-confirm selection commands added |
 | **AC-08** | Different local-only selection values do not alter equivalent MatchStates | **PASS** | Local array/set mutations leave `MatchState` unmutated |
 | **AC-09** | Same authoritative state + same RNG + different local selections produce deep-equal timeout results | **PASS** | `resultA` deep-equals `resultB` |
@@ -49,9 +49,9 @@ Task `T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING` created a dedicated test har
 | **AC-12** | Timeout `createdPlay.count` remains exactly one | **PASS** | `createdPlay.count === 1` |
 | **AC-13** | Timeout `createdPlay.cardIds` length remains exactly one | **PASS** | `createdPlay.cardIds.length === 1` |
 | **AC-14** | Local selection cannot bypass timeout RNG | **PASS** | RNG `nextInt` is always invoked and determines output |
-| **AC-15** | Local Truth-preferred selection cannot bias timeout | **PASS** | Local KING preference yields QUEEN when RNG chooses QUEEN |
-| **AC-16** | Local Lie-preferred selection cannot bias timeout | **PASS** | Local QUEEN preference yields QUEEN when RNG chooses QUEEN |
-| **AC-17** | Local Joker-preferred selection cannot bias timeout | **PASS** | Local JOKER preference yields QUEEN when RNG chooses QUEEN |
+| **AC-15** | Local Truth-preferred selection cannot bias timeout | **PASS** | Tested on canonical 20-card fixture; KING preference yields QUEEN when RNG chooses QUEEN |
+| **AC-16** | Local Lie-preferred selection cannot bias timeout | **PASS** | Tested on canonical 20-card fixture; QUEEN preference yields QUEEN when RNG chooses QUEEN |
+| **AC-17** | Local Joker-preferred selection cannot bias timeout | **PASS** | Tested on canonical 20-card fixture; JOKER preference yields QUEEN when RNG chooses QUEEN |
 | **AC-18** | RNG-selected authoritative Hand index determines `autoPlayedCardId` | **PASS** | `autoPlayedCardId = hand[rngIndex].id` |
 | **AC-19** | Current Player is derived from `state.round.currentPlayerId` | **PASS** | `timedOutPlayerId = state.round.currentPlayerId` |
 | **AC-20** | Local selection owner cannot replace `timedOutPlayerId` | **PASS** | External selection owner cannot alter actor ID |
@@ -100,7 +100,7 @@ Task `T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING` created a dedicated test har
 ## 4. File Impact Summary
 
 - **New Test File**:
-  - `packages/game-core/tests/timeout-selection-boundary.test.ts` (261 lines, 11 dedicated boundary test blocks)
+  - `packages/game-core/tests/timeout-selection-boundary.test.ts` (386 lines, 11 dedicated boundary test blocks)
 - **Product Source Files**:
   - `NONE` (Zero source modifications)
 - **Control Files Updated**:

@@ -1112,7 +1112,8 @@ tasks:
   T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING:
     title: Selected Unconfirmed Timeout Hardening
     stage: STAGE-03
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 9c92a69a562dbb8a89eecd3d2e6cb056a7cd80ea
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Harden and prove the approved architectural boundary for selected-but-unconfirmed cards at timeout, proving that local pre-confirm card highlighting/selection is Local Presentation State only, invisible to the pure Core, ignored during SYSTEM_TIMEOUT, and that confirmed PLAY_CARDS remains the sole authority boundary where explicit card IDs become authoritative.
