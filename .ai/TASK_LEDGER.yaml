@@ -933,7 +933,8 @@ tasks:
   T-013-THREE-PLAYER-FLOW-HARDENING:
     title: Three-Player Flow Hardening
     stage: STAGE-03
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 458195d068636c91397ea773ccfcb857c2b5649a
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Create a dedicated 3-player canonical flow hardening suite proving that the already-verified Game Core composes correctly across 3-player initialization, ordinary cyclic turns, empty-safe skipping, latest-Play challenge targeting, T14 mandatory CALL after two Players are empty, Truth/Lie x Blank/Lethal resolution, 3-player Round reset, 3 -> 2 Living transition after first elimination, eliminated-seat skipping, Round-starter fallback, and 3-player SYSTEM_TIMEOUT integration.
