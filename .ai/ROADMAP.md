@@ -24,9 +24,18 @@
 * isolated deterministic domain foundation established.
 
 ## STAGE-02 — Canonical Core Engine
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 **Goals**: full canonical game state machine, GAME_RULES behavior, challenge/empty-hand/roulette/round flow
-**Exit Gate**: canonical Core-relevant GAME_RULES T01–T26 and T28–T31 covered and passing; T27 dead-spectator hidden-information behavior remains mandatory but is evaluated under STAGE-04 recipient-specific hidden-information projections; no unresolved Core rule ambiguity; deterministic state transitions.
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-002 through T-011 VERIFIED
+- canonical Core-relevant T01–T26 PASS
+- T28–T31 PASS
+- T27 explicitly retained as mandatory STAGE-04 hidden-projection/security acceptance
+- no unresolved pure-Core rule ambiguity evidenced
+- deterministic Core transitions verified
+- latest full regression: 189 tests PASS
+- Stage-02/T27 boundary reconciled in ec9063502a30d57e87e2981d5db8d1da37eaed32
 **Progress**:
 - T-002-MATCH-ROUND-INITIALIZATION VERIFIED
 - deterministic Match / Round-1 initialization established

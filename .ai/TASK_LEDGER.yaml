@@ -2,7 +2,7 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-02
+current_stage: STAGE-03
 last_verified_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
 active_task: null
 
@@ -50,7 +50,7 @@ stages:
 
   STAGE-02:
     title: Canonical Core Engine
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-002-MATCH-ROUND-INITIALIZATION
       - T-003-PLAY-RULE-PRIMITIVES
@@ -63,8 +63,28 @@ stages:
       - T-010-FORCED-CALL-PLAY-ORCHESTRATION
       - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-002 through T-011 VERIFIED
+        - canonical Core-relevant GAME_RULES T01-T26 and T28-T31 covered and passing
+        - T27 retained as mandatory STAGE-04 recipient-projection/security acceptance
+        - no unresolved pure-Core GAME_RULES ambiguity evidenced
+        - deterministic Core transitions verified
+        - .ai/evidence/T-002-MATCH-ROUND-INITIALIZATION.md
+        - .ai/evidence/T-003-PLAY-RULE-PRIMITIVES.md
+        - .ai/evidence/T-004-TURN-ACTION-ELIGIBILITY.md
+        - .ai/evidence/T-005-PLAY-CARDS-STATE-TRANSITION.md
+        - .ai/evidence/T-006-CHALLENGE-RESOLUTION-PRIMITIVES.md
+        - .ai/evidence/T-007-ROULETTE-SHOT-RESOLUTION.md
+        - .ai/evidence/T-008-NEXT-ROUND-INITIALIZATION.md
+        - .ai/evidence/T-009-CALL-LIAR-MATCH-TRANSITION.md
+        - .ai/evidence/T-010-FORCED-CALL-PLAY-ORCHESTRATION.md
+        - .ai/evidence/T-011-SYSTEM-TIMEOUT-AUTO-PLAY.md
+        - docs/GAME_RULES.md v3
+        - T27 boundary reconciliation commit ec9063502a30d57e87e2981d5db8d1da37eaed32
+        - npm ci PASS
+        - npm run typecheck PASS
+        - npm test PASS (189 tests)
 
   STAGE-03:
     title: Player-Count & Rule Hardening

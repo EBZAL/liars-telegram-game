@@ -1,7 +1,7 @@
 # Current State
 
 **Current Stage:**
-STAGE-02 — Canonical Core Engine
+STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
 T-011-SYSTEM-TIMEOUT-AUTO-PLAY
@@ -424,13 +424,45 @@ None
 - Original-PC exact timeout auto-selection algorithm remains SOURCE_GAP.
 - Exactly one random authoritative Hand Card is the explicit Project Override.
 
-**Stage-02 Exit-Gate Boundary Reconciliation:**
-- Canonical T01–T26 and T28–T31 are Core-relevant and have durable VERIFIED implementation/evidence through T-011.
-- T27 is a mandatory information-security behavior, but its enforcement requires recipient-specific Room/Application projections rather than a pure authoritative Core MatchState transition.
-- T27 remains unimplemented and mandatory for STAGE-04.
-- This is not a waiver of T27 and not an Architecture change.
-- STAGE-02 Exit Gate remains NOT_EVALUATED until Architect re-read.
-- No currently evidenced unresolved pure-Core GAME_RULES implementation gap remains after T-011.
+**STAGE-02 — Canonical Core Engine:**
+COMPLETE
+
+**Stage Exit Gate:**
+PASS
+
+**Stage-02 Required Tasks:**
+T-002 through T-011 all VERIFIED
+
+**Canonical Core Coverage:**
+T01–T26 PASS
+T28–T31 PASS
+
+**T27:**
+mandatory project requirement
+not waived
+not implemented yet
+retained for STAGE-04 recipient-specific hidden-information projections
+
+No currently evidenced unresolved pure-Core GAME_RULES ambiguity remains.
+
+Core deterministic-transition requirement PASS.
+
+**Latest Full Regression Evidence:**
+npm ci PASS
+npm run typecheck PASS
+npm test PASS
+189 tests
+
+**Boundary Wording:**
+The Core implements the SYSTEM_TIMEOUT effect,
+but does not own actual 30-second deadline scheduling.
+
+TURN_DEADLINE alarms, stale-alarm handling,
+late-command arbitration, revision/dedupe,
+Pause/Resume, Room persistence/networking
+remain later Room/Application work.
+
+T27 remains mandatory in STAGE-04.
 
 **Active Blockers:**
 None
@@ -460,6 +492,6 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this reconciliation commit and then perform the STAGE-02 Exit Gate assessment using the reconciled Core boundary: T01–T26 and T28–T31 as Stage-02 Core criteria, with T27 retained as mandatory STAGE-04 recipient-projection/security acceptance. No new implementation task may begin before that Architect Stage Gate decision.
+Project Architect must re-read this Stage-02 completion State Sync, then inspect STAGE-03 goals and current repository state, select the smallest bounded Player-Count & Rule Hardening task, determine Workflow Profile/Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt.
 
 
