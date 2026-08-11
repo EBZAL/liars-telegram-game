@@ -221,10 +221,40 @@
 - ordinary / Blank / lethal determinism verified
 - __proto__ 3-player regression verified
 - T-013 remained test-only; no product defect discovered
-- latest full regression: 218 tests / 13 test files PASS
-- 2-player dedicated hardening: COMPLETE / VERIFIED
-- 3-player dedicated hardening: COMPLETE / VERIFIED
-- 4-player suite remains pending
+- T-014-FOUR-PLAYER-FLOW-HARDENING VERIFIED
+- dedicated 4-player scenario suite PASS
+- real 5/5/5/5 + 0 undealt initialization verified
+- canonical 20-card initial partition verified
+- four-seat cyclic order verified
+- multiple EMPTY_SAFE seat skipping verified
+- fixed four-seat order preserved under empty-seat skips
+- latest Play targeting across skipped seats verified
+- four-player sole-holder mandatory CALL verified
+- canonical 20-card sole-holder fixture verified
+- Truth/Lie × Blank/Lethal four-branch matrix verified
+- exactly one Shot-index advance across forced branches verified
+- Blank reset 5/5/5/5 + 0 undealt verified
+- safe-empty Player return verified
+- Revolver sequence/index persistence on Blank verified
+- first lethal elimination confirmed non-terminal
+- 4→3 Living transition verified
+- 4→3 reset 5/5/5 + 5 undealt verified
+- canonical 20-card 4→3 partition verified
+- eliminated loser starter fallback verified
+- eliminated-seat A→B→C→A skip verified
+- original four-seat order preserved after elimination
+- lethal Revolver persistence verified
+- actual next-Round Play ID continuity verified
+- ordinary four-player SYSTEM_TIMEOUT integration verified
+- final-card timeout forced CALL targeting verified
+- representative immutability verified
+- ordinary / Blank / lethal determinism verified
+- __proto__ four-player regression verified
+- T-014 remained test-only; no product defect discovered
+- latest full regression: 231 tests / 14 files PASS
+- 2-player suite COMPLETE / VERIFIED
+- 3-player suite COMPLETE / VERIFIED
+- 4-player suite COMPLETE / VERIFIED
 - selected-but-unconfirmed timeout-policy hardening remains pending
 - invariant/property testing remains pending
 

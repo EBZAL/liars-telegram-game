@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-03
-last_verified_task: T-013-THREE-PLAYER-FLOW-HARDENING
-active_task: T-014-FOUR-PLAYER-FLOW-HARDENING
+last_verified_task: T-014-FOUR-PLAYER-FLOW-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1019,8 +1019,18 @@ tasks:
   T-014-FOUR-PLAYER-FLOW-HARDENING:
     title: Four-Player Flow Hardening
     stage: STAGE-03
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 947fc6cb3f9521780ced5b4103aa0e017c7be55b
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 947fc6cb3f9521780ced5b4103aa0e017c7be55b
+      evidence:
+        - .ai/evidence/T-014-FOUR-PLAYER-FLOW-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Create a dedicated 4-player canonical flow hardening suite proving that the already-VERIFIED pure Game Core composes correctly across real 4-player initialization, 20 dealt / 0 undealt cards, four-seat cyclic turn order, multiple EMPTY_SAFE seat skipping, latest-Play challenge targeting, 4-player sole-holder mandatory CALL, Truth/Lie x Blank/Lethal forced-resolution matrix, 4-player Blank Round reset, 4 -> 3 Living transition after first elimination, 4 -> 3 deck-count transition, eliminated-seat skipping, round-starter fallback, and 4-player SYSTEM_TIMEOUT integration.

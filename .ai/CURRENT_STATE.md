@@ -4,7 +4,7 @@
 STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
-T-013-THREE-PLAYER-FLOW-HARDENING
+T-014-FOUR-PLAYER-FLOW-HARDENING
 
 **Current Active Task:**
 None
@@ -622,7 +622,139 @@ None
   - npm test PASS
   - 218 tests across 13 test files
 - No dependency changes.
+- No dependency changes.
 - No product source changes.
+- No forbidden nondeterminism.
+- No Architecture change.
+- T-014 Four-Player Flow Hardening VERIFIED.
+- Task remained test-only: YES
+- Product defect discovered: NONE
+- Dedicated 4-player canonical scenario suite: PASS
+- Real 4-player initialization:
+  - 4 ALIVE Players
+  - each WITH_CARDS
+  - 5 Cards each
+  - 20 dealt
+  - zero undealt
+  - full canonical 20-card partition
+  - 20 unique Card IDs
+  - 6 KING / 6 QUEEN / 6 ACE / 2 JOKER
+- Ordinary four-seat flow:
+  - fixed cyclic seat order verified
+  - P1 → P2 → P3 → P4 → P1
+- Multiple EMPTY_SAFE seats:
+  - canonical full-20-card fixture
+  - A and C EMPTY_SAFE
+  - B PLAY skips C → D
+  - D PLAY skips A and C → B
+  - seatOrder remains [A,B,C,D]
+- Latest Play targeting:
+  - skipped EMPTY_SAFE seats do not erase previousPlay
+  - D CALL_LIAR targets B's newest Play
+  - older D Play is not incorrectly challenged
+- Four-player sole-holder mandatory CALL:
+  - A and B EMPTY_SAFE
+  - C has final 1 Card
+  - D retains 1 Card
+  - centralPile = 18
+  - undealt = 0
+  - 20-card canonical partition preserved
+  - C final PLAY automatically forces D CALL
+  - Challenge targets C's newly-created Play
+  - no external CALL required
+- Four canonical forced branches VERIFIED:
+  - Truth + Blank
+  - Lie + Blank
+  - Truth + Lethal
+  - Lie + Lethal
+- Automatic forced-branch bounded effects:
+  - exactly one created Play
+  - exactly one Challenge resolution
+  - exactly one Shot-index advance
+  - shotIndex 0 → nextShotIndex 1 in canonical matrix fixtures
+- Four-player BLANK reset:
+  - all 4 Players remain ALIVE
+  - 5 Cards each
+  - undealt = 0
+  - canonical 20-card 6K/6Q/6A/2J partition restored
+  - previousPlay reset
+  - centralPile reset
+  - surviving round loser starts next Round
+  - prior EMPTY_SAFE Players return WITH_CARDS
+- Revolver persistence on BLANK:
+  - all four Revolver sequences remain unchanged
+  - shooter nextShotIndex advances exactly once
+  - all non-shooter indices remain unchanged
+- First lethal elimination from four Players:
+  - does NOT finish Match
+  - exactly 3 Living Players remain
+  - exactly 1 Player ELIMINATED
+  - state remains IN_PROGRESS
+  - winnerId remains null
+  - terminal = NEXT_ROUND
+- Truth + Lethal:
+  - D eliminated
+  - A/B/C remain Living
+  - starter fallback wraps D → A
+- Lie + Lethal:
+  - C eliminated
+  - A/B/D remain Living
+  - starter fallback resolves C → D
+- 4 → 3 Round reset:
+  - 3 Living Players receive 5 Cards each
+  - eliminated Player receives no fresh Hand
+  - undealt becomes 5
+  - Living Hands + undealt = 20
+  - 20 unique IDs
+  - 6K / 6Q / 6A / 2J
+- Fixed seat order after elimination:
+  - original [A,B,C,D] remains authoritative
+  - eliminated Player remains represented but is ineligible
+- Eliminated-seat skipping:
+  - with D eliminated, actual command flow: A → B → C → A
+  - final C → A transition proves D is skipped
+- Revolver persistence on lethal reset:
+  - eliminated shooter's Revolver sequence persists
+  - eliminated shooter's index advances exactly once
+  - Living Player Revolver sequences remain unchanged
+  - Living Player indices remain unchanged
+- Play identity:
+  - first actual PLAY after BLANK Round reset receives a later unique Play ID
+  - no cross-Round Play ID collision
+- 4-player SYSTEM_TIMEOUT:
+  - ordinary timeout chooses exactly one current-Hand Card
+  - Hand 5 → 4
+  - claimCount = 1
+  - claimedRank = tableRank
+  - no forced CALL while multiple Players retain Cards
+  - turn advances normally
+- Final-card four-player SYSTEM_TIMEOUT:
+  - timeout auto-plays C's only authoritative Card
+  - D automatically CALLs
+  - Challenge targets timeout-created Play
+  - exactly one Shot resolves
+- No selected-but-unconfirmed model was added.
+- Input immutability VERIFIED for:
+  - ordinary 4-player PLAY
+  - multi-EMPTY_SAFE sequence
+  - forced final-card PLAY
+  - SYSTEM_TIMEOUT
+  - 4→3 lethal transition
+- Determinism VERIFIED for:
+  - ordinary 4-player flow
+  - forced Blank flow
+  - 4→3 lethal flow
+- Prototype safety:
+  - __proto__ PlayerId works with four-player initialization
+  - players dictionary retains null prototype after command transition
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 231 tests across 14 test files
+  - four-player-flow.test.ts = 13 tests
+- No dependency change.
+- No product source change.
 - No forbidden nondeterminism.
 - No Architecture change.
 
@@ -656,11 +788,11 @@ IN_PROGRESS
 NOT_EVALUATED
 
 **Stage-03 Progress:**
-- T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED (2-player hardening complete)
-- T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED (3-player hardening complete)
-- 4-player dedicated hardening not yet completed.
-- selected-but-unconfirmed timeout-policy Stage-03 gate not yet independently hardened.
-- invariant/property Stage-03 gate not yet completed.
+- 2-player dedicated hardening: VERIFIED / COMPLETE
+- 3-player dedicated hardening: VERIFIED / COMPLETE
+- 4-player dedicated hardening: VERIFIED / COMPLETE
+- selected-but-unconfirmed timeout-policy hardening: PENDING
+- invariant/property testing: PENDING
 
 **Boundary Wording:**
 The Core implements the SYSTEM_TIMEOUT effect,
@@ -701,6 +833,6 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this verification State Sync, then inspect the remaining STAGE-03 exit-gate gaps and select the smallest next bounded hardening task. No next implementation task may begin before Architect Consistency/Risk Gate approval.
+Project Architect must re-read this T-014 verification State Sync and inspect the two remaining STAGE-03 Exit Gate gaps: selected-but-unconfirmed timeout-policy hardening and invariant/property testing. The Architect must select the smallest bounded next task, determine Workflow Profile/Risk, run the Consistency Gate, and only after PASS issue exactly one Executor prompt. No future task is pre-authorized by this State Sync.
 
 
