@@ -2,9 +2,9 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import { applySystemTimeout } from '../src/system-timeout-transition.js';
 import { applyPlayCardsCommand } from '../src/play-command-transition.js';
 import { initializeMatch } from '../src/match.js';
-import { MatchState, RoundState, PlayerState } from '../src/game-state.js';
+import { MatchState, RoundState, PlayerState, PlayState, TableRank } from '../src/game-state.js';
 import { RandomSource } from '../src/randomness.js';
-import { Card } from '../src/cards.js';
+import { Card, CardRank } from '../src/cards.js';
 
 class ScriptedRandom implements RandomSource {
   private indices: number[];
@@ -22,6 +22,138 @@ class ScriptedRandom implements RandomSource {
   }
 }
 
+/**
+ * Exhaustive type alias for all eight forbidden local/presentation selection concepts.
+ */
+type ForbiddenSelectionKey =
+  | 'selectedCards'
+  | 'selectedCardIds'
+  | 'selectedButUnconfirmedCards'
+  | 'highlightedCards'
+  | 'highlightedCardIds'
+  | 'draftSelection'
+  | 'pendingSelection'
+  | 'localSelection';
+
+type MatchSelectionLeak = Extract<keyof MatchState, ForbiddenSelectionKey>;
+type RoundSelectionLeak = Extract<keyof RoundState, ForbiddenSelectionKey>;
+type PlayerSelectionLeak = Extract<keyof PlayerState, ForbiddenSelectionKey>;
+
+/**
+ * Creates a fully canonical 20-card 2-player mid-Round state for Truth/Lie/Joker bias testing:
+ * - seatOrder = [A, B]
+ * - A: ALIVE, WITH_CARDS, hand = 3 Cards (KING, QUEEN, JOKER), current Player
+ * - B: ALIVE, WITH_CARDS, hand = 1 Card (ACE)
+ * - undealtCards = 10 Cards
+ * - centralPile = 6 Cards
+ * Total: 3 + 1 + 10 + 6 = 20 total Cards, 20 unique Card IDs (6 KING, 6 QUEEN, 6 ACE, 2 JOKER).
+ * previousPlay = unresolved, owned by B, referencing card in centralPile.
+ */
+function createCanonicalTruthLieJokerState(options: {
+  tableRank?: TableRank;
+  playSequence?: number;
+} = {}): {
+  state: MatchState;
+  kingCard: Card;
+  queenCard: Card;
+  jokerCard: Card;
+  bCard: Card;
+} {
+  const tableRank = options.tableRank ?? 'KING';
+
+  const defaultRevolver = () => ({
+    sequence: ['BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'LETHAL'] as const,
+    nextShotIndex: 0
+  });
+
+  const kingCard: Card = { id: 'card-a-king', rank: 'KING' };
+  const queenCard: Card = { id: 'card-a-queen', rank: 'QUEEN' };
+  const jokerCard: Card = { id: 'card-a-joker', rank: 'JOKER' };
+  const bCard: Card = { id: 'card-b-ace', rank: 'ACE' };
+
+  const needed: Record<CardRank, number> = { KING: 6, QUEEN: 6, ACE: 6, JOKER: 2 };
+  needed[kingCard.rank]--;
+  needed[queenCard.rank]--;
+  needed[jokerCard.rank]--;
+  needed[bCard.rank]--;
+
+  const remainingCards: Card[] = [];
+  let idCounter = 1;
+  const ranks: CardRank[] = ['KING', 'QUEEN', 'ACE', 'JOKER'];
+  for (const r of ranks) {
+    for (let i = 0; i < needed[r]; i++) {
+      remainingCards.push({ id: `card-rest-${idCounter++}`, rank: r });
+    }
+  }
+  expect(remainingCards).toHaveLength(16);
+
+  const centralPile = remainingCards.slice(0, 6);
+  const undealtCards = remainingCards.slice(6);
+  expect(centralPile).toHaveLength(6);
+  expect(undealtCards).toHaveLength(10);
+
+  const previousPlay: PlayState = {
+    playId: options.playSequence ?? 10,
+    playerId: 'B',
+    cardIds: [centralPile[5]!.id],
+    count: 1,
+    claimedRank: tableRank,
+    resolved: false
+  };
+
+  const pDict = Object.create(null);
+  pDict['A'] = {
+    id: 'A',
+    lifeStatus: 'ALIVE',
+    roundStatus: 'WITH_CARDS',
+    hand: [kingCard, queenCard, jokerCard],
+    revolver: defaultRevolver()
+  } as PlayerState;
+  pDict['B'] = {
+    id: 'B',
+    lifeStatus: 'ALIVE',
+    roundStatus: 'WITH_CARDS',
+    hand: [bCard],
+    revolver: defaultRevolver()
+  } as PlayerState;
+
+  const playSeq = (options.playSequence ?? 10) + 1;
+
+  const state: MatchState = {
+    status: 'IN_PROGRESS',
+    seatOrder: ['A', 'B'],
+    firstRoundStarter: 'A',
+    players: pDict,
+    round: {
+      roundNumber: 1,
+      tableRank,
+      currentPlayerId: 'A',
+      previousPlay,
+      centralPile,
+      undealtCards,
+      playSequence: playSeq
+    },
+    winnerId: null
+  };
+
+  // Precondition checks for full canonical 20-card partition
+  const pA = state.players['A']!;
+  const pB = state.players['B']!;
+  const allCards = [...pA.hand, ...pB.hand, ...state.round.centralPile, ...state.round.undealtCards];
+  expect(allCards).toHaveLength(20);
+  expect(new Set(allCards.map(c => c.id)).size).toBe(20);
+
+  const counts = { KING: 0, QUEEN: 0, ACE: 0, JOKER: 0 };
+  for (const c of allCards) counts[c.rank]++;
+  expect(counts).toEqual({ KING: 6, QUEEN: 6, ACE: 6, JOKER: 2 });
+
+  expect(state.round.centralPile.map(c => c.id)).toContain(state.round.previousPlay!.cardIds[0]);
+  expect(state.round.previousPlay!.playerId).toBe('B');
+  expect(state.round.previousPlay!.resolved).toBe(false);
+
+  return { state, kingCard, queenCard, jokerCard, bCard };
+}
+
 describe('Selected Unconfirmed Timeout Hardening (T-015)', () => {
   describe('1. API Arity & Type Contract (AC-02, AC-03)', () => {
     it('locks applySystemTimeout type parameters to exactly [MatchState, RandomSource] (AC-02)', () => {
@@ -34,21 +166,37 @@ describe('Selected Unconfirmed Timeout Hardening (T-015)', () => {
   });
 
   describe('2. Authoritative State Schema Negative Checks (AC-04, AC-05, AC-06, AC-27, AC-28, AC-29, AC-30)', () => {
-    it('proves MatchState, RoundState, and PlayerState expose no local selection/draft fields (AC-04, AC-05, AC-06)', () => {
+    it('exhaustively verifies MatchState, RoundState, and PlayerState contain none of the eight prohibited local selection keys (AC-04, AC-05, AC-06)', () => {
+      expectTypeOf<MatchSelectionLeak>().toEqualTypeOf<never>();
+      expectTypeOf<RoundSelectionLeak>().toEqualTypeOf<never>();
+      expectTypeOf<PlayerSelectionLeak>().toEqualTypeOf<never>();
+
       expectTypeOf<MatchState>().not.toHaveProperty('selectedCards');
       expectTypeOf<MatchState>().not.toHaveProperty('selectedCardIds');
       expectTypeOf<MatchState>().not.toHaveProperty('selectedButUnconfirmedCards');
-      expectTypeOf<MatchState>().not.toHaveProperty('draftSelection');
       expectTypeOf<MatchState>().not.toHaveProperty('highlightedCards');
+      expectTypeOf<MatchState>().not.toHaveProperty('highlightedCardIds');
+      expectTypeOf<MatchState>().not.toHaveProperty('draftSelection');
       expectTypeOf<MatchState>().not.toHaveProperty('pendingSelection');
+      expectTypeOf<MatchState>().not.toHaveProperty('localSelection');
 
       expectTypeOf<RoundState>().not.toHaveProperty('selectedCards');
       expectTypeOf<RoundState>().not.toHaveProperty('selectedCardIds');
+      expectTypeOf<RoundState>().not.toHaveProperty('selectedButUnconfirmedCards');
+      expectTypeOf<RoundState>().not.toHaveProperty('highlightedCards');
+      expectTypeOf<RoundState>().not.toHaveProperty('highlightedCardIds');
       expectTypeOf<RoundState>().not.toHaveProperty('draftSelection');
+      expectTypeOf<RoundState>().not.toHaveProperty('pendingSelection');
+      expectTypeOf<RoundState>().not.toHaveProperty('localSelection');
 
       expectTypeOf<PlayerState>().not.toHaveProperty('selectedCards');
       expectTypeOf<PlayerState>().not.toHaveProperty('selectedCardIds');
+      expectTypeOf<PlayerState>().not.toHaveProperty('selectedButUnconfirmedCards');
+      expectTypeOf<PlayerState>().not.toHaveProperty('highlightedCards');
+      expectTypeOf<PlayerState>().not.toHaveProperty('highlightedCardIds');
       expectTypeOf<PlayerState>().not.toHaveProperty('draftSelection');
+      expectTypeOf<PlayerState>().not.toHaveProperty('pendingSelection');
+      expectTypeOf<PlayerState>().not.toHaveProperty('localSelection');
     });
   });
 
@@ -156,51 +304,28 @@ describe('Selected Unconfirmed Timeout Hardening (T-015)', () => {
   });
 
   describe('7. Local Truth/Lie/Joker Choice Cannot Bias Timeout (AC-15, AC-16, AC-17, AC-32)', () => {
-    it('ensures local pre-confirm preference for Truth, Lie, or Joker cannot bias timeout selection (AC-15, AC-16, AC-17, AC-32)', () => {
-      const tableRank = 'KING';
-      const pHand: Card[] = [
-        { id: 'c-king', rank: 'KING' },   // Truth
-        { id: 'c-queen', rank: 'QUEEN' }, // Lie
-        { id: 'c-joker', rank: 'JOKER' }  // Joker
-      ];
-      const bHand: Card[] = [
-        { id: 'b-1', rank: 'ACE' }
-      ];
+    it('ensures local pre-confirm preference for Truth, Lie, or Joker cannot bias timeout selection on a canonical 20-card state (AC-15, AC-16, AC-17, AC-32)', () => {
+      const { state, kingCard, queenCard, jokerCard } = createCanonicalTruthLieJokerState({
+        tableRank: 'KING'
+      });
 
-      const pDict = Object.create(null);
-      pDict['A'] = { id: 'A', lifeStatus: 'ALIVE', roundStatus: 'WITH_CARDS', hand: pHand, revolver: { sequence: ['BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'LETHAL'], nextShotIndex: 0 } };
-      pDict['B'] = { id: 'B', lifeStatus: 'ALIVE', roundStatus: 'WITH_CARDS', hand: bHand, revolver: { sequence: ['BLANK', 'BLANK', 'BLANK', 'BLANK', 'BLANK', 'LETHAL'], nextShotIndex: 0 } };
+      // Local preferences (Truth = king, Lie = queen, Joker = joker)
+      const localTruthPref = [kingCard.id];
+      const localLiePref = [queenCard.id];
+      const localJokerPref = [jokerCard.id];
 
-      const match: MatchState = {
-        status: 'IN_PROGRESS',
-        seatOrder: ['A', 'B'],
-        firstRoundStarter: 'A',
-        players: pDict,
-        round: {
-          roundNumber: 1,
-          tableRank,
-          currentPlayerId: 'A',
-          previousPlay: null,
-          centralPile: [],
-          undealtCards: [],
-          playSequence: 1
-        },
-        winnerId: null
-      };
+      // For index 1 (queenCard), timeout always produces queenCard regardless of local preference
+      const resTruth = applySystemTimeout(state, new ScriptedRandom([1]));
+      const resLie = applySystemTimeout(state, new ScriptedRandom([1]));
+      const resJoker = applySystemTimeout(state, new ScriptedRandom([1]));
 
-      // Local preferences (Truth, Lie, Joker)
-      const localTruthPref = ['c-king'];
-      const localLiePref = ['c-queen'];
-      const localJokerPref = ['c-joker'];
+      expect(resTruth.autoPlayedCardId).toBe(queenCard.id);
+      expect(resLie.autoPlayedCardId).toBe(queenCard.id);
+      expect(resJoker.autoPlayedCardId).toBe(queenCard.id);
 
-      // For index 1 (c-queen), timeout always produces c-queen regardless of local preference
-      const resTruth = applySystemTimeout(match, new ScriptedRandom([1]));
-      const resLie = applySystemTimeout(match, new ScriptedRandom([1]));
-      const resJoker = applySystemTimeout(match, new ScriptedRandom([1]));
+      expect(resTruth.createdPlay.claimedRank).toBe('KING');
+      expect(resTruth.createdPlay.count).toBe(1);
 
-      expect(resTruth.autoPlayedCardId).toBe('c-queen');
-      expect(resLie.autoPlayedCardId).toBe('c-queen');
-      expect(resJoker.autoPlayedCardId).toBe('c-queen');
       expect(resTruth).toEqual(resLie);
       expect(resLie).toEqual(resJoker);
 
