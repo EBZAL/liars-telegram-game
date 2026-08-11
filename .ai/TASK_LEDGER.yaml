@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-03
 last_verified_task: T-011-SYSTEM-TIMEOUT-AUTO-PLAY
-active_task: null
+active_task: T-012-TWO-PLAYER-FLOW-HARDENING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -88,8 +88,9 @@ stages:
 
   STAGE-03:
     title: Player-Count & Rule Hardening
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-012-TWO-PLAYER-FLOW-HARDENING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -851,3 +852,69 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-012-TWO-PLAYER-FLOW-HARDENING:
+    title: Two-Player Flow Hardening
+    stage: STAGE-03
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Create a dedicated 2-player canonical flow hardening suite that verifies the already-established Game Core behaves coherently across complete heads-up scenarios.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+    acceptance_criteria:
+      - AC-01: Dedicated 2-player scenario suite exists.
+      - AC-02: Real 2-player initialization deals 5/5 with 10 undealt.
+      - AC-03: Full 20-card unique canonical partition verified.
+      - AC-04: Ordinary 1v1 turns alternate through command API.
+      - AC-05: Empty Hand alone never wins.
+      - AC-06: Final-card PLAY automatically forces opponent CALL.
+      - AC-07: Forced CALL targets the newly-created final Play.
+      - AC-08: Truthful final Play makes caller loser/shooter.
+      - AC-09: Lying final Play makes accused loser/shooter.
+      - AC-10: Truth+Blank branch verified.
+      - AC-11: Lie+Blank branch verified.
+      - AC-12: Truth+Lethal branch verified.
+      - AC-13: Lie+Lethal branch verified.
+      - AC-14: Blank advances shot index exactly once.
+      - AC-15: Surviving loser starts next Round.
+      - AC-16: Both Living Players receive 5 fresh Cards next Round.
+      - AC-17: New Round has 10 undealt Cards.
+      - AC-18: Round-reset full deck conservation verified.
+      - AC-19: Revolver sequences persist across Round reset.
+      - AC-20: Shooter index persists advanced; non-shooter index unchanged.
+      - AC-21: Revolver progression survives at least one Round boundary.
+      - AC-22: Play identity remains monotonic across Round boundary.
+      - AC-23: Lethal leaves exactly one Living Player and FINISHES Match.
+      - AC-24: Winner branch creates no new Round.
+      - AC-25: Winner branch consumes no next-Round RNG.
+      - AC-26: Eliminated loser receives no fresh Hand.
+      - AC-27: FINISHED state rejects subsequent PLAY command.
+      - AC-28: FINISHED state rejects SYSTEM_TIMEOUT before RNG.
+      - AC-29: Ordinary 1v1 SYSTEM_TIMEOUT one-card PLAY verified.
+      - AC-30: Final-card 1v1 SYSTEM_TIMEOUT integrates automatic forced CALL.
+      - AC-31: Metadata survives Round reset / winner branches.
+      - AC-32: Exactly one PLAY, Challenge and Shot on forced branch.
+      - AC-33: Representative input immutability verified.
+      - AC-34: Deterministic scenario equivalence verified.
+      - AC-35: __proto__ Player ID regression verified.
+      - AC-36: No new rule / Room / projection / UI-selection scope introduced.
+      - AC-37: No forbidden nondeterminism or dependency added.
+      - AC-38: Full existing regression suite passes.
+      - AC-39: npm ci / typecheck / test PASS.
+      - AC-40: Evidence accurately maps all ACs and any discovered defect.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
