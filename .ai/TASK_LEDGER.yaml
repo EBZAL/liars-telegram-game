@@ -590,7 +590,8 @@ tasks:
   T-009-CALL-LIAR-MATCH-TRANSITION:
     title: Call Liar Match Transition
     stage: STAGE-02
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 70ae9302a11a1a2bdcce084f38901d610f17793a
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the authoritative stateful CALL_LIAR Match transition by atomically composing verified primitives
