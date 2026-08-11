@@ -4,7 +4,7 @@
 STAGE-02 — Canonical Core Engine
 
 **Last Verified Task:**
-T-009-CALL-LIAR-MATCH-TRANSITION
+T-010-FORCED-CALL-PLAY-ORCHESTRATION
 
 **Current Active Task:**
 None
@@ -276,7 +276,73 @@ None
 - input MatchState remains unmutated
 - transition remains deterministic
 - npm ci PASS, typecheck PASS, 155-test suite PASS
-- T13/T14 mandatory-caller legality and stateful CALL execution are established, but PLAY_CARDS does not yet automatically dispatch the forced CALL_LIAR; SYSTEM_TIMEOUT is not implemented (T29/T30/T31 remain unimplemented); Core FINISHED is implemented (Room MATCH_FINISHED lifecycle is not implemented); Networking, persistence, projections and transport events remain outside this task
+- canonical command-level PLAY_CARDS orchestration established via applyPlayCardsCommand
+- verified low-level applyPlayCards primitive remains intentionally unchanged
+- PLAY command execution flow:
+  - apply verified low-level PLAY transition
+  - capture detached createdPlay snapshot
+  - derive forced caller through verified getForcedCallerId
+  - ordinary path: return post-PLAY state, forcedCall = null, consume no RandomSource
+  - forced path:
+    - forcedCaller must equal post-PLAY currentPlayerId
+    - forced caller allowed actions must equal exactly ['CALL_LIAR']
+    - invoke verified applyCallLiar automatically
+    - return its final authoritative MatchState
+- createdPlay metadata:
+  - detached PlayState object and cardIds array
+  - preserves created playId
+  - resolved=false at Play creation time
+  - remains available after automatic CALL / Round Reset
+- T13 automatic orchestration verified:
+  - 1v1 final PLAY automatically dispatches opponent CALL_LIAR
+  - no second user/client CALL action required
+- T13 BLANK path verified:
+  - automatic CALL occurs
+  - exactly one canonical Shot consumed
+  - Match continues IN_PROGRESS
+  - canonical next Round begins
+- T13 LETHAL/T26 path verified:
+  - automatic CALL occurs
+  - LETHAL elimination
+  - Match immediately FINISHED when sole Living remains
+  - sole Living Player wins
+  - no next Round created
+  - no next-Round RNG consumed
+- T14 automatic orchestration verified:
+  - prior ALIVE EMPTY_SAFE Player may remain empty
+  - newly-empty Player's final Play becomes challenge target
+  - sole remaining Living card-holder automatically CALLs
+  - newest Play is challenged
+- T12 remains preserved:
+  - choosing PLAY over prior challenge closes prior challenge window
+  - prior EMPTY_PENDING_CHALLENGE Player becomes EMPTY_SAFE
+- if an ordinary PLAY leaves >=2 Living Players holding Cards:
+  - no automatic CALL
+  - Challenge window remains open normally
+  - no RNG consumed
+- a Player already forced to CALL cannot submit PLAY_CARDS
+- PLAY identity remains exactly-once:
+  - no duplicate Play allocation
+  - playSequence increments once
+- Hand and centralPile PLAY effects occur once only
+- forced transition:
+  - exactly one Challenge through T-009
+  - exactly one Roulette Shot through T-009
+  - Round Reset / winner logic remains owned by T-009
+- single authoritative result state:
+  - result.state only
+  - forcedCall metadata contains no nested MatchState
+- automatic resolution metadata survives Round Reset:
+  - createdPlay
+  - challenge
+  - shot
+  - terminal
+  - winnerId
+- prototype-safe participant handling preserved (__proto__ Player IDs supported)
+- input MatchState/requestedCardIds not mutated
+- transition deterministic
+- npm ci PASS, typecheck PASS, 171-test suite PASS
+- SYSTEM_TIMEOUT is not implemented. T29 no-selection timeout auto-Play remains unimplemented; T30 exactly-one-card timeout behavior remains unimplemented; T31 unbiased timeout random-selection behavior remains unimplemented; No authoritative 30-second timer/deadline orchestration exists yet in Core; Room command envelope, actionId, expectedRevision, turnId, Durable Object, SQLite persistence, alarms, Pause/Resume, network transport, recipient projections, Telegram and UI remain outside this task.
 
 **Active Blockers:**
 None

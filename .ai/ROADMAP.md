@@ -111,12 +111,28 @@
 - Challenge/Shot resolution metadata survives Round Reset
 - 1v1 mandatory-caller stateful CALL execution verified
 - 3-player mandatory-caller stateful CALL execution verified
-- automatic post-PLAY forced CALL dispatch remains unimplemented
-- T13/T14 automatic orchestration remains unimplemented
+- T-010-FORCED-CALL-PLAY-ORCHESTRATION VERIFIED
+- canonical command-level PLAY_CARDS orchestration established
+- low-level applyPlayCards remains independently verified and unchanged
+- automatic post-PLAY forced-CALL dispatch established
+- T13 1v1 mandatory automatic CALL complete
+- T13 BLANK continuation through automatic CALL verified
+- T13 LETHAL/T26 winner path through automatic CALL verified
+- T14 3-player mandatory automatic CALL complete
+- forced CALL targets the newly-created latest Play
+- T12 prior challenge-window closure / EMPTY_SAFE semantics preserved
+- ordinary PLAY path consumes no RNG
+- forced-caller/current-player invariant enforced
+- forced caller exact CALL_LIAR-only eligibility enforced
+- forced orchestration reuses verified T-009
+- no duplicate Challenge/Roulette/Round/winner logic introduced
+- PLAY/Challenge/Shot metadata retained after automatic Round reset
+- single authoritative command result MatchState established
+- prototype-safe participant behavior retained
 - SYSTEM_TIMEOUT remains unimplemented
 - T29/T30/T31 remain unimplemented
-- Room MATCH_FINISHED remains outside Core and unimplemented
-- networking/persistence/projection/events remain future work
+- timer/deadline orchestration remains unimplemented
+- Room/network/persistence/projection/Telegram/UI remain future work
 - remaining canonical Core Engine behavior not yet implemented
 
 ## STAGE-03 — Player-Count & Rule Hardening

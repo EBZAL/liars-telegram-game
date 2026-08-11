@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-02
-last_verified_task: T-009-CALL-LIAR-MATCH-TRANSITION
-active_task: T-010-FORCED-CALL-PLAY-ORCHESTRATION
+last_verified_task: T-010-FORCED-CALL-PLAY-ORCHESTRATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -676,8 +676,18 @@ tasks:
   T-010-FORCED-CALL-PLAY-ORCHESTRATION:
     title: Forced Call Play Orchestration
     stage: STAGE-02
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: ddc348c44973a3c8f82aa5c262fb4f60690504b5
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: ddc348c44973a3c8f82aa5c262fb4f60690504b5
+      evidence:
+        - .ai/evidence/T-010-FORCED-CALL-PLAY-ORCHESTRATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the canonical PLAY_CARDS command-level transition that executes the verified PLAY_CARDS primitive, inspects the resulting authoritative state, and if exactly one ALIVE Player still holds Cards, automatically executes that Player's mandatory CALL_LIAR, returning the final authoritative MatchState.
