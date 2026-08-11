@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-03
 last_verified_task: T-014-FOUR-PLAYER-FLOW-HARDENING
-active_task: null
+active_task: T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -93,6 +93,7 @@ stages:
       - T-012-TWO-PLAYER-FLOW-HARDENING
       - T-013-THREE-PLAYER-FLOW-HARDENING
       - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1103,6 +1104,75 @@ tasks:
       - AC-52: npm ci / typecheck / test all PASS.
       - AC-53: Evidence accurately maps every AC and actual verification totals.
       - AC-54: Control lifecycle remains READY->IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING:
+    title: Selected Unconfirmed Timeout Hardening
+    stage: STAGE-03
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Harden and prove the approved architectural boundary for selected-but-unconfirmed cards at timeout, proving that local pre-confirm card highlighting/selection is Local Presentation State only, invisible to the pure Core, ignored during SYSTEM_TIMEOUT, and that confirmed PLAY_CARDS remains the sole authority boundary where explicit card IDs become authoritative.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+    acceptance_criteria:
+      - AC-01: Dedicated selected-unconfirmed timeout boundary suite exists.
+      - AC-02: applySystemTimeout type parameters remain exactly MatchState + RandomSource.
+      - AC-03: applySystemTimeout runtime arity remains two.
+      - AC-04: MatchState exposes no local selected-card field.
+      - AC-05: RoundState exposes no local selected-card field.
+      - AC-06: PlayerState exposes no local selected-card field.
+      - AC-07: No authoritative pre-confirm selection transition is introduced.
+      - AC-08: Different local-only selection values do not alter equivalent MatchStates.
+      - AC-09: Same authoritative state + same RNG + different local selections produce deep-equal timeout results.
+      - AC-10: Local single-card selection cannot override a different RNG-selected Card.
+      - AC-11: Local multi-card selection cannot cause timeout to play multiple Cards.
+      - AC-12: Timeout createdPlay count remains exactly one.
+      - AC-13: Timeout createdPlay cardIds length remains exactly one.
+      - AC-14: Local selection cannot bypass timeout RNG.
+      - AC-15: Local Truth-preferred selection cannot bias timeout.
+      - AC-16: Local Lie-preferred selection cannot bias timeout.
+      - AC-17: Local Joker-preferred selection cannot bias timeout.
+      - AC-18: RNG-selected authoritative Hand index determines autoPlayedCardId.
+      - AC-19: Current Player is derived from state.round.currentPlayerId.
+      - AC-20: Local selection owner cannot replace timedOutPlayerId.
+      - AC-21: Local-selection mutation leaves authoritative MatchState unchanged.
+      - AC-22: SYSTEM_TIMEOUT preserves source-state immutability.
+      - AC-23: Ordinary timeout card-selection phase consumes exactly one RNG call with max=current Hand size.
+      - AC-24: Confirmed PLAY_CARDS with explicit Card X authoritatively plays X.
+      - AC-25: Equivalent unconfirmed local selection of X does not make SYSTEM_TIMEOUT play X when RNG chooses Y.
+      - AC-26: Confirmed PLAY_CARDS remains the explicit-card authority boundary.
+      - AC-27: No SELECT/HIGHLIGHT/DRAFT Core command is added.
+      - AC-28: No authoritative selection/draft field is added to Core state.
+      - AC-29: No Room revision/dedupe/deadline state is added.
+      - AC-30: No UI/presentation implementation is added.
+      - AC-31: No new timeout rule or architecture reinterpretation is introduced.
+      - AC-32: No client/local hint can bias Truth/Lie/Joker timeout selection.
+      - AC-33: No dependency change.
+      - AC-34: No forbidden nondeterminism.
+      - AC-35: Task remains test-only unless stopped for defect/architecture change.
+      - AC-36: Existing T-011/T-012/T-013/T-014 timeout behavior remains passing.
+      - AC-37: Full regression suite passes.
+      - AC-38: npm ci / typecheck / test all PASS.
+      - AC-39: Evidence distinguishes Core-boundary PASS from future Room/UI implementation.
+      - AC-40: Evidence accurately maps all ACs and exact verification totals.
+      - AC-41: Control lifecycle remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
