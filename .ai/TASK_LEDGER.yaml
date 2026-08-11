@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-03
-last_verified_task: T-012-TWO-PLAYER-FLOW-HARDENING
-active_task: T-013-THREE-PLAYER-FLOW-HARDENING
+last_verified_task: T-013-THREE-PLAYER-FLOW-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -933,8 +933,18 @@ tasks:
   T-013-THREE-PLAYER-FLOW-HARDENING:
     title: Three-Player Flow Hardening
     stage: STAGE-03
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 414d7c1e1fdab0c9fdda558bdb753fc2b179705d
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 414d7c1e1fdab0c9fdda558bdb753fc2b179705d
+      evidence:
+        - .ai/evidence/T-013-THREE-PLAYER-FLOW-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Create a dedicated 3-player canonical flow hardening suite proving that the already-verified Game Core composes correctly across 3-player initialization, ordinary cyclic turns, empty-safe skipping, latest-Play challenge targeting, T14 mandatory CALL after two Players are empty, Truth/Lie x Blank/Lethal resolution, 3-player Round reset, 3 -> 2 Living transition after first elimination, eliminated-seat skipping, Round-starter fallback, and 3-player SYSTEM_TIMEOUT integration.

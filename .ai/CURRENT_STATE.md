@@ -4,7 +4,7 @@
 STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
-T-012-TWO-PLAYER-FLOW-HARDENING
+T-013-THREE-PLAYER-FLOW-HARDENING
 
 **Current Active Task:**
 None
@@ -515,6 +515,116 @@ None
 - No dependency change.
 - No product source change.
 - No forbidden nondeterminism.
+- T-013 Three-Player Flow Hardening VERIFIED.
+- Task remained test-only: YES
+- Product defect discovered: NONE
+- Dedicated 3-player canonical scenario suite: PASS
+- Real 3-player initialization:
+  - 3 Living Players
+  - 5 Cards each
+  - 15 dealt
+  - 5 undealt
+  - complete 20-card canonical partition
+  - 6 KING / 6 QUEEN / 6 ACE / 2 JOKER
+- Ordinary three-seat flow:
+  - fixed cyclic order verified
+  - P1 → P2 → P3 → P1
+- Empty-hand / EMPTY_SAFE composition:
+  - final-card Player becomes EMPTY_PENDING_CHALLENGE
+  - no premature forced CALL while two other Players retain Cards
+  - next Player may PLAY instead of CALL
+  - previous empty Player becomes EMPTY_SAFE
+  - EMPTY_SAFE Player remains ALIVE and is skipped for current Round
+  - latest unresolved Play remains correct challenge target across skipped empty seat
+- T14 3-player mandatory CALL:
+  - A EMPTY_SAFE
+  - B plays final Card
+  - C is sole remaining Player with Cards
+  - C automatically CALLs B
+  - forced Challenge targets B's newly created Play
+  - no separate external CALL required
+- Canonical T14 fixture:
+  - full 20 Cards conserved
+  - hands 0 + 1 + 1
+  - centralPile 13
+  - undealt 5
+  - 20 unique Card IDs
+  - 6K / 6Q / 6A / 2J
+  - coherent unresolved previousPlay
+- Four T14 branches VERIFIED:
+  - Truth + Blank
+  - Lie + Blank
+  - Truth + Lethal
+  - Lie + Lethal
+- BLANK continuation:
+  - exactly one Shot
+  - shooter Revolver index advances exactly once
+  - surviving round loser starts next Round
+  - all 3 Living Players receive fresh 5-card Hands
+  - undealt = 5
+  - canonical 20-card reset preserved
+  - EMPTY_SAFE Player returns WITH_CARDS
+- Revolver persistence:
+  - all Revolver sequences remain unchanged across Round reset
+  - shooter index advances exactly once
+  - non-shooter indices remain unchanged
+- First elimination in 3-player Match:
+  - does NOT finish Match
+  - exactly 2 Living Players remain
+  - Match remains IN_PROGRESS
+  - winnerId remains null
+- 3 → 2 Round reset:
+  - two Living Players receive 5 Cards each
+  - eliminated Player receives no new Hand
+  - undealt = 10
+  - 20 unique Cards retained across Living Hands + undealt
+  - canonical 6K / 6Q / 6A / 2J composition retained
+- Eliminated loser starter fallback:
+  - C eliminated in [A,B,C] → A starts next Round
+  - B eliminated in [A,B,C] → C starts next Round
+- Eliminated-seat turn skipping:
+  - original fixed seatOrder remains [A,B,C]
+  - with C eliminated, actual command flow A → B → A proves C is skipped
+- Lethal Revolver persistence:
+  - eliminated shooter's Revolver sequence persists
+  - eliminated shooter index advances exactly once
+  - Living Player Revolver sequences and indices remain unchanged
+- Play identity:
+  - first actual PLAY after new Round receives a later unique Play ID
+  - no cross-Round Play ID collision
+- SYSTEM_TIMEOUT 3-player integration:
+  - ordinary timeout auto-plays exactly one Card
+  - claim count = 1
+  - claim rank = tableRank
+  - normal next eligible seat receives turn
+  - final-card T14 timeout automatically flows through forced CALL / Challenge / one Shot
+  - Challenge targets timeout-created Play
+- Automatic forced-branch bounded effects:
+  - one created Play
+  - one forced Challenge
+  - one Shot-index advance
+  - all Truth/Lie × Blank/Lethal branches covered
+- Input immutability VERIFIED for:
+  - ordinary 3-player PLAY
+  - empty-safe A final transition
+  - subsequent B transition making A EMPTY_SAFE
+  - T14 forced final-card PLAY
+  - SYSTEM_TIMEOUT
+- Determinism VERIFIED for:
+  - ordinary 3-player flow
+  - T14 forced Blank flow
+  - 3→2 Lethal flow
+- Prototype safety:
+  - __proto__ PlayerId works in real 3-player initialization and command flow
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 218 tests across 13 test files
+- No dependency changes.
+- No product source changes.
+- No forbidden nondeterminism.
+- No Architecture change.
 
 **STAGE-02 — Canonical Core Engine:**
 COMPLETE
@@ -547,7 +657,7 @@ NOT_EVALUATED
 
 **Stage-03 Progress:**
 - T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED (2-player hardening complete)
-- 3-player dedicated hardening not yet completed.
+- T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED (3-player hardening complete)
 - 4-player dedicated hardening not yet completed.
 - selected-but-unconfirmed timeout-policy Stage-03 gate not yet independently hardened.
 - invariant/property Stage-03 gate not yet completed.

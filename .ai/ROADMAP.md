@@ -195,8 +195,35 @@
 - ordinary and forced-terminal determinism verified
 - __proto__ heads-up regression verified
 - T-012 remained test-only; no product defect discovered
-- latest full regression: 204 tests / 12 test files PASS
-- 3-player suite remains pending
+- T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED
+- dedicated 3-player scenario suite PASS
+- real 5/5/5 + 5 undealt initialization verified
+- full canonical 20-card 3-player partition verified
+- ordinary three-seat cyclic turn flow verified
+- EMPTY_PENDING_CHALLENGE → EMPTY_SAFE flow verified
+- EMPTY_SAFE turn skipping verified
+- latest unresolved Play targeting across skipped empty seat verified
+- T14 automatic forced CALL after two Players are empty verified
+- canonical 20-card T14 fixture verified
+- Truth/Lie × Blank/Lethal T14 matrix verified
+- 3-player Blank reset 5/5/5 + 5 verified
+- safe-empty Player return verified
+- Revolver sequence/index persistence verified
+- first lethal elimination confirmed non-terminal
+- 3→2 Living transition verified
+- 3→2 next Round 5/5 + 10 undealt verified
+- 3→2 canonical 20-card partition verified
+- eliminated loser starter fallback verified
+- eliminated-seat A→B→A skip verified
+- cross-Round Play ID continuity through actual next PLAY verified
+- ordinary and final-card SYSTEM_TIMEOUT integration verified
+- empty-safe / forced / timeout immutability verified
+- ordinary / Blank / lethal determinism verified
+- __proto__ 3-player regression verified
+- T-013 remained test-only; no product defect discovered
+- latest full regression: 218 tests / 13 test files PASS
+- 2-player dedicated hardening: COMPLETE / VERIFIED
+- 3-player dedicated hardening: COMPLETE / VERIFIED
 - 4-player suite remains pending
 - selected-but-unconfirmed timeout-policy hardening remains pending
 - invariant/property testing remains pending
