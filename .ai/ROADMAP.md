@@ -171,9 +171,21 @@
 - actual 30-second deadline scheduling, TURN_DEADLINE alarms, stale-alarm handling, late-command arbitration, revision/dedupe, Pause/Resume, networking and persistence remain later Room/Application work and are not Stage-02 Core gaps
 
 ## STAGE-03 — Player-Count & Rule Hardening
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 **Goals**: exhaustive 2/3/4-player flows, timeout behavior, edge/invariant testing
-**Exit Gate**: 2-player suite PASS; 3-player suite PASS; 4-player suite PASS; selected-but-unconfirmed timeout policy PASS; invariant/property tests PASS.
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-012 through T-016 all VERIFIED
+- 2-player dedicated hardening suite PASS
+- 3-player dedicated hardening suite PASS
+- 4-player dedicated hardening suite PASS
+- selected-but-unconfirmed timeout authority policy PASS
+- invariant/property suite PASS
+- latest regression 251 tests / 16 test files PASS
+- all 33 GAME_RULES §24 invariants classified
+- I29/T27 explicitly retained as mandatory STAGE-04 projection/security work
+- no unresolved Stage-03 implementation bucket
+- no active blocker
 **Progress**:
 - T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED
 - dedicated 2-player scenario suite PASS
@@ -311,13 +323,14 @@
 - selected-but-unconfirmed timeout policy COMPLETE / VERIFIED
 - invariant/property testing COMPLETE / VERIFIED
 - Remaining Stage-03 implementation work: NONE
-- Formal STAGE-03 Exit Gate: PENDING ARCHITECT EVALUATION
+- Formal STAGE-03 Exit Gate: PASS
 
 ## STAGE-04 — Authoritative Multiplayer
 **Status**: NOT_STARTED
 **Goals**: Durable Object Room Coordinator, WebSocket, revision/dedupe, persistence, timeout, Pause/Resume, hidden projections, T27 dead-spectator hidden-Hand protection (Eliminated spectators receive Public State only and cannot read Living Players' hidden Hand values)
 **Exit Gate**: action dedupe; stale revision; turn validation; concurrent action safety; deadline races; unique Living presence accounting; zero-Living-connected Pause; Living-only Resume; life-status-triggered Pause evaluation; fresh 30-second Resume deadline; single activeAlarm invariant; stale/idempotent alarm behavior; persistence reload; reconnect; recipient-specific hidden-information projections, including T27 dead-spectator Hand isolation.
-
+Current project stage after Stage-03 completion.
+No Stage-04 task registered yet.
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

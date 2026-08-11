@@ -1,7 +1,7 @@
 # Current State
 
 **Current Stage:**
-STAGE-03 — Player-Count & Rule Hardening
+STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
 T-016-INVARIANT-PROPERTY-HARDENING
@@ -990,52 +990,131 @@ No currently evidenced unresolved pure-Core GAME_RULES ambiguity remains.
 Core deterministic-transition requirement PASS.
 
 **STAGE-03 — Player-Count & Rule Hardening:**
-IN_PROGRESS
+COMPLETE
 
 **Stage Exit Gate:**
-NOT_EVALUATED
+PASS
 
-**Stage-03 Progress:**
-- 2-player dedicated hardening: VERIFIED / COMPLETE
-- 3-player dedicated hardening: VERIFIED / COMPLETE
-- 4-player dedicated hardening: VERIFIED / COMPLETE
-- selected-but-unconfirmed timeout-policy hardening: VERIFIED / COMPLETE
-- invariant/property testing: VERIFIED / COMPLETE
+**Stage-03 Required Tasks:**
+- T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED
+- T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED
+- T-014-FOUR-PLAYER-FLOW-HARDENING VERIFIED
+- T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING VERIFIED
+- T-016-INVARIANT-PROPERTY-HARDENING VERIFIED
 
-All required Stage-03 implementation tasks are VERIFIED.
+**Stage-Level Acceptance:**
+- 2-player suite PASS
+- 3-player suite PASS
+- 4-player suite PASS
+- selected-but-unconfirmed timeout policy PASS
+- invariant/property tests PASS
 
-STAGE-03 remains IN_PROGRESS because its Exit Gate has not yet been evaluated by the Project Architect.
+Remaining Stage-03 implementation work:
+NONE
 
-Stage-03 Exit Gate:
-NOT_EVALUATED
+**Formal Architect Stage Gate:**
+PASS
+
+**Architecture Review:**
+PASS
+
+**Security Boundary Review:**
+PASS — T27 retained as mandatory STAGE-04 work
+
+**UI Review:**
+N/A
+
+**Release Review:**
+N/A
+
+**Open Blockers:**
+NONE
+
+**Latest Full Regression:**
+npm ci PASS
+npm run typecheck PASS
+npm test PASS
+251 tests across 16 test files
 
 **Boundary Wording:**
-T27 recipient-specific hidden-information projection/security remains mandatory STAGE-04 work.
 
-Actual 30-second deadline scheduling,
-TURN_DEADLINE alarms,
-late-command arbitration,
-revision/dedupe,
-Pause/Resume,
-Room persistence/networking
-remain later Authoritative Multiplayer/Application work.
+T27 dead-spectator hidden-Hand isolation:
+MANDATORY STAGE-04 WORK
+NOT WAIVED
+NOT IMPLEMENTED BY STAGE-03
 
-End-to-end UI card-selection/highlight behavior remains later UI work.
+Recipient-specific hidden-information projections:
+STAGE-04
 
-**Active Blockers:**
-None
+Actual 30-second deadline scheduling:
+STAGE-04 / Application runtime
 
-**Known Failure / Issue:**
-None currently evidenced.
+TURN_DEADLINE alarms:
+STAGE-04
 
-**Open Risks:**
-* Core rule correctness
-* 2/3/4-player edge cases
+stale-alarm behavior:
+STAGE-04
+
+late-command arbitration:
+STAGE-04
+
+revision / dedupe:
+STAGE-04
+
+concurrent action safety:
+STAGE-04
+
+Room persistence / reconnect:
+STAGE-04
+
+Living-presence Pause/Resume:
+STAGE-04
+
+End-to-end card-selection/highlight UI:
+later UI work
+
+These are not Stage-03 failures.
+
+**STAGE-04 — Authoritative Multiplayer:**
+
+**Status:**
+NOT_STARTED
+
+**Current Stage:**
+YES
+
+**Registered Tasks:**
+NONE
+
+**Exit Gate:**
+NOT_EVALUATED
+
+**Stage Goals:**
+- Durable Object Room Coordinator
+- WebSocket authority path
+- actionId / expectedRevision / turnId protocol enforcement
+- action dedupe
+- stale revision rejection
+- concurrent-action safety
+- actual authoritative turn deadlines and alarm behavior
+- late-command arbitration
+- unique Living-presence accounting
+- Living-only Pause/Resume behavior
+- persistence reload
+- reconnect
+- recipient-specific hidden-information projections
+- T27 dead-spectator Living-Hand isolation
+
+None of the above are implemented.
+
+**Known Risks:**
 * realtime concurrency
-* timeout/reconnect races
+* deadline/reconnect races
 * Telegram identity/trust boundary
 * hidden information leakage
 * free-tier operational constraints
+
+These known risks belong to later stages and do not block Stage-03 completion.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1049,6 +1128,12 @@ None currently evidenced.
 * no D1/VPS/custom domain MVP
 * no separate Bot Backend
 
+**Active Blockers:**
+None
+
+**Known Failure / Issue:**
+None currently evidenced.
+
 **Next Approved Action:**
-Project Architect must re-read this T-016 verification State Sync and perform the formal STAGE-03 Exit Gate review. No new implementation task is authorized before that Stage Gate decision. The Stage Gate must independently verify: all required Stage-03 tasks are durably VERIFIED; 2-player suite PASS; 3-player suite PASS; 4-player suite PASS; selected-but-unconfirmed timeout policy PASS; invariant/property tests PASS; T27 remains correctly deferred to Stage-04 rather than waived. Only after the Architect issues a Stage Gate decision may Gravity persist any Stage-03 COMPLETE/PASS transition.
+Project Architect must re-read this Stage-03 completion State Sync. After successful reconciliation, the Architect must inspect STAGE-04 goals, Architecture, Security requirements, relevant ADRs, Current State, Roadmap, Ledger, and actual Git state. The Architect must then derive the smallest bounded STAGE-04 Authoritative Multiplayer task, determine Workflow Profile and Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt. No STAGE-04 implementation task is pre-authorized by this Stage Gate State Sync.
 

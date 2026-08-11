@@ -2,7 +2,7 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-03
+current_stage: STAGE-04
 last_verified_task: T-016-INVARIANT-PROPERTY-HARDENING
 active_task: null
 
@@ -88,7 +88,7 @@ stages:
 
   STAGE-03:
     title: Player-Count & Rule Hardening
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-012-TWO-PLAYER-FLOW-HARDENING
       - T-013-THREE-PLAYER-FLOW-HARDENING
@@ -96,8 +96,28 @@ stages:
       - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
       - T-016-INVARIANT-PROPERTY-HARDENING
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED
+        - T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED
+        - T-014-FOUR-PLAYER-FLOW-HARDENING VERIFIED
+        - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING VERIFIED
+        - T-016-INVARIANT-PROPERTY-HARDENING VERIFIED
+        - dedicated 2-player suite PASS
+        - dedicated 3-player suite PASS
+        - dedicated 4-player suite PASS
+        - selected-but-unconfirmed timeout policy PASS
+        - invariant/property testing PASS
+        - .ai/evidence/T-012-TWO-PLAYER-FLOW-HARDENING.md
+        - .ai/evidence/T-013-THREE-PLAYER-FLOW-HARDENING.md
+        - .ai/evidence/T-014-FOUR-PLAYER-FLOW-HARDENING.md
+        - .ai/evidence/T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING.md
+        - .ai/evidence/T-016-INVARIANT-PROPERTY-HARDENING.md
+        - latest full regression npm ci PASS
+        - latest full regression npm run typecheck PASS
+        - latest full regression npm test PASS (251 tests / 16 files)
+        - GAME_RULES §24 invariant matrix classified 20 PROPERTY_DIRECT / 12 SCENARIO_VERIFIED / 1 STAGE04_DEFERRED
+        - T27 recipient-projection/security requirement retained as mandatory STAGE-04 work
 
   STAGE-04:
     title: Authoritative Multiplayer
