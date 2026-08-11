@@ -1,7 +1,7 @@
 # T-009-CALL-LIAR-MATCH-TRANSITION Evidence
 
 **Task ID**: T-009-CALL-LIAR-MATCH-TRANSITION
-**Implementation Commit**: 70ae9302a11a1a2bdcce084f38901d610f17793a
+**Implementation Commit**: e17b13a76430e474a6eab1a5793a9043865dcafd
 
 ## Files Changed
 - `packages/game-core/src/game-state.ts`
@@ -16,21 +16,22 @@
 - **MatchStatus Contract**: Introduced `export type MatchStatus = 'IN_PROGRESS' | 'FINISHED'` in `game-state.ts` and updated `MatchState.status`.
 - **Stateful CALL Transition (`applyCallLiar`)**: Atomically composes `resolveLiarChallenge`, `resolved` previousPlay lifecycle, `resolveRouletteShot`, post-Shot living derivation, and `initializeNextRound` (or T26 `MATCH_WON` terminal).
 - **Challenge Resolver Reuse**: Reuses `resolveLiarChallenge` for caller authority, turn legality, and truth/lie evaluation. Derive shooter as `challenge.shooterId` (Lie -> accused; Truth -> caller).
+- **Shooter / Round-Loser Invariant Guard**: Explicitly enforces `if (challenge.shooterId !== challenge.roundLoserId) throw new Error(...)`.
 - **Resolved PreviousPlay Lifecycle**: Sets `previousPlay.resolved = true` on intermediate post-Shot MatchState.
 - **Roulette Resolver Reuse**: Reuses `resolveRouletteShot` for the shooter. Advances `nextShotIndex` by 1 and derives `ALIVE` (BLANK) or `ELIMINATED` (LETHAL) status.
 - **Continuing Match Branch (>= 2 Living)**: Returns `terminal = 'NEXT_ROUND'` and invokes `initializeNextRound(postShotState, challenge.roundLoserId, random)`. Preserves T20 surviving-loser starter, T21 eliminated-loser cyclic fallback starter, T22 safe-empty return, fresh 20-card dealing, and persistent Revolver state.
 - **T26 Immediate Match Winner (1 Living)**: Returns `terminal = 'MATCH_WON'`, `status = 'FINISHED'`, and sets `winnerId` to the sole ALIVE player. No next Round is initialized, no fresh deal occurs, and no next-round RNG is consumed (verified via `ThrowingRandom`).
 - **FINISHED State Guards**: `applyPlayCards`, `resolveLiarChallenge`, `initializeNextRound`, and `applyCallLiar` all reject if `state.status !== 'IN_PROGRESS'` or `state.winnerId !== null`.
-- **Forced-Caller Compatibility**: Verified full stateful CALL execution for 1v1 forced caller and 3-player single-card-holder forced caller.
+- **Forced-Caller Compatibility**: Verified full stateful CALL execution for 1v1 forced caller (AC-31) and 3-player single-card-holder forced caller (AC-32; A empty-safe, B plays final card, C forced caller).
 - **Detached Metadata**: Transition result exposes detached `challenge` resolution and scalar `shot` summary (`playerId`, `shotIndex`, `outcome`, `nextShotIndex`, `eliminated`) without exposing mutable aliases to authoritative PlayerState.
 
 ## Bounded Scope Confirmation
 PLAY_CARDS does NOT yet automatically dispatch a forced CALL_LIAR. T13/T14 automatic post-PLAY forced-call orchestration is not claimed complete by T-009. SYSTEM_TIMEOUT is not implemented. T29/T30/T31 remain unimplemented. Room MATCH_FINISHED lifecycle is not implemented. Networking/persistence/projection/events remain outside this task.
 
 ## Verification Commands & Results
-- `npm ci`: PASS
+- `npm ci`: PASS (tracked files unchanged)
 - `npm run typecheck`: PASS
-- `npm test`: PASS (152 total tests across 9 test files, 15 new focused tests for call-liar-transition)
+- `npm test`: PASS (155 total tests across 9 test files, 18 focused tests for call-liar-transition)
 - No new dependencies added.
 - No forbidden nondeterminism (`Math.random`, `Date.now`, `crypto.randomUUID`) used.
 
@@ -43,14 +44,14 @@ PLAY_CARDS does NOT yet automatically dispatch a forced CALL_LIAR. T13/T14 autom
 - AC-06 PASS — At least 2 ALIVE players required before CALL.
 - AC-07 PASS — Reuses verified resolveLiarChallenge for legality and challenge result.
 - AC-08 PASS — Atomically marks previousPlay.resolved = true.
-- AC-09 PASS — Shooter equals challenge.shooterId / roundLoserId.
+- AC-09 PASS — Shooter equals challenge.shooterId / roundLoserId (enforced via explicit internal invariant guard).
 - AC-10 PASS — Reuses verified resolveRouletteShot for shooter.
-- AC-11 PASS — Exactly one Shot consumed per CALL.
-- AC-12 PASS — Prototype-safe shooter update in players dictionary.
+- AC-11 PASS — Exactly one Shot consumed per CALL (asserted via shotIndex -> nextShotIndex = shotIndex + 1).
+- AC-12 PASS — Prototype-safe shooter update in players dictionary (verified with null-prototype dictionary and __proto__ participant).
 - AC-13 PASS — Post-Shot Living count derived solely from lifeStatus === 'ALIVE'.
 - AC-14 PASS — >= 2 Living routes to initializeNextRound.
-- AC-15 PASS — T15 integrated: Lie -> accused shoots.
-- AC-16 PASS — T16 integrated: Truth -> caller shoots.
+- AC-15 PASS — T15 integrated: Deterministic Lie fixture explicitly exercised (playWasTruthful === false, challengerWasCorrect === true, roundLoserId === accused, shooterId === accused).
+- AC-16 PASS — T16 integrated: Deterministic Truth fixture explicitly exercised (playWasTruthful === true, challengerWasCorrect === false, roundLoserId === caller, shooterId === caller).
 - AC-17 PASS — T17 integrated: BLANK keeps shooter ALIVE and advances nextShotIndex.
 - AC-18 PASS — T20 integrated: Surviving round loser starts next Round.
 - AC-19 PASS — T18 integrated: LETHAL eliminates shooter.
@@ -65,8 +66,8 @@ PLAY_CARDS does NOT yet automatically dispatch a forced CALL_LIAR. T13/T14 autom
 - AC-28 PASS — Revealed challenge cards remain detached snapshots.
 - AC-29 PASS — Shot summary exposes scalar result without authoritative Player alias.
 - AC-30 PASS — Challenge & Shot metadata remain available on transition result even after Round Reset clears previousPlay.
-- AC-31 PASS — Forced 1v1 caller compatibility verified.
-- AC-32 PASS — Forced 3-player single-card-holder caller compatibility verified.
+- AC-31 PASS — Forced 1v1 caller compatibility explicitly tested.
+- AC-32 PASS — Forced 3-player single-card-holder caller compatibility explicitly tested.
 - AC-33 PASS — No claim of automatic post-PLAY CALL dispatch.
 - AC-34 PASS — First-turn CALL (previousPlay == null) rejected.
 - AC-35 PASS — Out-of-turn caller rejected.
