@@ -3,7 +3,7 @@
 ## Task Identification
 
 - **Task ID**: `T-013-THREE-PLAYER-FLOW-HARDENING`
-- **Implementation Commit**: `458195d068636c91397ea773ccfcb857c2b5649a`
+- **Implementation Commit**: `414d7c1e1fdab0c9fdda558bdb753fc2b179705d`
 - **Task Remained Test-Only**: `YES`
 - **Product Code Defect Found**: `NO`
 
@@ -11,7 +11,7 @@
 
 ## Technical Summary
 
-A dedicated 3-player canonical flow hardening suite has been created in `packages/game-core/tests/three-player-flow.test.ts`. This suite proves that the verified pure Game Core correctly composes 3-player initialization, cyclic turn flow, empty-safe turn skipping, latest-Play challenge targeting, T14 automatic forced CALL, the complete 4-branch Truth/Lie × Blank/Lethal matrix, 3-player Round reset (5/5/5 + 5 undealt), 3 → 2 Living transition after first elimination (5/5 + 10 undealt), fallback starter selection around eliminated seats, post-elimination turn skipping, Revolver persistence, Play ID monotonic continuity, 3-player `SYSTEM_TIMEOUT` integration, input immutability, determinism, and `__proto__` prototype safety.
+A dedicated 3-player canonical flow hardening suite has been created and strengthened in `packages/game-core/tests/three-player-flow.test.ts`. This suite proves that the verified pure Game Core correctly composes 3-player initialization, cyclic turn flow, empty-safe turn skipping, latest-Play challenge targeting, T14 automatic forced CALL, the complete 4-branch Truth/Lie × Blank/Lethal matrix, 3-player Round reset (5/5/5 + 5 undealt), 3 → 2 Living transition after first elimination (5/5 + 10 undealt), fallback starter selection around eliminated seats, post-elimination turn skipping, Revolver persistence, Play ID monotonic continuity, 3-player `SYSTEM_TIMEOUT` integration, input immutability, determinism, and `__proto__` prototype safety.
 
 No production code changes were required; the verified Core primitives fully support all canonical 3-player invariants without defect.
 
@@ -31,22 +31,22 @@ No production code changes were required; the verified Core primitives fully sup
 4. **Canonical T14 Pre-Final Fixture & Forced CALL**:
    - Established canonical fixture with A `EMPTY_SAFE`, B `WITH_CARDS` (1 final card, current player), C `WITH_CARDS` (1 card), 13 central pile cards, 5 undealt cards (total 20 conserved cards: 6K/6Q/6A/2J).
    - B final PLAY automatically triggers C CALL without external command or manual challenge invocation.
-5. **Four-Branch T14 Matrix**:
-   - **Truth + Blank**: C caller loses challenge, shoots BLANK (shot index 0 -> 1). 3 Living players survive. Round 2 deals 5/5/5 with 5 undealt. Surviving loser C starts Round 2. Safe-empty A returns to `WITH_CARDS` with 5 cards.
-   - **Lie + Blank**: B accused loses challenge, shoots BLANK (shot index 0 -> 1). 3 Living players survive. Round 2 deals 5/5/5 with 5 undealt. Surviving loser B starts Round 2.
-   - **Truth + Lethal (C Eliminated)**: C caller loses challenge, shoots LETHAL. C eliminated. Match does NOT finish because 2 Living players (A & B) remain (`terminal = NEXT_ROUND`, `status = IN_PROGRESS`, `winnerId = null`). Round 2 deals 5/5 to A & B with 10 undealt. Eliminated C receives 0 cards. Starter fallback wraps from C to A in `['A', 'B', 'C']` cycle.
+5. **Four-Branch T14 Matrix & Revolver / Deck Hardening**:
+   - **Truth + Blank**: C caller loses challenge, shoots BLANK (`shotIndex` 0 -> `nextShotIndex` 1). 3 Living players survive. Round 2 deals 5/5/5 with 5 undealt. Surviving loser C starts Round 2. Safe-empty A returns to `WITH_CARDS` with 5 cards. All three Revolver sequences deep-equal pre-reset sequences; only shooter C index advances (0 -> 1); non-shooters A and B indices remain unchanged (0).
+   - **Lie + Blank**: B accused loses challenge, shoots BLANK (`shotIndex` 0 -> `nextShotIndex` 1). 3 Living players survive. Round 2 deals 5/5/5 with 5 undealt. Surviving loser B starts Round 2. Shooter B index advances (0 -> 1); non-shooters A and C indices remain unchanged (0).
+   - **Truth + Lethal (C Eliminated)**: C caller loses challenge, shoots LETHAL. C eliminated. Match does NOT finish because 2 Living players (A & B) remain (`terminal = NEXT_ROUND`, `status = IN_PROGRESS`, `winnerId = null`). Round 2 deals 5/5 to A & B with 10 undealt (`A.hand + B.hand + undealtCards = 20` cards, 20 unique IDs, 6K/6Q/6A/2J). Eliminated C receives 0 cards. Eliminated shooter C's Revolver sequence persists and index advances (0 -> 1); living players A and B Revolver sequences persist and indices remain unchanged. Starter fallback wraps from C to A in `['A', 'B', 'C']` cycle.
    - **Lie + Lethal (B Eliminated)**: B accused loses challenge, shoots LETHAL. B eliminated. Match does NOT finish (`terminal = NEXT_ROUND`, `status = IN_PROGRESS`, `winnerId = null`). Round 2 deals 5/5 to A & C with 10 undealt. Eliminated B receives 0 cards. Starter fallback advances from B to C in `['A', 'B', 'C']` cycle.
-6. **Post-Elimination Seat Skipping**:
-   - In 2-living-player Round after elimination, ordinary turns alternate between surviving living seats, skipping eliminated seat while preserving original fixed 3-seat `seatOrder`.
-7. **Revolver Persistence & Continuity**:
-   - Revolver sequences and non-shooter indices remain unchanged across Round reset.
-   - `playSequence` remains monotonic across Round reset (next play ID > T14 final play ID).
+   - **Exactly One Shot Across Matrix (AC-36)**: All four automatic T14 matrix branches prove `forcedCall != null`, `forcedCall.challenge.playId === createdPlay.playId`, `forcedCall.shot.shotIndex === 0`, and `forcedCall.shot.nextShotIndex === 1` (`nextShotIndex === shotIndex + 1`).
+6. **Post-Elimination Seat Skipping (AC-33)**:
+   - In 2-living-player Round after C elimination, executing actual `A -> B -> A` command sequence (`A` plays card -> `currentPlayerId = B`; `B` plays card -> `currentPlayerId = A`) proves C eliminated seat is skipped while preserving original fixed 3-seat `seatOrder = ['A', 'B', 'C']`.
+7. **Play ID Monotonic Continuity (AC-34)**:
+   - On Blank -> new Round state, first actual PLAY in next Round receives later unique Play ID (`r2Play.createdPlay.playId > finalPlayId`).
 8. **SYSTEM_TIMEOUT Integration**:
    - Ordinary 3-player timeout auto-plays 1 card from hand (5 -> 4 cards), creating valid play claiming `tableRank`.
-   - Final-card T14 timeout auto-plays B's only card and triggers automatic forced CALL, challenge, shot, and Round reset.
-9. **Immutability & Determinism**:
-   - Source `MatchState` immutability verified via JSON snapshot comparison for ordinary PLAY, T14 final PLAY, and `SYSTEM_TIMEOUT`.
-   - Deterministic execution verified across duplicate inputs with identical RNG sequences.
+   - Final-card T14 timeout auto-plays B's only card and triggers automatic forced CALL, challenge, shot (`shotIndex` 0 -> `nextShotIndex` 1), and Round reset.
+9. **Immutability & Determinism (AC-40, AC-41)**:
+   - Source `MatchState` immutability verified via JSON snapshot comparison for ordinary PLAY, empty-safe `A -> B` transition sequence, T14 forced final PLAY, and `SYSTEM_TIMEOUT`.
+   - Deterministic execution verified across duplicate inputs with identical RNG sequences for ordinary 3p flow, forced Blank flow, and 3 -> 2 lethal flow.
 10. **Prototype Safety**:
     - `__proto__` handled safely as PlayerId in 3-player match initialization and command transitions.
 
@@ -100,7 +100,7 @@ No production code changes were required; the verified Core primitives fully sup
 | AC-42 | __proto__ PlayerId 3-player regression verified | PASS | `three-player-flow.test.ts` Section 8 |
 | AC-43 | Handcrafted fixtures conserve canonical 20-card state | PASS | `three-player-flow.test.ts` Fixture helpers |
 | AC-44 | No forbidden nondeterminism / Room / projection / UI scope introduced | PASS | Verified pure game-core boundary |
-| AC-45 | Full existing regression suite passes | PASS | 13 test files, 217 tests passing |
+| AC-45 | Full existing regression suite passes | PASS | 13 test files, 218 tests passing |
 | AC-46 | npm ci / typecheck / test all PASS | PASS | Ran cleanly with 0 errors |
 | AC-47 | Evidence accurately maps all ACs and any product defect | PASS | This document |
 | AC-48 | Control lifecycle remains IN_PROGRESS->IMPLEMENTED only; never VERIFIED | PASS | Ledger status set to IMPLEMENTED |
@@ -111,7 +111,7 @@ No production code changes were required; the verified Core primitives fully sup
 
 - `npm ci`: PASS (80 packages audited, 0 errors)
 - `npm run typecheck`: PASS (0 type errors)
-- `npm test`: PASS (13 test files, 217 total tests passed)
+- `npm test`: PASS (13 test files, 218 total tests passed)
   - `play-rules.test.ts`: 20 passed
   - `turn-rules.test.ts`: 21 passed
   - `roulette-rules.test.ts`: 13 passed
@@ -124,7 +124,7 @@ No production code changes were required; the verified Core primitives fully sup
   - `call-liar-transition.test.ts`: 18 passed
   - `domain.test.ts`: 8 passed
   - `two-player-flow.test.ts`: 15 passed
-  - `three-player-flow.test.ts`: 13 passed
+  - `three-player-flow.test.ts`: 14 passed
 - **Tracked-file impact by npm ci**: None
 - **Dependency changes**: None
 - **Product source changes**: None
