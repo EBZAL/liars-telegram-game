@@ -424,6 +424,14 @@ None
 - Original-PC exact timeout auto-selection algorithm remains SOURCE_GAP.
 - Exactly one random authoritative Hand Card is the explicit Project Override.
 
+**Stage-02 Exit-Gate Boundary Reconciliation:**
+- Canonical T01–T26 and T28–T31 are Core-relevant and have durable VERIFIED implementation/evidence through T-011.
+- T27 is a mandatory information-security behavior, but its enforcement requires recipient-specific Room/Application projections rather than a pure authoritative Core MatchState transition.
+- T27 remains unimplemented and mandatory for STAGE-04.
+- This is not a waiver of T27 and not an Architecture change.
+- STAGE-02 Exit Gate remains NOT_EVALUATED until Architect re-read.
+- No currently evidenced unresolved pure-Core GAME_RULES implementation gap remains after T-011.
+
 **Active Blockers:**
 None
 
@@ -452,5 +460,6 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this State Sync commit and perform the STAGE-02 Exit Gate assessment against the canonical GAME_RULES T01–T31 coverage, Core determinism, architecture boundaries, and any remaining unresolved Core-rule gap. No next implementation task may begin unless the Architect first determines that additional Stage-02 work is required and passes a new Consistency Gate.
+Project Architect must re-read this reconciliation commit and then perform the STAGE-02 Exit Gate assessment using the reconciled Core boundary: T01–T26 and T28–T31 as Stage-02 Core criteria, with T27 retained as mandatory STAGE-04 recipient-projection/security acceptance. No new implementation task may begin before that Architect Stage Gate decision.
+
 

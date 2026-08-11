@@ -26,7 +26,7 @@
 ## STAGE-02 — Canonical Core Engine
 **Status**: IN_PROGRESS
 **Goals**: full canonical game state machine, GAME_RULES behavior, challenge/empty-hand/roulette/round flow
-**Exit Gate**: canonical GAME_RULES T01–T31 covered and passing; no unresolved Core rule ambiguity; deterministic state transitions.
+**Exit Gate**: canonical Core-relevant GAME_RULES T01–T26 and T28–T31 covered and passing; T27 dead-spectator hidden-information behavior remains mandatory but is evaluated under STAGE-04 recipient-specific hidden-information projections; no unresolved Core rule ambiguity; deterministic state transitions.
 **Progress**:
 - T-002-MATCH-ROUND-INITIALIZATION VERIFIED
 - deterministic Match / Round-1 initialization established
@@ -156,7 +156,10 @@
 - TURN_DEADLINE alarm, stale alarm handling and late-command arbitration remain Stage-04/runtime work
 - original-PC exact auto-selection algorithm remains Source Gap
 - project one-random-card override implemented
-- remaining canonical Core Engine behavior not yet implemented
+- all currently identified pure Core GAME_RULES behavior required for the STAGE-02 boundary is implemented and VERIFIED through T-011
+- Stage-02 Exit Gate remains NOT_EVALUATED pending Architect re-read
+- T27 dead-spectator hidden-Hand protection is not a pure Core transition and remains mandatory Stage-04 recipient-projection/security work
+- actual 30-second deadline scheduling, TURN_DEADLINE alarms, stale-alarm handling, late-command arbitration, revision/dedupe, Pause/Resume, networking and persistence remain later Room/Application work and are not Stage-02 Core gaps
 
 ## STAGE-03 — Player-Count & Rule Hardening
 **Status**: NOT_STARTED
@@ -165,8 +168,9 @@
 
 ## STAGE-04 — Authoritative Multiplayer
 **Status**: NOT_STARTED
-**Goals**: Durable Object Room Coordinator, WebSocket, revision/dedupe, persistence, timeout, Pause/Resume, hidden projections
-**Exit Gate**: action dedupe; stale revision; turn validation; concurrent action safety; deadline races; unique Living presence accounting; zero-Living-connected Pause; Living-only Resume; life-status-triggered Pause evaluation; fresh 30-second Resume deadline; single activeAlarm invariant; stale/idempotent alarm behavior; persistence reload; reconnect; hidden-information projections.
+**Goals**: Durable Object Room Coordinator, WebSocket, revision/dedupe, persistence, timeout, Pause/Resume, hidden projections, T27 dead-spectator hidden-Hand protection (Eliminated spectators receive Public State only and cannot read Living Players' hidden Hand values)
+**Exit Gate**: action dedupe; stale revision; turn validation; concurrent action safety; deadline races; unique Living presence accounting; zero-Living-connected Pause; Living-only Resume; life-status-triggered Pause evaluation; fresh 30-second Resume deadline; single activeAlarm invariant; stale/idempotent alarm behavior; persistence reload; reconnect; recipient-specific hidden-information projections, including T27 dead-spectator Hand isolation.
+
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED
