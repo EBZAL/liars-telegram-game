@@ -83,6 +83,8 @@ interface TraceObservationCounters {
   aliveEmptyStatesObserved: number;
   freshNextRoundsObserved: number;
   finishedMatchesObserved: number;
+  blankShotsObserved: number;
+  freshRoundsWithEliminatedPlayerObserved: number;
 }
 
 /**
@@ -195,9 +197,8 @@ function assertCoreStateInvariants(
     if (counters) counters.finishedMatchesObserved++;
   }
 
-  // D7 — Fresh-Round Distribution Check
+  // D7 — Fresh-Round Distribution Check (structural assertions run on all fresh rounds)
   if (state.round.previousPlay === null && state.round.centralPile.length === 0 && state.status === 'IN_PROGRESS') {
-    if (counters) counters.freshNextRoundsObserved++;
     for (const pId of state.seatOrder) {
       const p = state.players[pId]!;
       if (p.lifeStatus === 'ALIVE') {
@@ -208,6 +209,23 @@ function assertCoreStateInvariants(
       }
     }
     expect(state.round.undealtCards.length).toBe(20 - livingCount * 5);
+
+    // Correction 2: Only count fresh NEXT rounds (roundNumber > 1) for non-vacuous observation
+    if (state.round.roundNumber > 1 && counters) {
+      counters.freshNextRoundsObserved++;
+
+      // Correction 3: Track fresh Round 2+ states with at least one ELIMINATED player (I04 proof)
+      let hasEliminatedPlayer = false;
+      for (const pId of state.seatOrder) {
+        if (state.players[pId]!.lifeStatus === 'ELIMINATED') {
+          expect(state.players[pId]!.hand.length).toBe(0);
+          hasEliminatedPlayer = true;
+        }
+      }
+      if (hasEliminatedPlayer) {
+        counters.freshRoundsWithEliminatedPlayerObserved++;
+      }
+    }
   }
 
   // D8 — Revolver Invariants
@@ -370,7 +388,9 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
         emptySafeStatesObserved: 0,
         aliveEmptyStatesObserved: 0,
         freshNextRoundsObserved: 0,
-        finishedMatchesObserved: 0
+        finishedMatchesObserved: 0,
+        blankShotsObserved: 0,
+        freshRoundsWithEliminatedPlayerObserved: 0
       };
 
       for (const playerCount of playerCounts) {
@@ -505,6 +525,11 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
                   }
                 }
                 expect(advancingCount, errorContext).toBe(1);
+
+                // Correction 3: Track Blank shots on forced call (I18 non-vacuity)
+                if (result.forcedCall.shot.outcome === 'BLANK') {
+                  counters.blankShotsObserved++;
+                }
               } else {
                 // Ordinary PLAY: all revolver indices unchanged
                 for (const pId of state.seatOrder) {
@@ -545,6 +570,11 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
                 }
               }
               expect(advancingCount, errorContext).toBe(1);
+
+              // Correction 3: Track Blank shots on explicit CALL (I18 non-vacuity)
+              if (result.shot.outcome === 'BLANK') {
+                counters.blankShotsObserved++;
+              }
             }
 
             // Monotonicity checks
@@ -559,14 +589,14 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
 
       expect(totalTraces).toBe(48);
 
-      // Finding 13: Exact command total assertion
+      // Correction 4: Exact stable observation counter assertions
       expect(totalCommandsExecuted).toBe(894);
-
-      // Finding 8 & 9: Non-vacuous observation assertions
-      expect(counters.emptySafeStatesObserved).toBeGreaterThan(0);
-      expect(counters.aliveEmptyStatesObserved).toBeGreaterThan(0);
-      expect(counters.freshNextRoundsObserved).toBeGreaterThan(0);
-      expect(counters.finishedMatchesObserved).toBeGreaterThan(0);
+      expect(counters.emptySafeStatesObserved).toBe(3);
+      expect(counters.aliveEmptyStatesObserved).toBe(84);
+      expect(counters.freshNextRoundsObserved).toBe(181);
+      expect(counters.finishedMatchesObserved).toBe(22);
+      expect(counters.blankShotsObserved).toBe(159);
+      expect(counters.freshRoundsWithEliminatedPlayerObserved).toBe(41);
     });
   });
 
@@ -715,17 +745,37 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
     });
   });
 
-  describe('PROPERTY GROUP L — Repeated Table Rank Legality (Finding 10 / I28)', () => {
-    it('proves a next round with repeated tableRank is accepted and canonical', () => {
-      const initRng = new ScriptedRandom([0]);
-      const match = initializeMatch(['A', 'B'], initRng);
-      const curP = match.round.currentPlayerId;
-      const playRes = applyPlayCardsCommand(match, curP, [match.players[curP]!.hand[0]!.id], new ScriptedRandom([0]));
+  describe('PROPERTY GROUP L — Repeated Table Rank Legality (I28)', () => {
+    it('proves a next round with repeated tableRank via injected deterministic randomness', () => {
+      // RNG consumption for initializeMatch(['A', 'B'], rng):
+      //   Call 0: shuffle playerIds (nextInt(2))
+      //   Call 1: starter index (nextInt(2))
+      //   Call 2: table deck shuffle i=2 (nextInt(3))
+      //   Call 3: table deck shuffle i=1 (nextInt(2))
+      //   Calls 4..22: liar deck shuffle (19 calls)
+      //   Calls 23..27: revolver player 1 (5 calls)
+      //   Calls 28..32: revolver player 2 (5 calls)
+      //
+      // To produce tableRank = KING at index 0 of [KING, QUEEN, ACE]:
+      //   Call 2: nextInt(3) → 2 (swap [2] with [2], no-op)
+      //   Call 3: nextInt(2) → 1 (swap [1] with [1], no-op)
+      //   Result: [KING, QUEEN, ACE] → tableRank = KING
+      const initIndices = new Array(33).fill(0);
+      initIndices[2] = 2; // table deck shuffle: nextInt(3) → 2
+      initIndices[3] = 1; // table deck shuffle: nextInt(2) → 1
+      const initRng = new ScriptedRandom(initIndices);
 
-      // Create a state where previousPlay is unresolved and exists
+      const match = initializeMatch(['A', 'B'], initRng);
+      const priorTableRank = match.round.tableRank;
+      expect(priorTableRank).toBe('KING');
+
+      // Play one card to create a previousPlay
+      const curP = match.round.currentPlayerId;
+      const playRng = new ScriptedRandom([0]);
+      const playRes = applyPlayCardsCommand(match, curP, [match.players[curP]!.hand[0]!.id], playRng);
       expect(playRes.state.round.previousPlay).not.toBeNull();
 
-      // Explicitly mark previousPlay as resolved to test initializeNextRound
+      // Manually construct resolved state for initializeNextRound precondition
       const resolvedState: MatchState = {
         ...playRes.state,
         round: {
@@ -737,13 +787,46 @@ describe('T-016 Core Invariant & Property Hardening Suite', () => {
         }
       };
 
-      const nextRng = new SeededRandom(0);
-      const nextMatch = initializeNextRound(resolvedState, 'A', nextRng);
+      // RNG consumption for initializeNextRound (2 living players):
+      //   Call 0: table deck shuffle i=2 (nextInt(3))
+      //   Call 1: table deck shuffle i=1 (nextInt(2))
+      //   Calls 2..20: liar deck shuffle (19 calls)
+      //
+      // Same injection to produce KING again:
+      //   Call 0: nextInt(3) → 2
+      //   Call 1: nextInt(2) → 1
+      const nextRoundIndices = new Array(21).fill(0);
+      nextRoundIndices[0] = 2; // table deck shuffle: nextInt(3) → 2
+      nextRoundIndices[1] = 1; // table deck shuffle: nextInt(2) → 1
+      const nextRng = new ScriptedRandom(nextRoundIndices);
 
-      expect(['KING', 'QUEEN', 'ACE']).toContain(nextMatch.round.tableRank);
+      const nextMatch = initializeNextRound(resolvedState, curP, nextRng);
+      const nextTableRank = nextMatch.round.tableRank;
+
+      // Correction 1: Explicit repeated table rank equality assertion
+      expect(nextTableRank).toBe(priorTableRank);
+      expect(nextTableRank).toBe('KING');
+
+      // Canonical next-round structural assertions
       expect(nextMatch.round.roundNumber).toBe(2);
       expect(nextMatch.round.previousPlay).toBeNull();
       expect(nextMatch.round.centralPile).toEqual([]);
+
+      // Living players each 5 cards
+      let livingCount = 0;
+      for (const pId of nextMatch.seatOrder) {
+        const p = nextMatch.players[pId]!;
+        if (p.lifeStatus === 'ALIVE') {
+          livingCount++;
+          expect(p.hand.length).toBe(5);
+        }
+      }
+      expect(livingCount).toBe(2);
+
+      // Undealt count canonical
+      expect(nextMatch.round.undealtCards.length).toBe(20 - livingCount * 5);
+
+      // Full 20-card conservation, unique IDs, 6K/6Q/6A/2J
       assertCoreStateInvariants(nextMatch);
     });
   });
