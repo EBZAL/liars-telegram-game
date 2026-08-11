@@ -4,7 +4,7 @@
 STAGE-03 — Player-Count & Rule Hardening
 
 **Last Verified Task:**
-T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+T-016-INVARIANT-PROPERTY-HARDENING
 
 **Current Active Task:**
 None
@@ -836,6 +836,135 @@ None
   - npm test PASS
   - 242 tests across 15 test files
   - T-015 suite = 11 tests
+- T-016 Invariant & Property Hardening VERIFIED.
+- Task remained test-only: YES
+- Product defect discovered: NONE
+- Architecture change required: NO
+- Dependencies added: NONE
+- Deterministic property harness:
+  - existing Vitest + TypeScript only
+  - injected deterministic RandomSource
+  - no external property-testing dependency
+  - no forbidden nondeterministic API
+- Initialization property sweep:
+  - Player counts 2 / 3 / 4
+  - seeds 0..31
+  - 96 canonical initialization cases
+  - invalid Player counts 0 / 1 / 5 / 6 rejected
+- Canonical initialization properties:
+  - seatOrder exact unique Player permutation
+  - firstRoundStarter/current Player coherent
+  - every Living Player receives exactly 5 Cards
+  - undealt = 10 / 5 / 0 for 2 / 3 / 4 Players
+  - full 20-card conservation
+  - 20 unique Card IDs
+  - 6 KING / 6 QUEEN / 6 ACE / 2 JOKER
+  - Table Rank always KING / QUEEN / ACE
+  - every Revolver = 1 LETHAL + 5 BLANK
+  - every Revolver begins at index 0
+- Initialization determinism:
+  - same input + same RNG stream
+  - deep-equal MatchState
+- Exhaustive Truth/Lie properties:
+  - 252 cases
+  - all rank tuples of length 1..3
+  - all Table Ranks
+  - Joker validity
+  - mixed invalid Card makes whole Play Lie
+  - Claim Rank = Table Rank
+  - Claim Count = actual played count
+- Generated legal trace sweep:
+  - 48 traces
+  - 2/3/4 Players
+  - seeds 0..15
+  - max 24 authoritative commands per trace
+  - exact authoritative command total = 894
+  - legality derived through getAllowedTurnActions
+  - public applyPlayCardsCommand / applyCallLiar paths
+  - source MatchState immutable on every command
+- Authoritative state invariants:
+  - fixed seatOrder
+  - fixed firstRoundStarter
+  - exact Player identity set preserved
+  - 20-card conservation
+  - unique Card IDs
+  - 6K / 6Q / 6A / 2J
+  - Table Rank valid
+  - previousPlay coherent
+  - current Player authoritative turn-eligible
+  - ALIVE/roundStatus/Hand coherence
+  - fresh-Round 5-card Living distribution
+  - Eliminated Players receive no fresh Hand
+  - winner coherence
+  - Revolver sequence persists for Match
+- PLAY transition properties:
+  - createdPlay ID = pre-command playSequence
+  - post-command playSequence = pre + 1
+  - Play IDs globally unique and monotonic across Round boundaries
+  - createdPlay count = selected Card count
+  - Claim Rank = pre-command Table Rank
+  - ordinary PLAY removes selected Cards from Hand
+  - selected Cards enter centralPile exactly once
+  - unselected Hand Cards remain
+  - ordinary no-Shot PLAY leaves every Revolver index unchanged
+- CALL / Shot properties:
+  - forced CALL targets newly-created Play
+  - explicit CALL targets exact pre-command previousPlay
+  - challenge shooter = round loser
+  - Shot player = challenge shooter
+  - Shot nextShotIndex = shotIndex + 1
+  - authoritative shooter index advances exactly one
+  - all non-shooter indices remain unchanged
+- Non-vacuous deterministic observations:
+  - EMPTY_SAFE states = 3
+  - ALIVE zero-card states = 84
+  - actual fresh Round 2+ states = 181
+  - FINISHED matches = 22
+  - Blank shots = 159
+  - fresh Round 2+ states containing Eliminated Player = 41
+- Repeated Table Rank:
+  - prior Table Rank = KING
+  - next Round Table Rank = KING
+  - explicit prior == next assertion
+  - Round 2 canonical state verified
+  - repeated Table Rank confirmed legal
+- Timeout property sweep:
+  - 45 cases
+  - every Hand index 0..4
+  - 2/3/4 Players
+  - exact authoritative Card selected by injected RNG index
+  - exactly one Card
+  - Claim Rank = Table Rank
+  - actor = authoritative currentPlayerId
+  - exactly one ordinary timeout selection RNG call
+  - source state immutable
+- Deterministic replay:
+  - 6 full replay cases
+  - independently allocated equivalent inputs/RNGs
+  - final states deep-equal
+  - authoritative event logs deep-equal
+- Prototype safety:
+  - __proto__ Player ID
+  - constructor Player ID
+  - null-prototype players dictionary persists through generated commands
+- GAME_RULES §24 matrix:
+  - 33 total invariants classified
+  - PROPERTY_DIRECT = 20
+  - SCENARIO_VERIFIED = 12
+  - STAGE04_DEFERRED = 1
+  - I29 alone remains STAGE04_DEFERRED
+  - T27 recipient-projection/security remains mandatory Stage-04 work
+  - no other invariant deferred
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 251 tests across 16 files
+  - T-016 suite = 9 test blocks
+- No product source changes.
+- No dependency changes.
+- No Architecture change.
+- No forbidden nondeterminism.
 
 **STAGE-02 — Canonical Core Engine:**
 COMPLETE
@@ -871,18 +1000,27 @@ NOT_EVALUATED
 - 3-player dedicated hardening: VERIFIED / COMPLETE
 - 4-player dedicated hardening: VERIFIED / COMPLETE
 - selected-but-unconfirmed timeout-policy hardening: VERIFIED / COMPLETE
-- invariant/property testing: PENDING
+- invariant/property testing: VERIFIED / COMPLETE
+
+All required Stage-03 implementation tasks are VERIFIED.
+
+STAGE-03 remains IN_PROGRESS because its Exit Gate has not yet been evaluated by the Project Architect.
+
+Stage-03 Exit Gate:
+NOT_EVALUATED
 
 **Boundary Wording:**
-The Core implements the SYSTEM_TIMEOUT effect,
-but does not own actual 30-second deadline scheduling.
+T27 recipient-specific hidden-information projection/security remains mandatory STAGE-04 work.
 
-TURN_DEADLINE alarms, stale-alarm handling,
-late-command arbitration, revision/dedupe,
-Pause/Resume, Room persistence/networking
-remain later Room/Application work.
+Actual 30-second deadline scheduling,
+TURN_DEADLINE alarms,
+late-command arbitration,
+revision/dedupe,
+Pause/Resume,
+Room persistence/networking
+remain later Authoritative Multiplayer/Application work.
 
-T27 remains mandatory in STAGE-04.
+End-to-end UI card-selection/highlight behavior remains later UI work.
 
 **Active Blockers:**
 None
@@ -912,6 +1050,5 @@ None currently evidenced.
 * no separate Bot Backend
 
 **Next Approved Action:**
-Project Architect must re-read this T-015 verification State Sync. After successful reconciliation, only the invariant/property testing bucket remains unresolved in STAGE-03. The Architect must independently derive the smallest bounded invariant/property hardening task, determine Workflow Profile/Risk, run the Consistency Gate, and only after PASS issue one Executor prompt. No future task is pre-authorized by this State Sync.
-
+Project Architect must re-read this T-016 verification State Sync and perform the formal STAGE-03 Exit Gate review. No new implementation task is authorized before that Stage Gate decision. The Stage Gate must independently verify: all required Stage-03 tasks are durably VERIFIED; 2-player suite PASS; 3-player suite PASS; 4-player suite PASS; selected-but-unconfirmed timeout policy PASS; invariant/property tests PASS; T27 remains correctly deferred to Stage-04 rather than waived. Only after the Architect issues a Stage Gate decision may Gravity persist any Stage-03 COMPLETE/PASS transition.
 

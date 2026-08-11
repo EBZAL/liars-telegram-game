@@ -273,11 +273,45 @@
 - no UI implementation introduced
 - T-015 remained test-only; no product defect discovered
 - latest full regression: 242 tests / 15 test files PASS
+- T-016-INVARIANT-PROPERTY-HARDENING VERIFIED
+- deterministic dependency-free property harness PASS
+- 96 initialization sweep cases PASS
+- invalid Player-count exclusivity PASS
+- 252 exhaustive Truth/Lie/Claim cases PASS
+- 48 bounded legal command traces PASS
+- exact 894 authoritative generated commands PASS
+- canonical 20-card conservation invariant PASS
+- fixed seat/player identity invariant PASS
+- authoritative current-turn eligibility PASS
+- fresh-Round distribution invariant PASS
+- Eliminated fresh-Hand exclusion PASS
+- Revolver sequence persistence PASS
+- exact shooter index progression PASS
+- PLAY Hand→centralPile delta PASS
+- exact playSequence +1 per PLAY PASS
+- global/cross-Round Play ID monotonicity PASS
+- explicit latest previousPlay CALL targeting PASS
+- forced newest-Play CALL targeting PASS
+- non-vacuous EMPTY_SAFE / empty-Hand / Round-reset / winner / Blank / elimination observations PASS
+- repeated Table Rank KING → KING legality PASS
+- 45 timeout index-property cases PASS
+- 6 deterministic full-trace replays PASS
+- prototype-safe generated trace PASS
+- all 33 GAME_RULES §24 invariants classified
+- PROPERTY_DIRECT 20
+- SCENARIO_VERIFIED 12
+- I29 alone STAGE04_DEFERRED
+- mandatory T27 Stage-04 boundary preserved
+- latest full regression: 251 tests / 16 files PASS
+- task remained test-only
+- no product defect discovered
 - 2-player suite COMPLETE / VERIFIED
 - 3-player suite COMPLETE / VERIFIED
 - 4-player suite COMPLETE / VERIFIED
 - selected-but-unconfirmed timeout policy COMPLETE / VERIFIED
-- invariant/property testing remains pending
+- invariant/property testing COMPLETE / VERIFIED
+- Remaining Stage-03 implementation work: NONE
+- Formal STAGE-03 Exit Gate: PENDING ARCHITECT EVALUATION
 
 ## STAGE-04 — Authoritative Multiplayer
 **Status**: NOT_STARTED

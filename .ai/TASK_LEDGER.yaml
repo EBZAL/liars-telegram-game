@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-03
-last_verified_task: T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
-active_task: T-016-INVARIANT-PROPERTY-HARDENING
+last_verified_task: T-016-INVARIANT-PROPERTY-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1193,8 +1193,18 @@ tasks:
   T-016-INVARIANT-PROPERTY-HARDENING:
     title: Invariant & Property Hardening
     stage: STAGE-03
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 343c84f94d8575bad300037a4559e1fc7f090889
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 343c84f94d8575bad300037a4559e1fc7f090889
+      evidence:
+        - .ai/evidence/T-016-INVARIANT-PROPERTY-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Close the final unresolved STAGE-03 implementation bucket by adding a deterministic, dependency-free Core invariant/property hardening suite verifying structural and behavioral properties across a bounded generated state-space using deterministic seed sweeps, bounded legal-command traces, reusable authoritative-state invariant assertions, exhaustive small-domain combinatorics, and deterministic replay equivalence.
