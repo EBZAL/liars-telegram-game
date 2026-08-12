@@ -401,6 +401,33 @@
 - game-core 251 tests / 16 files PASS
 - room-runtime 80 tests / 4 files PASS
 - authoritative metadata reconciliation PASS
+- T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE VERIFIED
+- provider-independent client gameplay transaction PASS
+- authorization-before-dispatch PASS
+- REJECT zero-dispatch/zero-revision/zero-record PASS
+- DUPLICATE zero-dispatch/zero-second-revision PASS
+- duplicate retry retains priorResultingRevision PASS
+- server-only prepared next turn PASS
+- consumed turnId replacement PASS
+- PLAY_CARDS applyPlayCardsCommand dispatch PASS
+- CALL_LIAR applyCallLiar dispatch PASS
+- one client command = one Room revision PASS
+- Room revision = processed resultingRevision PASS
+- ordinary PLAY commit PASS
+- CALL_LIAR commit PASS
+- forced-CALL PLAY one-revision/one-record PASS
+- no synthetic CALL_LIAR client record PASS
+- Match finish mapping PASS
+- stale currentTurnDeadline invalidation PASS
+- stale activeAlarm invalidation PASS
+- Core result fail-closed consistency PASS
+- immutable/pure transaction PASS
+- pure logical commit pair distinguished from durable persistence PASS
+- latest regression 347 tests / 21 files PASS
+- room-runtime 96 tests / 5 files PASS
+- game-core 251 tests / 16 files unchanged
+- no package/dependency change
+- authoritative metadata reconciliation PASS
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

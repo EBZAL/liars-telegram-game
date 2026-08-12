@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
 
 **Current Active Task:**
 None
@@ -1070,6 +1070,201 @@ STAGE-04
 Living-presence Pause/Resume:
 STAGE-04
 
+- 2/3/4 Players
+  - seeds 0..15
+  - max 24 authoritative commands per trace
+  - exact authoritative command total = 894
+  - legality derived through getAllowedTurnActions
+  - public applyPlayCardsCommand / applyCallLiar paths
+  - source MatchState immutable on every command
+- Authoritative state invariants:
+  - fixed seatOrder
+  - fixed firstRoundStarter
+  - exact Player identity set preserved
+  - 20-card conservation
+  - unique Card IDs
+  - 6K / 6Q / 6A / 2J
+  - Table Rank valid
+  - previousPlay coherent
+  - current Player authoritative turn-eligible
+  - ALIVE/roundStatus/Hand coherence
+  - fresh-Round 5-card Living distribution
+  - Eliminated Players receive no fresh Hand
+  - winner coherence
+  - Revolver sequence persists for Match
+- PLAY transition properties:
+  - createdPlay ID = pre-command playSequence
+  - post-command playSequence = pre + 1
+  - Play IDs globally unique and monotonic across Round boundaries
+  - createdPlay count = selected Card count
+  - Claim Rank = pre-command Table Rank
+  - ordinary PLAY removes selected Cards from Hand
+  - selected Cards enter centralPile exactly once
+  - unselected Hand Cards remain
+  - ordinary no-Shot PLAY leaves every Revolver index unchanged
+- CALL / Shot properties:
+  - forced CALL targets newly-created Play
+  - explicit CALL targets exact pre-command previousPlay
+  - challenge shooter = round loser
+  - Shot player = challenge shooter
+  - Shot nextShotIndex = shotIndex + 1
+  - authoritative shooter index advances exactly one
+  - all non-shooter indices remain unchanged
+- Non-vacuous deterministic observations:
+  - EMPTY_SAFE states = 3
+  - ALIVE zero-card states = 84
+  - actual fresh Round 2+ states = 181
+  - FINISHED matches = 22
+  - Blank shots = 159
+  - fresh Round 2+ states containing Eliminated Player = 41
+- Repeated Table Rank:
+  - prior Table Rank = KING
+  - next Round Table Rank = KING
+  - explicit prior == next assertion
+  - Round 2 canonical state verified
+  - repeated Table Rank confirmed legal
+- Timeout property sweep:
+  - 45 cases
+  - every Hand index 0..4
+  - 2/3/4 Players
+  - exact authoritative Card selected by injected RNG index
+  - exactly one Card
+  - Claim Rank = Table Rank
+  - actor = authoritative currentPlayerId
+  - exactly one ordinary timeout selection RNG call
+  - source state immutable
+- Deterministic replay:
+  - 6 full replay cases
+  - independently allocated equivalent inputs/RNGs
+  - final states deep-equal
+  - authoritative event logs deep-equal
+- Prototype safety:
+  - __proto__ Player ID
+  - constructor Player ID
+  - null-prototype players dictionary persists through generated commands
+- GAME_RULES §24 matrix:
+  - 33 total invariants classified
+  - PROPERTY_DIRECT = 20
+  - SCENARIO_VERIFIED = 12
+  - STAGE04_DEFERRED = 1
+  - I29 alone remains STAGE04_DEFERRED
+  - T27 recipient-projection/security remains mandatory Stage-04 work
+  - no other invariant deferred
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 251 tests across 16 files
+  - T-016 suite = 9 test blocks
+- No product source changes.
+- No dependency changes.
+- No Architecture change.
+- No forbidden nondeterminism.
+
+**STAGE-02 — Canonical Core Engine:**
+COMPLETE
+
+**Stage Exit Gate:**
+PASS
+
+**Stage-02 Required Tasks:**
+T-002 through T-011 all VERIFIED
+
+**Canonical Core Coverage:**
+T01–T26 PASS
+T28–T31 PASS
+
+**T27:**
+mandatory project requirement
+not waived
+not implemented yet
+retained for STAGE-04 recipient-specific hidden-information projections
+
+No currently evidenced unresolved pure-Core GAME_RULES ambiguity remains.
+
+Core deterministic-transition requirement PASS.
+
+**STAGE-03 — Player-Count & Rule Hardening:**
+COMPLETE
+
+**Stage Exit Gate:**
+PASS
+
+**Stage-03 Required Tasks:**
+- T-012-TWO-PLAYER-FLOW-HARDENING VERIFIED
+- T-013-THREE-PLAYER-FLOW-HARDENING VERIFIED
+- T-014-FOUR-PLAYER-FLOW-HARDENING VERIFIED
+- T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING VERIFIED
+- T-016-INVARIANT-PROPERTY-HARDENING VERIFIED
+
+**Stage-Level Acceptance:**
+- 2-player suite PASS
+- 3-player suite PASS
+- 4-player suite PASS
+- selected-but-unconfirmed timeout policy PASS
+- invariant/property tests PASS
+
+Remaining Stage-03 implementation work:
+NONE
+
+**Formal Architect Stage Gate:**
+PASS
+
+**Architecture Review:**
+PASS
+
+**Security Boundary Review:**
+PASS — T27 retained as mandatory STAGE-04 work
+
+**UI Review:**
+N/A
+
+**Release Review:**
+N/A
+
+**Open Blockers:**
+NONE
+
+**Latest Full Regression:**
+npm ci PASS
+npm run typecheck PASS
+npm test PASS
+251 tests across 16 test files
+
+**Boundary Wording:**
+
+T27 dead-spectator hidden-Hand isolation:
+MANDATORY STAGE-04 WORK
+NOT WAIVED
+NOT IMPLEMENTED BY STAGE-03
+
+Recipient-specific hidden-information projections:
+STAGE-04
+
+Actual 30-second deadline scheduling:
+STAGE-04 / Application runtime
+
+TURN_DEADLINE alarms:
+STAGE-04
+
+stale-alarm behavior:
+STAGE-04
+
+late-command arbitration:
+STAGE-04
+
+revision / dedupe:
+STAGE-04
+
+concurrent action safety:
+STAGE-04
+
+Room persistence / reconnect:
+STAGE-04
+
+Living-presence Pause/Resume:
+STAGE-04
+
 End-to-end card-selection/highlight UI:
 later UI work
 
@@ -1087,6 +1282,7 @@ YES
 - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
 - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION VERIFIED
 - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING VERIFIED
+- T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE VERIFIED
 
 **Exit Gate:**
 NOT_EVALUATED
@@ -1318,23 +1514,160 @@ NOT_EVALUATED
 - Correction package-lock delta: 0
 - Correction game-core delta: 0
 
-**Explicitly NOT IMPLEMENTED BY T-019:**
-- Telegram initData validation
-- authentication/session implementation
-- Durable Object
-- HTTP/WebSocket
-- SQLite/persistence
-- concurrency serialization
-- actual Core gameplay dispatch
-- Match mutation orchestration
-- Room revision mutation orchestration
-- successful command transaction
-- turnId generation
-- deadline/alarm execution
-- late-command arbitration
-- presence
+**T-020 Authoritative Gameplay Commit Primitive VERIFIED:**
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Transaction boundary:
+  - executeClientGameplayTransaction exists
+  - client actions supported: PLAY_CARDS, CALL_LIAR
+  - SYSTEM_TIMEOUT not handled
+  - no provider API
+  - no persistence API
+- Transaction ordering:
+  1. T-019 authorization
+  2. REJECT/DUPLICATE early return
+  3. validate server-prepared next turn
+  4. verified Core command dispatch
+  5. validate Core result consistency
+  6. compute exactly one next Room revision
+  7. record exactly one successful processed client action
+  8. construct next authoritative Room state
+  9. return COMMITTED
+- Authorization preservation:
+  - delegates to evaluateServerGameplayActionRequest
+  - no duplicate authorization implementation
+  - REJECT preserves T-019 reason
+  - REJECT performs no Core transition
+  - REJECT does not increment revision
+  - REJECT creates no record
+  - DUPLICATE returns priorResultingRevision
+  - DUPLICATE performs no Core transition
+  - DUPLICATE does not increment revision
+  - DUPLICATE creates no second record
+  - DUPLICATE does not rotate turnId
+  - DUPLICATE does not require valid preparedNextTurn
+- Server-prepared next turn:
+  - server-only context
+  - client envelope unchanged
+  - actor-free client envelope preserved
+  - non-empty turnId required for new accepted command
+  - next turnId cannot equal consumed currentTurnId
+  - validated after authorization ACCEPT
+  - validated before Core dispatch
+  - no turnId generation in room-runtime
+- Core dispatch:
+  - PLAY_CARDS uses applyPlayCardsCommand
+  - CALL_LIAR uses applyCallLiar
+  - low-level applyPlayCards not used
+  - Core derives claims/challenge/roulette/round reset/winner
+  - supplied RandomSource passed through
+  - no extra randomness source
+- One-command / one-revision:
+  - one accepted client command increments Room revision exactly once
+  - processed record resultingRevision equals Room revision
+  - both equal envelope.expectedRevision + 1
+- Ordinary PLAY:
+  - COMMITTED
+  - Core-derived Match update
+  - selected cards removed by Core
+  - previousPlay Core-derived
+  - exactly one processed record
+  - prepared next turn installed
+  - old currentTurnDeadline cleared
+  - old activeAlarm cleared
+- CALL_LIAR:
+  - COMMITTED
+  - Core-derived challenge/roulette/next-round behavior
+  - exactly one Room revision
+  - exactly one processed CALL_LIAR record
+  - continuing Match receives prepared next turn
+  - stale timing metadata cleared
+- Forced-CALL PLAY:
+  - Core command orchestration may internally execute forced CALL
+  - still one client transaction
+  - Room revision increments exactly once
+  - exactly one processed client record
+  - record actionType remains PLAY_CARDS
+  - zero synthetic CALL_LIAR client record
+- Match finish:
+  - winning client command COMMITTED
+  - Room lifecycle becomes MATCH_FINISHED
+  - Core Match status FINISHED
+  - winnerId non-null
+  - currentTurnId null
+  - currentTurnDeadline null
+  - activeAlarm null
+  - no Room-layer next round
+- Continuing Match:
+  - lifecycle remains MATCH_ACTIVE
+  - prepared next turn installed
+  - old deadline/alarm invalidated
+- Core consistency guards:
+  - IN_PROGRESS + winnerId non-null fails closed
+  - FINISHED + winnerId null fails closed
+  - invalid Core result creates no processed action record
+- Purity:
+  - input Room state not mutated
+  - input Match not mutated
+  - input Hands not mutated
+  - envelope not mutated
+  - actor not mutated
+  - prepared next turn not mutated
+  - input registry not mutated
+  - fresh Room state returned on COMMITTED
+  - registry prototype safety retained
+- Randomness:
+  - only injected Core RandomSource used
+  - rejected request consumes no gameplay randomness
+  - duplicate consumes no gameplay randomness
+  - no Math.random
+  - no Date.now
+  - no crypto entropy introduced
+- Important persistence distinction:
+  - T-020 provides a pure in-memory logical commit pair: Room state + processed registry
+  - it does NOT provide durable atomic persistence
+  - future Durable Object / SQLite work must persist both transactionally
+- Timing boundary:
+  - successful client command invalidates consumed turn deadline/alarm
+  - next 30-second deadline remains deferred
+  - TURN_DEADLINE scheduling remains deferred
+  - alarm generation remains deferred
+  - late-command/deadline arbitration remains deferred
+- Presence boundary:
+  - elimination may occur through Core
+  - presence information is unavailable here
+  - no Pause/Resume logic
+  - life-status-triggered Pause re-evaluation deferred
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 347 tests / 21 files
+  - game-core: 251 tests / 16 files
+  - room-runtime: 96 tests / 5 files
+- Direct room-runtime checks: PASS
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core source/test changes.
+- No T-017/T-018/T-019 source changes.
+
+**Explicitly NOT IMPLEMENTED BY T-020:**
+- SYSTEM_TIMEOUT Room orchestration
+- deadline scheduling
+- TURN_DEADLINE alarm scheduling
+- late-command/deadline arbitration
+- presence accounting
 - Pause/Resume
-- recipient-specific projections
+- life-status-triggered Pause
+- Durable Object
+- WebSocket
+- SQLite persistence/reload
+- durable atomic transaction
+- actual concurrency serialization
+- Telegram auth/session
+- recipient-specific projection
 - T27
 
 T27 remains mandatory STAGE-04 security work.
@@ -1346,7 +1679,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-019 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-020 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1367,4 +1700,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-019 verification State Sync. No T-020 or future task is pre-authorized. After successful reconciliation, Architect must inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state, derive the smallest bounded next task, run Risk Gate + Consistency Gate, then issue exactly one Executor prompt.
+Project Architect must re-read this T-020 verification State Sync. No T-021 or future implementation task is pre-authorized. Only after reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state, derive the smallest bounded next task, run Risk/Consistency Gates and issue one Executor prompt.

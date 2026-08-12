@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
-active_task: T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+last_verified_task: T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1703,8 +1703,20 @@ tasks:
   T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE:
     title: Authoritative Gameplay Commit Primitive
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: a9f891f9b9d25efc4e26e81d3afa40c536f650b6
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: a9f891f9b9d25efc4e26e81d3afa40c536f650b6
+      evidence:
+        - .ai/evidence/T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE.md
+      architect_review:
+        contract_review: PASS
+        architecture_review: PASS
+        security_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative gameplay commit primitive composing strict protocol, revision idempotency, server actor authorization, verified Game Core command transition, exactly one new Room revision, exactly one actor-bound processed-action record, and one consistent next Room state + processed registry pair.
