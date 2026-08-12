@@ -326,11 +326,28 @@
 - Formal STAGE-03 Exit Gate: PASS
 
 ## STAGE-04 — Authoritative Multiplayer
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Goals**: Durable Object Room Coordinator, WebSocket, revision/dedupe, persistence, timeout, Pause/Resume, hidden projections, T27 dead-spectator hidden-Hand protection (Eliminated spectators receive Public State only and cannot read Living Players' hidden Hand values)
 **Exit Gate**: action dedupe; stale revision; turn validation; concurrent action safety; deadline races; unique Living presence accounting; zero-Living-connected Pause; Living-only Resume; life-status-triggered Pause evaluation; fresh 30-second Resume deadline; single activeAlarm invariant; stale/idempotent alarm behavior; persistence reload; reconnect; recipient-specific hidden-information projections, including T27 dead-spectator Hand isolation.
-Current project stage after Stage-03 completion.
-No Stage-04 task registered yet.
+**Progress**:
+- T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
+- provider-independent room-runtime workspace established
+- exact Room lifecycle foundation PASS
+- exact alarm-kind foundation PASS
+- exact RoomAuthorityState key surface PASS
+- canonical empty LOBBY initialization PASS
+- strict gameplay envelope validation PASS
+- PLAY_CARDS protocol boundary PASS
+- CALL_LIAR protocol boundary PASS
+- client SYSTEM_TIMEOUT rejection PASS
+- client actor/claim/outcome authority rejection PASS
+- payload detachment / input immutability PASS
+- compile-time 8-key local-selection exclusion PASS
+- runtime local-selection exclusion PASS
+- latest regression 274 tests / 18 files PASS
+- no external dependency change
+- no game-core change
+- T27 remains mandatory later Stage-04 work
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

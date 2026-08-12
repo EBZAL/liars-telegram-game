@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-016-INVARIANT-PROPERTY-HARDENING
+T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
 
 **Current Active Task:**
 None
@@ -1078,34 +1078,83 @@ These are not Stage-03 failures.
 **STAGE-04 — Authoritative Multiplayer:**
 
 **Status:**
-NOT_STARTED
+IN_PROGRESS
 
 **Current Stage:**
 YES
 
 **Registered Tasks:**
-NONE
+- T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
 
 **Exit Gate:**
 NOT_EVALUATED
 
-**Stage Goals:**
-- Durable Object Room Coordinator
-- WebSocket authority path
-- actionId / expectedRevision / turnId protocol enforcement
-- action dedupe
-- stale revision rejection
-- concurrent-action safety
-- actual authoritative turn deadlines and alarm behavior
-- late-command arbitration
-- unique Living-presence accounting
-- Living-only Pause/Resume behavior
-- persistence reload
-- reconnect
-- recipient-specific hidden-information projections
-- T27 dead-spectator Living-Hand isolation
+**T-017 Room Authority & Protocol Foundation VERIFIED:**
+- New workspace `@liars-telegram-game/room-runtime` established
+- Provider-independent: YES
+- Cloudflare/provider APIs: NOT IMPLEMENTED HERE
+- Room authority foundation:
+  - RoomLifecycle exact set: `LOBBY`, `MATCH_ACTIVE`, `MATCH_PAUSED_NO_LIVING_CONNECTIONS`, `MATCH_FINISHED`, `ABANDONED`
+  - RoomAlarmKind exact set: `TURN_DEADLINE`, `HOST_GRACE`, `ROOM_RETENTION`
+  - ActiveRoomAlarm: `{ kind, dueAt, generation }`
+  - RoomAuthorityState exact authoritative key surface: `roomId`, `lifecycle`, `revision`, `members`, `hostPlayerId`, `match`, `currentTurnId`, `currentTurnDeadline`, `activeAlarm`
+  - generic Match snapshot boundary preserved
+  - initial Room: `LOBBY`, revision `0`, empty members, null host, null Match, null turnId, null deadline, null alarm
+  - fresh independently allocated initial state
+  - invalid blank/whitespace Room ID rejected
+- Room-state authority boundary:
+  - 8 forbidden local-selection keys
+  - exhaustive compile-time extraction proof PASS (`RoomSelectionLeak = never`)
+  - exact key-surface `ExtraKeys = never` PASS
+  - exact key-surface `MissingKeys = never` PASS
+  - runtime constructed-state forbidden-key proof PASS
+  - pre-confirm card selection remains non-authoritative
+- Gameplay protocol:
+  - exact client envelope: `actionId`, `expectedRevision`, `turnId`, `actionType`, `payload`
+  - Client gameplay actions: `PLAY_CARDS`, `CALL_LIAR`
+  - `SYSTEM_TIMEOUT` client action: REJECTED
+  - `PLAY_CARDS`: payload only `cardIds`, 1..3 IDs, non-empty strings, unique IDs
+  - `CALL_LIAR`: exact empty payload, target not client-specified
+- Strict trust boundary:
+  - unexpected envelope fields rejected
+  - `actorId`/`playerId` authority rejected
+  - claim rank/count authority rejected
+  - challenge/shooter/truth/winner authority rejected
+  - malformed input rejected
+  - `expectedRevision` safe integer >= 0
+  - `actionId` non-empty string
+  - `turnId` non-empty string
+  - `PLAY` `cardIds` detached from untrusted input
+  - parser input immutable
+- Latest regression:
+  - `npm ci` PASS
+  - `npm run typecheck` PASS
+  - `npm test` PASS
+  - 274 tests across 18 files
+  - `game-core` = 251 tests / 16 files
+  - `room-runtime` = 23 tests / 2 files
+- No external dependency changes.
+- No package-lock correction changes.
+- No `game-core` source changes.
+- No `game-core` test changes.
+- No product Room-state source correction required.
 
-None of the above are implemented.
+**Explicitly NOT IMPLEMENTED BY T-017:**
+- Cloudflare Durable Object
+- WebSocket
+- SQLite persistence
+- revision increment behavior
+- action dedupe
+- concurrent command serialization
+- actual deadline/alarm behavior
+- presence accounting
+- Pause/Resume
+- Telegram authentication
+- recipient projections
+- T27
+- Game Core dispatch
+
+T27 remains mandatory STAGE-04 recipient-projection/security work.
 
 **Known Risks:**
 * realtime concurrency
@@ -1114,7 +1163,7 @@ None of the above are implemented.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion.
+These known risks belong to later stages and do not block Stage-03 completion or T-017 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1135,5 +1184,5 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this Stage-03 completion State Sync. After successful reconciliation, the Architect must inspect STAGE-04 goals, Architecture, Security requirements, relevant ADRs, Current State, Roadmap, Ledger, and actual Git state. The Architect must then derive the smallest bounded STAGE-04 Authoritative Multiplayer task, determine Workflow Profile and Risk, run the Pre-Execution Consistency Gate, and only after PASS issue exactly one Executor prompt. No STAGE-04 implementation task is pre-authorized by this Stage Gate State Sync.
+Project Architect must re-read this T-017 verification State Sync. No T-018 or other implementation task is pre-authorized. After successful reconciliation, Architect must inspect Stage-04 Roadmap, Architecture, Security, relevant ADRs, Ledger, Current State and actual repository state, then derive the smallest bounded next Stage-04 task, determine Workflow Profile / Risk, run Consistency Gate, and only after PASS issue exactly one Executor prompt.
 
