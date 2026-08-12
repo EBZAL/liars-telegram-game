@@ -6,8 +6,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "npm run build --workspace=@liars-telegram-game/game-core && tsc --noEmit",
+    "test": "npm run build --workspace=@liars-telegram-game/game-core && vitest run"
+  },
+  "dependencies": {
+    "@liars-telegram-game/game-core": "*"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",

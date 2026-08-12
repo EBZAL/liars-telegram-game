@@ -6,7 +6,12 @@ import type {
   CallLiarPayload,
 } from './gameplay-protocol.js';
 
+export interface ServerResolvedActor {
+  playerId: string;
+}
+
 export interface ProcessedGameplayActionRecord {
+  actorPlayerId: string;
   actionId: string;
   expectedRevision: number;
   turnId: string;
@@ -88,7 +93,8 @@ export function isExactRequest(
 export function evaluateGameplayActionAdmission(
   roomState: RoomAuthorityState<unknown>,
   envelope: GameplayActionEnvelope,
-  processedRegistry: ProcessedGameplayActionRegistry
+  processedRegistry: ProcessedGameplayActionRegistry,
+  actor?: ServerResolvedActor
 ): GameplayActionAdmissionResult {
   const actionId = envelope.actionId;
   const hasExisting = Object.prototype.hasOwnProperty.call(processedRegistry, actionId);
@@ -96,7 +102,8 @@ export function evaluateGameplayActionAdmission(
   // Step 1 — actionId lookup
   if (hasExisting) {
     const existingRecord = processedRegistry[actionId];
-    if (isExactRequest(existingRecord, envelope)) {
+    const matchesActor = actor ? existingRecord.actorPlayerId === actor.playerId.trim() : true;
+    if (matchesActor && isExactRequest(existingRecord, envelope)) {
       return {
         decision: 'DUPLICATE',
         priorResultingRevision: existingRecord.resultingRevision,
@@ -140,22 +147,34 @@ export function evaluateGameplayActionAdmission(
 
 export function recordSuccessfulGameplayAction(
   registry: ProcessedGameplayActionRegistry,
+  actor: ServerResolvedActor,
   envelope: GameplayActionEnvelope,
   resultingRevision: number
 ): ProcessedGameplayActionRegistry {
+  if (
+    typeof actor !== 'object' ||
+    actor === null ||
+    typeof actor.playerId !== 'string' ||
+    actor.playerId.trim() === ''
+  ) {
+    throw new Error('Invalid server actor context: playerId must be a non-empty string');
+  }
+
+  const actorPlayerId = actor.playerId.trim();
   const actionId = envelope.actionId;
   const hasExisting = Object.prototype.hasOwnProperty.call(registry, actionId);
 
   if (hasExisting) {
     const existingRecord = registry[actionId];
     if (
+      existingRecord.actorPlayerId === actorPlayerId &&
       isExactRequest(existingRecord, envelope) &&
       existingRecord.resultingRevision === resultingRevision
     ) {
       return registry;
     }
     throw new Error(
-      `Action ID conflict: actionId '${actionId}' already exists with different request or resultingRevision`
+      `Action ID conflict: actionId '${actionId}' already exists with different actor, request, or resultingRevision`
     );
   }
 
@@ -170,6 +189,7 @@ export function recordSuccessfulGameplayAction(
   }
 
   const record: ProcessedGameplayActionRecord = {
+    actorPlayerId,
     actionId: envelope.actionId,
     expectedRevision: envelope.expectedRevision,
     turnId: envelope.turnId,

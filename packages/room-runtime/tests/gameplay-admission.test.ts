@@ -13,7 +13,10 @@ import type {
   GameplayActionEnvelope,
   ProcessedGameplayActionRegistry,
   ProcessedGameplayActionRecord,
+  ServerResolvedActor,
 } from '../src/index.js';
+
+const dummyActor: ServerResolvedActor = { playerId: 'player-1' };
 
 describe('Gameplay Admission & Idempotency Layer', () => {
   describe('API Exports (AC-01, AC-07)', () => {
@@ -80,12 +83,13 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['card-1'] },
       };
 
-      const updated = recordSuccessfulGameplayAction(registry, envelope, 6);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope, 6);
       expect(Object.getPrototypeOf(updated)).toBeNull();
       expect(Object.prototype.hasOwnProperty.call(updated, '__proto__')).toBe(true);
 
       const record = updated['__proto__'];
       expect(record.actionId).toBe('__proto__');
+      expect(record.actorPlayerId).toBe('player-1');
       expect(record.resultingRevision).toBe(6);
 
       // Lookup in admission evaluation
@@ -97,7 +101,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       };
 
       // Exact retry -> DUPLICATE even if room state advanced
-      const evalResult = evaluateGameplayActionAdmission(roomState, envelope, updated);
+      const evalResult = evaluateGameplayActionAdmission(roomState, envelope, updated, dummyActor);
       expect(evalResult).toEqual({
         decision: 'DUPLICATE',
         priorResultingRevision: 6,
@@ -114,12 +118,13 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: {},
       };
 
-      const updated = recordSuccessfulGameplayAction(registry, envelope, 3);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope, 3);
       expect(Object.getPrototypeOf(updated)).toBeNull();
       expect(Object.prototype.hasOwnProperty.call(updated, 'constructor')).toBe(true);
 
       const record = updated['constructor'];
       expect(record.actionId).toBe('constructor');
+      expect(record.actorPlayerId).toBe('player-1');
       expect(record.resultingRevision).toBe(3);
 
       const roomState: RoomAuthorityState = {
@@ -129,14 +134,14 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         currentTurnId: 'turn-2',
       };
 
-      const evalResult = evaluateGameplayActionAdmission(roomState, envelope, updated);
+      const evalResult = evaluateGameplayActionAdmission(roomState, envelope, updated, dummyActor);
       expect(evalResult).toEqual({
         decision: 'DUPLICATE',
         priorResultingRevision: 3,
       });
     });
 
-    it('retains detached request snapshot and resultingRevision without server hidden state (AC-13 .. AC-16)', () => {
+    it('retains actorPlayerId, detached request snapshot, and resultingRevision without server hidden state (AC-13 .. AC-16, AC-18)', () => {
       const registry = createProcessedGameplayActionRegistry();
       const originalCardIds = ['c1', 'c2'];
       const envelope: GameplayActionEnvelope = {
@@ -147,10 +152,11 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: originalCardIds },
       };
 
-      const updated = recordSuccessfulGameplayAction(registry, envelope, 5);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope, 5);
       const record = updated['act-100'];
 
       expect(record).toEqual({
+        actorPlayerId: 'player-1',
         actionId: 'act-100',
         expectedRevision: 4,
         turnId: 'turn-4',
@@ -168,6 +174,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       expect(recordKeys.sort()).toEqual([
         'actionId',
         'actionType',
+        'actorPlayerId',
         'expectedRevision',
         'payload',
         'resultingRevision',
@@ -177,6 +184,20 @@ describe('Gameplay Admission & Idempotency Layer', () => {
   });
 
   describe('Successful Action Recording (AC-49 .. AC-57)', () => {
+    it('requires valid server actor context (AC-65)', () => {
+      const registry = createProcessedGameplayActionRegistry();
+      const envelope: GameplayActionEnvelope = {
+        actionId: 'act-1',
+        expectedRevision: 10,
+        turnId: 'turn-1',
+        actionType: 'CALL_LIAR',
+        payload: {},
+      };
+
+      expect(() => recordSuccessfulGameplayAction(registry, null as unknown as ServerResolvedActor, envelope, 11)).toThrow(/Invalid server actor context/);
+      expect(() => recordSuccessfulGameplayAction(registry, { playerId: '' }, envelope, 11)).toThrow(/Invalid server actor context/);
+    });
+
     it('requires resultingRevision = expectedRevision + 1 (AC-49, AC-50)', () => {
       const registry = createProcessedGameplayActionRegistry();
       const envelope: GameplayActionEnvelope = {
@@ -187,10 +208,10 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: {},
       };
 
-      expect(() => recordSuccessfulGameplayAction(registry, envelope, 11)).not.toThrow();
-      expect(() => recordSuccessfulGameplayAction(registry, envelope, 10)).toThrow(/must equal expectedRevision \+ 1/);
-      expect(() => recordSuccessfulGameplayAction(registry, envelope, 12)).toThrow(/must equal expectedRevision \+ 1/);
-      expect(() => recordSuccessfulGameplayAction(registry, envelope, -1)).toThrow(/must equal expectedRevision \+ 1/);
+      expect(() => recordSuccessfulGameplayAction(registry, dummyActor, envelope, 11)).not.toThrow();
+      expect(() => recordSuccessfulGameplayAction(registry, dummyActor, envelope, 10)).toThrow(/must equal expectedRevision \+ 1/);
+      expect(() => recordSuccessfulGameplayAction(registry, dummyActor, envelope, 12)).toThrow(/must equal expectedRevision \+ 1/);
+      expect(() => recordSuccessfulGameplayAction(registry, dummyActor, envelope, -1)).toThrow(/must equal expectedRevision \+ 1/);
     });
 
     it('returns an immutable fresh registry update without mutating original (AC-51, AC-52, AC-53)', () => {
@@ -203,7 +224,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['card-a'] },
       };
 
-      const updated = recordSuccessfulGameplayAction(registry, envelope, 1);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope, 1);
 
       expect(updated).not.toBe(registry);
       expect(Object.prototype.hasOwnProperty.call(registry, 'act-1')).toBe(false);
@@ -221,8 +242,8 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['card-a'] },
       };
 
-      const updated1 = recordSuccessfulGameplayAction(registry, envelope, 1);
-      const updated2 = recordSuccessfulGameplayAction(updated1, envelope, 1);
+      const updated1 = recordSuccessfulGameplayAction(registry, dummyActor, envelope, 1);
+      const updated2 = recordSuccessfulGameplayAction(updated1, dummyActor, envelope, 1);
 
       expect(updated2['act-1']).toEqual(updated1['act-1']);
     });
@@ -236,7 +257,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         actionType: 'PLAY_CARDS',
         payload: { cardIds: ['card-a'] },
       };
-      const updated = recordSuccessfulGameplayAction(registry, envelope1, 1);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope1, 1);
 
       const envelope2: GameplayActionEnvelope = {
         actionId: 'act-1',
@@ -246,7 +267,23 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['card-b'] },
       };
 
-      expect(() => recordSuccessfulGameplayAction(updated, envelope2, 1)).toThrow(
+      expect(() => recordSuccessfulGameplayAction(updated, dummyActor, envelope2, 1)).toThrow(
+        /Action ID conflict/
+      );
+    });
+
+    it('rejects re-recording same actionId with different actor as Action ID conflict (AC-68)', () => {
+      const registry = createProcessedGameplayActionRegistry();
+      const envelope: GameplayActionEnvelope = {
+        actionId: 'act-1',
+        expectedRevision: 0,
+        turnId: 'turn-1',
+        actionType: 'CALL_LIAR',
+        payload: {},
+      };
+      const updated = recordSuccessfulGameplayAction(registry, { playerId: 'p1' }, envelope, 1);
+
+      expect(() => recordSuccessfulGameplayAction(updated, { playerId: 'p2' }, envelope, 1)).toThrow(
         /Action ID conflict/
       );
     });
@@ -260,10 +297,10 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         actionType: 'CALL_LIAR',
         payload: {},
       };
-      const updated = recordSuccessfulGameplayAction(registry, envelope1, 1);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope1, 1);
 
       // Attempt to re-record exact same request with resultingRevision = 2 (AC-57 mandatory proof)
-      expect(() => recordSuccessfulGameplayAction(updated, envelope1, 2)).toThrow(
+      expect(() => recordSuccessfulGameplayAction(updated, dummyActor, envelope1, 2)).toThrow(
         /Action ID conflict/
       );
     });
@@ -277,7 +314,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         actionType: 'CALL_LIAR',
         payload: {},
       };
-      const updated = recordSuccessfulGameplayAction(registry, envelope1, 1);
+      const updated = recordSuccessfulGameplayAction(registry, dummyActor, envelope1, 1);
 
       // Re-recording with a different request AND an invalid resultingRevision (e.g. -1 or 99)
       const conflictingEnvelope: GameplayActionEnvelope = {
@@ -289,10 +326,10 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       };
 
       // Must throw Action ID conflict, NOT generic invalid resultingRevision error
-      expect(() => recordSuccessfulGameplayAction(updated, conflictingEnvelope, -1)).toThrow(
+      expect(() => recordSuccessfulGameplayAction(updated, dummyActor, conflictingEnvelope, -1)).toThrow(
         /Action ID conflict/
       );
-      expect(() => recordSuccessfulGameplayAction(updated, conflictingEnvelope, 99)).toThrow(
+      expect(() => recordSuccessfulGameplayAction(updated, dummyActor, conflictingEnvelope, 99)).toThrow(
         /Action ID conflict/
       );
     });
@@ -327,8 +364,6 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     });
 
     it('evaluates DUPLICATE before stale revision and turn checks (AC-18, AC-19, AC-20, AC-21, AC-22)', () => {
-      // CRITICAL DUPLICATE ORDERING PROOF:
-      // Processed at expectedRevision = 7, turnId = 'turn-7', resultingRevision = 8
       const initialRegistry = createProcessedGameplayActionRegistry();
       const originalEnvelope: GameplayActionEnvelope = {
         actionId: 'act-77',
@@ -337,9 +372,8 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         actionType: 'PLAY_CARDS',
         payload: { cardIds: ['c1', 'c2'] },
       };
-      const registry = recordSuccessfulGameplayAction(initialRegistry, originalEnvelope, 8);
+      const registry = recordSuccessfulGameplayAction(initialRegistry, dummyActor, originalEnvelope, 8);
 
-      // Later authoritative Room state becomes: revision = 11, currentTurnId = 'turn-10'
       const advancedRoomState: RoomAuthorityState = {
         ...createInitialRoomState('room-test'),
         lifecycle: 'MATCH_ACTIVE',
@@ -347,7 +381,6 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         currentTurnId: 'turn-10',
       };
 
-      // Exact retry of original command
       const retryEnvelope: GameplayActionEnvelope = {
         actionId: 'act-77',
         expectedRevision: 7,
@@ -356,9 +389,8 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['c1', 'c2'] },
       };
 
-      const result = evaluateGameplayActionAdmission(advancedRoomState, retryEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(advancedRoomState, retryEnvelope, registry, dummyActor);
 
-      // Must be DUPLICATE, NOT STALE_REVISION or TURN_MISMATCH or ACCEPT
       expect(result).toEqual({
         decision: 'DUPLICATE',
         priorResultingRevision: 8,
@@ -368,6 +400,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     it('rejects reused actionId with different expectedRevision as ACTION_ID_CONFLICT (AC-23, AC-28, AC-29)', () => {
       const registry = recordSuccessfulGameplayAction(
         createProcessedGameplayActionRegistry(),
+        dummyActor,
         {
           actionId: 'act-1',
           expectedRevision: 5,
@@ -382,13 +415,13 @@ describe('Gameplay Admission & Idempotency Layer', () => {
 
       const conflictingEnvelope: GameplayActionEnvelope = {
         actionId: 'act-1',
-        expectedRevision: 6, // different expectedRevision
+        expectedRevision: 6,
         turnId: 'turn-1',
         actionType: 'CALL_LIAR',
         payload: {},
       };
 
-      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry, dummyActor);
       expect(result).toEqual({
         decision: 'REJECT',
         reason: 'ACTION_ID_CONFLICT',
@@ -398,6 +431,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     it('rejects reused actionId with different turnId as ACTION_ID_CONFLICT (AC-24, AC-28, AC-29)', () => {
       const registry = recordSuccessfulGameplayAction(
         createProcessedGameplayActionRegistry(),
+        dummyActor,
         {
           actionId: 'act-1',
           expectedRevision: 5,
@@ -413,12 +447,12 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       const conflictingEnvelope: GameplayActionEnvelope = {
         actionId: 'act-1',
         expectedRevision: 5,
-        turnId: 'turn-2', // different turnId
+        turnId: 'turn-2',
         actionType: 'CALL_LIAR',
         payload: {},
       };
 
-      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry, dummyActor);
       expect(result).toEqual({
         decision: 'REJECT',
         reason: 'ACTION_ID_CONFLICT',
@@ -428,6 +462,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     it('rejects reused actionId with different actionType as ACTION_ID_CONFLICT (AC-25)', () => {
       const registry = recordSuccessfulGameplayAction(
         createProcessedGameplayActionRegistry(),
+        dummyActor,
         {
           actionId: 'act-1',
           expectedRevision: 5,
@@ -444,11 +479,11 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         actionId: 'act-1',
         expectedRevision: 5,
         turnId: 'turn-1',
-        actionType: 'PLAY_CARDS', // CALL vs PLAY
+        actionType: 'PLAY_CARDS',
         payload: { cardIds: ['c1'] },
       };
 
-      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry, dummyActor);
       expect(result).toEqual({
         decision: 'REJECT',
         reason: 'ACTION_ID_CONFLICT',
@@ -458,6 +493,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     it('rejects reused actionId with different PLAY cardIds as ACTION_ID_CONFLICT (AC-26)', () => {
       const registry = recordSuccessfulGameplayAction(
         createProcessedGameplayActionRegistry(),
+        dummyActor,
         {
           actionId: 'act-1',
           expectedRevision: 5,
@@ -478,7 +514,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['c2'] },
       };
 
-      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry, dummyActor);
       expect(result).toEqual({
         decision: 'REJECT',
         reason: 'ACTION_ID_CONFLICT',
@@ -488,6 +524,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
     it('rejects reused actionId with different PLAY cardIds ordering as ACTION_ID_CONFLICT (AC-27)', () => {
       const registry = recordSuccessfulGameplayAction(
         createProcessedGameplayActionRegistry(),
+        dummyActor,
         {
           actionId: 'act-1',
           expectedRevision: 5,
@@ -508,7 +545,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         payload: { cardIds: ['c2', 'c1'] },
       };
 
-      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry);
+      const result = evaluateGameplayActionAdmission(roomState, conflictingEnvelope, registry, dummyActor);
       expect(result).toEqual({
         decision: 'REJECT',
         reason: 'ACTION_ID_CONFLICT',
@@ -521,7 +558,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
 
       const envelope: GameplayActionEnvelope = {
         actionId: 'act-unseen',
-        expectedRevision: 4, // lower
+        expectedRevision: 4,
         turnId: 'turn-1',
         actionType: 'CALL_LIAR',
         payload: {},
@@ -540,7 +577,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
 
       const envelope: GameplayActionEnvelope = {
         actionId: 'act-unseen',
-        expectedRevision: 6, // higher
+        expectedRevision: 6,
         turnId: 'turn-1',
         actionType: 'CALL_LIAR',
         payload: {},
@@ -565,28 +602,24 @@ describe('Gameplay Admission & Idempotency Layer', () => {
 
       const baseRoom = createInitialRoomState('room-1');
 
-      // LOBBY (AC-33)
       const lobbyRoom = { ...baseRoom, revision: 5, lifecycle: 'LOBBY' as const };
       expect(evaluateGameplayActionAdmission(lobbyRoom, envelope, registry)).toEqual({
         decision: 'REJECT',
         reason: 'MATCH_NOT_ACTIVE',
       });
 
-      // MATCH_PAUSED_NO_LIVING_CONNECTIONS (AC-34)
       const pausedRoom = { ...baseRoom, revision: 5, lifecycle: 'MATCH_PAUSED_NO_LIVING_CONNECTIONS' as const };
       expect(evaluateGameplayActionAdmission(pausedRoom, envelope, registry)).toEqual({
         decision: 'REJECT',
         reason: 'MATCH_NOT_ACTIVE',
       });
 
-      // MATCH_FINISHED (AC-35)
       const finishedRoom = { ...baseRoom, revision: 5, lifecycle: 'MATCH_FINISHED' as const };
       expect(evaluateGameplayActionAdmission(finishedRoom, envelope, registry)).toEqual({
         decision: 'REJECT',
         reason: 'MATCH_NOT_ACTIVE',
       });
 
-      // ABANDONED (AC-36)
       const abandonedRoom = { ...baseRoom, revision: 5, lifecycle: 'ABANDONED' as const };
       expect(evaluateGameplayActionAdmission(abandonedRoom, envelope, registry)).toEqual({
         decision: 'REJECT',
@@ -631,7 +664,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
         ...createInitialRoomState('room-1'),
         lifecycle: 'MATCH_ACTIVE',
         revision: 5,
-        currentTurnId: 'turn-2', // wrong turn
+        currentTurnId: 'turn-2',
       };
 
       expect(evaluateGameplayActionAdmission(roomState, envelope, registry)).toEqual({
@@ -679,7 +712,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
 
       const staleEnvelope: GameplayActionEnvelope = {
         actionId: 'act-stale',
-        expectedRevision: 4, // stale
+        expectedRevision: 4,
         turnId: 'turn-1',
         actionType: 'CALL_LIAR',
         payload: {},
