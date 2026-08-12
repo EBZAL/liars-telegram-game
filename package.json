@@ -8,7 +8,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "typecheck": "npm run typecheck --workspace=@liars-telegram-game/game-core",
-    "test": "npm run test --workspace=@liars-telegram-game/game-core"
+    "typecheck": "npm run typecheck --workspace=@liars-telegram-game/game-core && npm run typecheck --workspace=@liars-telegram-game/room-runtime",
+    "test": "npm run test --workspace=@liars-telegram-game/game-core && npm run test --workspace=@liars-telegram-game/room-runtime"
   }
 }
