@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
-active_task: T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+last_verified_task: T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1424,8 +1424,18 @@ tasks:
   T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION:
     title: Revision, Idempotency & Turn Admission
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 7379f52ff4dacf891fea44cfc79cc08e426a4261
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 7379f52ff4dacf891fea44cfc79cc08e426a4261
+      evidence:
+        - .ai/evidence/T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent ADR-006 authority layer that combines actionId retry/idempotency admission, stale expectedRevision rejection, current turnId validation, and monotonic +1 revision primitive for one successful client gameplay commit.

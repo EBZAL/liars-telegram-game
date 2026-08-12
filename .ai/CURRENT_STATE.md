@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
 
 **Current Active Task:**
 None
@@ -1085,6 +1085,7 @@ YES
 
 **Registered Tasks:**
 - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
+- T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION VERIFIED
 
 **Exit Gate:**
 NOT_EVALUATED
@@ -1139,20 +1140,93 @@ NOT_EVALUATED
 - No `game-core` test changes.
 - No product Room-state source correction required.
 
-**Explicitly NOT IMPLEMENTED BY T-017:**
-- Cloudflare Durable Object
+**T-018 Revision, Idempotency & Turn Admission VERIFIED:**
+- Provider-independent: YES
+- ADR-006 admission ordering:
+  1. existing actionId lookup
+  2. unseen revision check
+  3. MATCH_ACTIVE lifecycle check
+  4. current turnId check
+  5. ACCEPT
+- Admission outcomes: ACCEPT, DUPLICATE, REJECT
+- Rejection reasons: ACTION_ID_CONFLICT, STALE_REVISION, MATCH_NOT_ACTIVE, TURN_MISMATCH
+- Successful retry behavior:
+  - exact successfully processed request = DUPLICATE
+  - duplicate lookup occurs before stale-revision validation
+  - duplicate lookup occurs before current-turn validation
+  - retry remains DUPLICATE after Room revision advances
+  - retry remains DUPLICATE after current turn changes
+  - prior resulting revision returned
+- ActionId conflict behavior:
+  - same actionId + different expectedRevision = conflict
+  - same actionId + different turnId = conflict
+  - same actionId + different actionType = conflict
+  - same actionId + different PLAY cardIds = conflict
+  - different PLAY card ordering = conflict
+- Processed-action recording:
+  - existing actionId lookup occurs before new-record resultingRevision validation
+  - exact same request + same resultingRevision = idempotent no-op
+  - same actionId + different request = Action ID conflict
+  - same actionId + different resultingRevision = Action ID conflict
+  - conflict takes precedence over generic resultingRevision validation
+  - unseen invalid resultingRevision remains rejected by revision rule
+  - unseen successful record requires resultingRevision = expectedRevision + 1
+- Revision primitive:
+  - monotonic +1
+  - safe non-negative integers only
+  - negative rejected
+  - non-integer rejected
+  - unsafe values rejected
+  - MAX_SAFE_INTEGER overflow rejected
+- Processed registry:
+  - independently allocated
+  - null-prototype
+  - prototype-safe opaque actionId support
+  - __proto__ safe
+  - constructor safe
+  - request snapshot retained
+  - PLAY cardIds detached
+  - original registry immutable
+  - input envelope immutable
+  - no hidden Match/randomness data stored
+- Admission purity:
+  - RoomAuthorityState not mutated
+  - envelope not mutated
+  - processed registry not mutated
+  - rejected admission creates no record
+  - admission itself does not mutate Room revision
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 305 tests / 19 files
+  - game-core: 251 tests / 16 files
+  - room-runtime: 54 tests / 3 files
+  - No package.json changes.
+  - No package-lock changes.
+  - No external dependency changes.
+  - No game-core changes.
+  - No T-017 source/test changes.
+  - No forbidden nondeterminism.
+
+**Explicitly NOT IMPLEMENTED BY T-018:**
+- Game Core dispatch
+- authenticated actor resolution
+- membership authorization
+- current-player actor authorization
+- Card ownership validation
+- Core legal-action validation
+- Durable Object
 - WebSocket
-- SQLite persistence
-- revision increment behavior
-- action dedupe
-- concurrent command serialization
-- actual deadline/alarm behavior
-- presence accounting
+- SQLite/persistence
+- actual concurrency serialization
+- deadline/alarm execution
+- late-command arbitration
+- presence
 - Pause/Resume
 - Telegram authentication
 - recipient projections
 - T27
-- Game Core dispatch
 
 T27 remains mandatory STAGE-04 recipient-projection/security work.
 
@@ -1163,7 +1237,7 @@ T27 remains mandatory STAGE-04 recipient-projection/security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-017 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-018 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1184,5 +1258,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-017 verification State Sync. No T-018 or other implementation task is pre-authorized. After successful reconciliation, Architect must inspect Stage-04 Roadmap, Architecture, Security, relevant ADRs, Ledger, Current State and actual repository state, then derive the smallest bounded next Stage-04 task, determine Workflow Profile / Risk, run Consistency Gate, and only after PASS issue exactly one Executor prompt.
+Project Architect must re-read this T-018 verification State Sync. No T-019 or future implementation task is pre-authorized. Only after reconciliation may Architect inspect the remaining Stage-04 goals, Architecture, Security, ADRs, Ledger, Current State and actual Git state, derive the smallest next task, run Risk/Consistency Gates and issue one Executor prompt.
+
 

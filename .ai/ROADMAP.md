@@ -348,6 +348,29 @@
 - no external dependency change
 - no game-core change
 - T27 remains mandatory later Stage-04 work
+- T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION VERIFIED
+- ADR-006 provider-independent admission layer PASS
+- actionId idempotency foundation PASS
+- duplicate-before-stale ordering PASS
+- duplicate-before-turn ordering PASS
+- advanced retry remains DUPLICATE PASS
+- actionId conflict fail-closed behavior PASS
+- stale lower revision rejection PASS
+- future revision rejection PASS
+- inactive lifecycle rejection PASS
+- current turnId validation PASS
+- monotonic +1 revision primitive PASS
+- successful processed-action registry PASS
+- conflict-before-resultingRevision-validation PASS
+- AC-57 exact resultingRevision conflict proof PASS
+- __proto__ actionId safety PASS
+- constructor actionId safety PASS
+- immutable/detached request recording PASS
+- latest regression 305 tests / 19 files PASS
+- game-core 251 tests unchanged
+- room-runtime 54 tests / 3 files PASS
+- no package/dependency change
+- no T-017 contract change
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED
