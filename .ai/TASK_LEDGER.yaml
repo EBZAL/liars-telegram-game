@@ -1325,8 +1325,7 @@ tasks:
   T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION:
     title: Room Authority & Protocol Foundation
     stage: STAGE-04
-    status: IMPLEMENTED
-    implementation_commit: ceb93cf1153721a26e340ebcbba65946c33972dc
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Establish the smallest provider-independent authoritative Room foundation required before Durable Object/WebSocket/revision/dedupe/alarm/presence/projection behavior can safely be implemented.
