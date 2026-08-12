@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
-active_task: null
+active_task: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -125,6 +125,7 @@ stages:
     required_tasks:
       - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
       - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1540,5 +1541,150 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-019-SERVER-ACTOR-AUTHORIZATION-BINDING:
+    title: Server Actor Authorization & Action Binding
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STRICT
+    risk_level: HIGH
+    objective: Establish the server-derived actor authorization boundary required before Game Core dispatch, including ServerResolvedActor validation, Room membership authorization, actor-bound processed-action registry, cross-actor collision protection, current-player authorization, Core legal-action validation via getAllowedTurnActions, and PLAY card-ownership validation via validatePlaySelection.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-016-INVARIANT-PROPERTY-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent server actor authorization module exists.
+      - AC-02: Workflow contains no Cloudflare/HTTP/WebSocket/Telegram API.
+      - AC-03: room-runtime declares game-core as an internal runtime workspace dependency.
+      - AC-04: No external dependency/version is introduced.
+      - AC-05: Clean npm ci does not depend on stale dist artifacts for required checks.
+      - AC-06: game-core source remains unchanged.
+      - AC-07: game-core tests remain unchanged.
+      - AC-08: T-017 RoomAuthorityState source remains unchanged.
+      - AC-09: T-017 GameplayActionEnvelope/parser source remains unchanged.
+      - AC-10: Client GameplayActionEnvelope still contains no actor/player identity field.
+      - AC-11: ServerResolvedActor or equivalent exists.
+      - AC-12: Server actor playerId must be a non-empty string.
+      - AC-13: No parser from client gameplay JSON creates authoritative actor identity.
+      - AC-14: Invalid server actor context fails closed.
+      - AC-15: Non-member actor is rejected.
+      - AC-16: Non-member rejection occurs before processed-action duplicate disclosure.
+      - AC-17: Existing exact envelope submitted by a non-member is NOT DUPLICATE.
+      - AC-18: Processed successful record stores server actorPlayerId.
+      - AC-19: Processed record retains T-018 request snapshot.
+      - AC-20: Processed record retains resultingRevision.
+      - AC-21: Processed record contains no hidden Match/randomness/authentication data.
+      - AC-22: Successful PLAY record still detaches cardIds.
+      - AC-23: Same actor + exact processed request remains DUPLICATE.
+      - AC-24: Same actor exact retry after Room revision advance remains DUPLICATE.
+      - AC-25: Same actor exact retry after current turn changes remains DUPLICATE.
+      - AC-26: DUPLICATE remains before stale-revision rejection.
+      - AC-27: DUPLICATE remains before current-player authorization.
+      - AC-28: DUPLICATE returns priorResultingRevision.
+      - AC-29: Different authorized Room member using same actionId + same request is ACTION_ID_CONFLICT.
+      - AC-30: Different authorized Room member using same actionId + different request is ACTION_ID_CONFLICT.
+      - AC-31: Cross-actor actionId collision is never DUPLICATE.
+      - AC-32: Cross-actor actionId collision is never ACCEPT.
+      - AC-33: Cross-actor conflict does not expose original actor identity.
+      - AC-34: Same actor + different expectedRevision remains ACTION_ID_CONFLICT.
+      - AC-35: Same actor + different turnId remains ACTION_ID_CONFLICT.
+      - AC-36: Same actor + different actionType remains ACTION_ID_CONFLICT.
+      - AC-37: Same actor + different PLAY cardIds remains ACTION_ID_CONFLICT.
+      - AC-38: Different PLAY card ordering remains ACTION_ID_CONFLICT.
+      - AC-39: Unseen lower revision remains STALE_REVISION.
+      - AC-40: Unseen higher revision remains STALE_REVISION.
+      - AC-41: LOBBY remains MATCH_NOT_ACTIVE.
+      - AC-42: MATCH_PAUSED_NO_LIVING_CONNECTIONS remains MATCH_NOT_ACTIVE.
+      - AC-43: MATCH_FINISHED remains MATCH_NOT_ACTIVE.
+      - AC-44: ABANDONED remains MATCH_NOT_ACTIVE.
+      - AC-45: MATCH_ACTIVE with null Match snapshot is rejected.
+      - AC-46: MATCH_ACTIVE with inconsistent finished Core Match fails closed.
+      - AC-47: Room currentTurnId mismatch is rejected.
+      - AC-48: Room currentTurnId null is rejected.
+      - AC-49: Room member absent from Match players is rejected.
+      - AC-50: New command from non-current Match Player is rejected.
+      - AC-51: Host status grants no gameplay authorization bypass.
+      - AC-52: Core getAllowedTurnActions is used for legal action authorization.
+      - AC-53: First-turn CALL_LIAR is rejected.
+      - AC-54: Ordinary legal PLAY_CARDS is authorized.
+      - AC-55: Ordinary legal CALL_LIAR is authorized when Core permits it.
+      - AC-56: Forced-CALL Player cannot authorize PLAY_CARDS.
+      - AC-57: Forced-CALL Player can authorize CALL_LIAR.
+      - AC-58: PLAY ownership uses authoritative actor Hand.
+      - AC-59: PLAY using another Player's card ID is rejected.
+      - AC-60: PLAY using unknown card ID is rejected.
+      - AC-61: PLAY using actor-owned legal card IDs is authorized.
+      - AC-62: Authorization result does not expose selected Card rank/value.
+      - AC-63: Authorization result does not expose any other Player Hand.
+      - AC-64: CALL_LIAR target remains server/Core-derived.
+      - AC-65: recordSuccessfulGameplayAction requires server actor context.
+      - AC-66: New successful record binds actorPlayerId.
+      - AC-67: Exact same actor/request/result re-record is idempotent.
+      - AC-68: Different actor re-record is Action ID conflict.
+      - AC-69: Different request re-record is Action ID conflict.
+      - AC-70: Different resultingRevision re-record is Action ID conflict.
+      - AC-71: Existing-action conflict precedence remains before generic result revision validation.
+      - AC-72: Unseen invalid resultingRevision remains rejected by revision validation.
+      - AC-73: Registry remains prototype-safe.
+      - AC-74: actionId __proto__ remains safe.
+      - AC-75: actionId constructor remains safe.
+      - AC-76: server actor playerId __proto__ is safe as a stored value.
+      - AC-77: server actor playerId constructor is safe as a stored value.
+      - AC-78: Request evaluation does not mutate RoomAuthorityState.
+      - AC-79: Request evaluation does not mutate MatchState.
+      - AC-80: Request evaluation does not mutate authoritative Hands.
+      - AC-81: Request evaluation does not mutate envelope.
+      - AC-82: Request evaluation does not mutate actor context.
+      - AC-83: Request evaluation does not mutate processed registry.
+      - AC-84: Rejected request does not create processed record.
+      - AC-85: Request evaluation does not mutate Room revision.
+      - AC-86: No Game Core transition is dispatched.
+      - AC-87: No RandomSource is consumed.
+      - AC-88: No Date.now / Math.random / crypto entropy is introduced.
+      - AC-89: No authentication/session mechanism is claimed.
+      - AC-90: No Durable Object/WebSocket/SQLite implementation is introduced.
+      - AC-91: No concurrency serialization is introduced.
+      - AC-92: No deadlines/alarms are introduced.
+      - AC-93: No presence/Pause/Resume is introduced.
+      - AC-94: No recipient projection/T27 implementation is claimed.
+      - AC-95: All existing T-017 tests continue passing.
+      - AC-96: All evolved T-018 semantics remain explicitly tested.
+      - AC-97: npm ci passes.
+      - AC-98: npm run typecheck passes.
+      - AC-99: npm test passes.
+      - AC-100: room-runtime direct typecheck passes from clean dependency state.
+      - AC-101: room-runtime direct test passes from clean dependency state.
+      - AC-102: game-core direct typecheck passes.
+      - AC-103: game-core direct tests pass unchanged.
+      - AC-104: package-lock changes are internal-workspace-only.
+      - AC-105: Evidence maps AC-01 through AC-104.
+      - AC-106: Evidence explicitly records membership-before-dedupe proof.
+      - AC-107: Evidence explicitly records same-actor duplicate-after-advance proof.
+      - AC-108: Evidence explicitly records cross-actor actionId collision proof.
+      - AC-109: Evidence explicitly records first-turn/forced-CALL legal-action proofs.
+      - AC-110: Evidence explicitly records foreign-card ownership rejection proof.
+      - AC-111: Evidence explicitly records all deferred boundaries.
+      - AC-112: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: HIGH
+      Workflow Profile: STRICT
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
