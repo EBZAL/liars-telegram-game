@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
-active_task: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+last_verified_task: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -1545,8 +1545,20 @@ tasks:
   T-019-SERVER-ACTOR-AUTHORIZATION-BINDING:
     title: Server Actor Authorization & Action Binding
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 0141807c91205d71639532367e651875020eef2a
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 0141807c91205d71639532367e651875020eef2a
+      evidence:
+        - .ai/evidence/T-019-SERVER-ACTOR-AUTHORIZATION-BINDING.md
+      architect_review:
+        contract_review: PASS
+        architecture_review: PASS
+        security_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Establish the server-derived actor authorization boundary required before Game Core dispatch, including ServerResolvedActor validation, Room membership authorization, actor-bound processed-action registry, cross-actor collision protection, current-player authorization, Core legal-action validation via getAllowedTurnActions, and PLAY card-ownership validation via validatePlaySelection.

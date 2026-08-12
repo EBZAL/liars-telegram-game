@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
 
 **Current Active Task:**
 None
@@ -1086,6 +1086,7 @@ YES
 **Registered Tasks:**
 - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
 - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION VERIFIED
+- T-019-SERVER-ACTOR-AUTHORIZATION-BINDING VERIFIED
 
 **Exit Gate:**
 NOT_EVALUATED
@@ -1209,26 +1210,134 @@ NOT_EVALUATED
   - No T-017 source/test changes.
   - No forbidden nondeterminism.
 
-**Explicitly NOT IMPLEMENTED BY T-018:**
-- Game Core dispatch
-- authenticated actor resolution
-- membership authorization
-- current-player actor authorization
-- Card ownership validation
-- Core legal-action validation
+**T-019 Server Actor Authorization & Action Binding VERIFIED:**
+- Workflow: STRICT
+- Risk: HIGH
+- Provider-independent: YES
+- Server actor boundary:
+  - ServerResolvedActor exists
+  - actor identity is server-derived
+  - GameplayActionEnvelope remains actor-free
+  - low-level gameplay admission requires actor parameter
+  - actor parameter is compile-time non-optional
+  - no actorless duplicate path remains
+  - malformed actor fails closed as INVALID_ACTOR_CONTEXT
+  - no fallback to host/current player/client fields
+- Safe request evaluation ordering:
+  1. validate server actor context
+  2. validate Room membership
+  3. actor-bound actionId lookup
+  4. unseen revision validation
+  5. lifecycle validation
+  6. Match snapshot validation
+  7. Room turnId validation
+  8. Match/current-player authorization
+  9. Core legal-action validation
+  10. Core PLAY ownership validation
+  11. ACCEPT
+- Membership privacy:
+  - non-member rejected before dedupe disclosure
+  - non-member known actionId = ACTOR_NOT_MEMBER
+  - not DUPLICATE
+- Actor-bound idempotency:
+  - ProcessedGameplayActionRecord contains actorPlayerId
+  - same actor exact retry = DUPLICATE
+  - same actor retry remains DUPLICATE after revision advance
+  - same actor retry remains DUPLICATE after current turn changes
+  - priorResultingRevision returned
+  - cross-actor same actionId = ACTION_ID_CONFLICT
+  - cross-actor conflict never ACCEPT
+  - cross-actor conflict never DUPLICATE
+  - rejection does not expose original actor identity
+- Successful action recording:
+  - server actor required
+  - successful record binds actorPlayerId
+  - same actor/request/result re-record = idempotent
+  - different actor = Action ID conflict
+  - different request = Action ID conflict
+  - different resultingRevision = Action ID conflict
+  - existing-action conflict precedence preserved
+  - PLAY cardIds detached
+  - null-prototype registry preserved
+- Authorization:
+  - Room membership required
+  - Match player membership required
+  - new command actor must be Match currentPlayerId
+  - Host has no gameplay bypass
+  - null Match snapshot rejected
+  - finished/inconsistent Core Match fails closed
+- Core rule delegation:
+  - getAllowedTurnActions used
+  - validatePlaySelection used
+  - no duplicate gameplay-rule implementation in Room layer
+- Action legality:
+  - first-turn CALL_LIAR rejected
+  - ordinary legal PLAY_CARDS accepted
+  - ordinary CALL_LIAR accepted when Core permits
+  - forced-CALL PLAY_CARDS rejected
+  - forced-CALL CALL_LIAR accepted
+- Card ownership:
+  - authoritative actor Hand used
+  - own legal card accepted
+  - foreign Player card rejected
+  - unknown card rejected
+  - authorization result exposes no Card rank/value
+  - other Players' Hands are not returned
+- Prototype safety:
+  - actionId __proto__ PASS
+  - actionId constructor PASS
+  - actor playerId __proto__ safe as value
+  - actor playerId constructor safe as value
+- Purity:
+  - Room state not mutated
+  - Match state not mutated
+  - Hands not mutated
+  - envelope not mutated
+  - actor context not mutated
+  - registry not mutated by request evaluation
+  - Room revision not mutated
+  - rejected request creates no processed record
+  - no RandomSource consumed
+  - no Core mutation/transition dispatched
+  - no forbidden nondeterminism
+- Workspace integration:
+  - room-runtime has internal runtime dependency on game-core
+  - game-core package exports/build resolution supports workspace consumption
+  - no game-core source changes
+  - no game-core test changes
+  - no external dependency/version changes
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 331 tests / 20 files
+  - game-core: 251 tests / 16 files
+  - room-runtime: 80 tests / 4 files
+- Direct room-runtime checks from clean dist state: PASS
+- Correction package delta: 0
+- Correction package-lock delta: 0
+- Correction game-core delta: 0
+
+**Explicitly NOT IMPLEMENTED BY T-019:**
+- Telegram initData validation
+- authentication/session implementation
 - Durable Object
-- WebSocket
+- HTTP/WebSocket
 - SQLite/persistence
-- actual concurrency serialization
+- concurrency serialization
+- actual Core gameplay dispatch
+- Match mutation orchestration
+- Room revision mutation orchestration
+- successful command transaction
+- turnId generation
 - deadline/alarm execution
 - late-command arbitration
 - presence
 - Pause/Resume
-- Telegram authentication
-- recipient projections
+- recipient-specific projections
 - T27
 
-T27 remains mandatory STAGE-04 recipient-projection/security work.
+T27 remains mandatory STAGE-04 security work.
 
 **Known Risks:**
 * realtime concurrency
@@ -1237,7 +1346,7 @@ T27 remains mandatory STAGE-04 recipient-projection/security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-018 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-019 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1258,6 +1367,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-018 verification State Sync. No T-019 or future implementation task is pre-authorized. Only after reconciliation may Architect inspect the remaining Stage-04 goals, Architecture, Security, ADRs, Ledger, Current State and actual Git state, derive the smallest next task, run Risk/Consistency Gates and issue one Executor prompt.
-
-
+Project Architect must re-read this T-019 verification State Sync. No T-020 or future task is pre-authorized. After successful reconciliation, Architect must inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state, derive the smallest bounded next task, run Risk Gate + Consistency Gate, then issue exactly one Executor prompt.

@@ -371,6 +371,36 @@
 - room-runtime 54 tests / 3 files PASS
 - no package/dependency change
 - no T-017 contract change
+- T-019-SERVER-ACTOR-AUTHORIZATION-BINDING VERIFIED
+- STRICT / HIGH security review PASS
+- server-derived actor boundary PASS
+- client gameplay envelope remains actor-free PASS
+- mandatory low-level actor parameter PASS
+- compile-time non-optional actor proof PASS
+- malformed actor fail-closed PASS
+- membership-before-dedupe privacy PASS
+- actor-bound processed action registry PASS
+- same-actor retry-after-advance PASS
+- cross-actor actionId conflict PASS
+- current-player authorization PASS
+- Host no-bypass PASS
+- Core getAllowedTurnActions delegation PASS
+- Core validatePlaySelection delegation PASS
+- first-turn CALL rejection PASS
+- forced-CALL authorization PASS
+- foreign-card rejection PASS
+- unknown-card rejection PASS
+- hidden-card authorization-result isolation PASS
+- prototype safety PASS
+- immutable/pure authorization PASS
+- no Core dispatch PASS
+- internal room-runtime → game-core dependency established
+- no game-core source/test change
+- no external dependency change
+- latest regression 331 tests / 20 files PASS
+- game-core 251 tests / 16 files PASS
+- room-runtime 80 tests / 4 files PASS
+- authoritative metadata reconciliation PASS
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED
