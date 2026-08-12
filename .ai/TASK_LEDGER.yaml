@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
-active_task: null
+active_task: T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -126,6 +126,7 @@ stages:
       - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
       - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
       - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1698,6 +1699,164 @@ tasks:
       Risk Level: HIGH
       Workflow Profile: STRICT
       Decision: APPROVED_WITH_CONTROLS
+
+  T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE:
+    title: Authoritative Gameplay Commit Primitive
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative gameplay commit primitive composing strict protocol, revision idempotency, server actor authorization, verified Game Core command transition, exactly one new Room revision, exactly one actor-bound processed-action record, and one consistent next Room state + processed registry pair.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-016-INVARIANT-PROPERTY-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent gameplay commit primitive exists.
+      - AC-02: Public API exported by room-runtime.
+      - AC-03: No provider/Cloudflare/WebSocket/SQLite API introduced.
+      - AC-04: No new external dependency.
+      - AC-05: RoomAuthorityState shape unchanged.
+      - AC-06: GameplayActionEnvelope shape unchanged.
+      - AC-07: Client envelope receives no nextTurnId field.
+      - AC-08: Client envelope remains actor-free.
+      - AC-09: ServerPreparedNextTurn or equivalent is explicitly server-side context.
+      - AC-10: Blank/non-string prepared next turn ID is rejected for a new accepted action.
+      - AC-11: Prepared next turn ID equal to consumed currentTurnId is rejected.
+      - AC-12: Prepared next turn validation occurs only after T-019 ACCEPT.
+      - AC-13: Prepared next turn validation occurs before Core dispatch.
+      - AC-14: Transaction delegates authorization to evaluateServerGameplayActionRequest.
+      - AC-15: No manual duplicate authorization copy is introduced.
+      - AC-16: REJECT result preserves exact T-019 reason.
+      - AC-17: REJECT causes zero Core transition.
+      - AC-18: REJECT causes zero revision increment.
+      - AC-19: REJECT creates no processed record.
+      - AC-20: DUPLICATE returns priorResultingRevision.
+      - AC-21: DUPLICATE causes zero Core transition.
+      - AC-22: DUPLICATE causes zero revision increment.
+      - AC-23: DUPLICATE creates no second processed record.
+      - AC-24: DUPLICATE does not rotate currentTurnId.
+      - AC-25: DUPLICATE does not require valid preparedNextTurn.
+      - AC-26: Same committed request retried against advanced returned state remains DUPLICATE.
+      - AC-27: Cross-actor actionId collision remains ACTION_ID_CONFLICT.
+      - AC-28: Stale action remains STALE_REVISION.
+      - AC-29: Non-member remains ACTOR_NOT_MEMBER.
+      - AC-30: Non-current actor remains ACTOR_NOT_CURRENT_PLAYER.
+      - AC-31: Illegal action remains ACTION_NOT_ALLOWED.
+      - AC-32: Foreign/unknown PLAY card remains INVALID_PLAY_SELECTION.
+      - AC-33: PLAY_CARDS uses applyPlayCardsCommand.
+      - AC-34: PLAY_CARDS does not use low-level applyPlayCards directly.
+      - AC-35: CALL_LIAR uses applyCallLiar.
+      - AC-36: No SYSTEM_TIMEOUT dispatch exists.
+      - AC-37: Supplied RandomSource is passed to Core command transition.
+      - AC-38: No additional gameplay RNG source exists.
+      - AC-39: No Math.random introduced.
+      - AC-40: No Date.now introduced.
+      - AC-41: No crypto entropy introduced.
+      - AC-42: Ordinary PLAY reaches COMMITTED.
+      - AC-43: Ordinary PLAY resulting Match is Core-derived.
+      - AC-44: Ordinary PLAY Room revision increments exactly once.
+      - AC-45: Ordinary PLAY produces exactly one processed record.
+      - AC-46: Processed record resultingRevision equals new Room revision.
+      - AC-47: Processed record remains actor-bound.
+      - AC-48: Successful continuing PLAY installs prepared next turn ID.
+      - AC-49: Successful continuing PLAY clears old currentTurnDeadline.
+      - AC-50: Successful continuing PLAY clears old activeAlarm.
+      - AC-51: Legal CALL_LIAR reaches COMMITTED.
+      - AC-52: CALL resulting Match is Core-derived.
+      - AC-53: CALL Room revision increments exactly once.
+      - AC-54: CALL creates exactly one processed client record.
+      - AC-55: Continuing CALL installs prepared next turn ID.
+      - AC-56: Continuing CALL clears old timing metadata.
+      - AC-57: Forced-CALL PLAY command reaches one COMMITTED result.
+      - AC-58: Forced-CALL PLAY increments Room revision exactly once.
+      - AC-59: Forced-CALL PLAY adds exactly one processed action record.
+      - AC-60: Forced-CALL PLAY record actionType remains PLAY_CARDS.
+      - AC-61: No synthetic CALL_LIAR processed client record is created.
+      - AC-62: Forced-CALL resulting Match matches verified Core orchestration.
+      - AC-63: Match-winning client command reaches COMMITTED.
+      - AC-64: Winning command increments revision exactly once.
+      - AC-65: Winning command is recorded exactly once.
+      - AC-66: Winning command maps Room lifecycle to MATCH_FINISHED.
+      - AC-67: Finished Room Match status is FINISHED.
+      - AC-68: Finished Room winnerId is non-null.
+      - AC-69: Finished Room currentTurnId is null.
+      - AC-70: Finished Room currentTurnDeadline is null.
+      - AC-71: Finished Room activeAlarm is null.
+      - AC-72: No Room-layer next Round is created after Core Match finish.
+      - AC-73: Continuing Core Match maps Room lifecycle to MATCH_ACTIVE.
+      - AC-74: Continuing Match with an elimination does not implement Pause logic.
+      - AC-75: Presence accounting remains deferred.
+      - AC-76: Life-status-triggered Pause re-evaluation remains deferred.
+      - AC-77: Successful COMMITTED result preserves roomId.
+      - AC-78: Successful COMMITTED result preserves members.
+      - AC-79: Successful COMMITTED result preserves hostPlayerId.
+      - AC-80: COMMITTED returns a fresh Room state without mutating input Room state.
+      - AC-81: Input MatchState is not mutated.
+      - AC-82: Input player Hands are not mutated.
+      - AC-83: Input envelope is not mutated.
+      - AC-84: Input actor context is not mutated.
+      - AC-85: Input prepared-next-turn context is not mutated.
+      - AC-86: Input processed registry is not mutated.
+      - AC-87: Returned processed registry preserves prototype safety.
+      - AC-88: Returned Room revision equals envelope.expectedRevision + 1.
+      - AC-89: Returned processed record resultingRevision equals envelope.expectedRevision + 1.
+      - AC-90: Returned Room revision equals recorded resultingRevision.
+      - AC-91: In-progress Core state with non-null winner fails closed.
+      - AC-92: Finished Core state with null winner fails closed.
+      - AC-93: Invalid Core result creates no processed record.
+      - AC-94: Transaction does not return separate Card rank/value metadata.
+      - AC-95: Transaction is documented as internal authoritative state, not client projection.
+      - AC-96: No recipient projection is implemented or claimed.
+      - AC-97: No deadline scheduling is implemented.
+      - AC-98: No TURN_DEADLINE alarm scheduling is implemented.
+      - AC-99: No alarm provider API is introduced.
+      - AC-100: No late-command/deadline arbitration is implemented.
+      - AC-101: No Durable Object is implemented.
+      - AC-102: No SQLite/persistence is implemented.
+      - AC-103: No actual concurrent serialization is implemented.
+      - AC-104: No WebSocket is implemented.
+      - AC-105: No Telegram auth/session work is implemented.
+      - AC-106: No presence/Pause/Resume is implemented.
+      - AC-107: No T27/projection implementation is claimed.
+      - AC-108: game-core source remains unchanged.
+      - AC-109: game-core tests remain unchanged.
+      - AC-110: T-017/T-018/T-019 existing tests continue passing.
+      - AC-111: package files remain unchanged.
+      - AC-112: package-lock remains unchanged.
+      - AC-113: npm ci passes.
+      - AC-114: npm run typecheck passes.
+      - AC-115: npm test passes.
+      - AC-116: room-runtime direct typecheck passes.
+      - AC-117: room-runtime direct tests pass.
+      - AC-118: game-core direct typecheck/tests pass unchanged.
+      - AC-119: Evidence maps AC-01 through AC-118.
+      - AC-120: Evidence explicitly proves one client command = one Room revision for forced-CALL PLAY.
+      - AC-121: Evidence explicitly distinguishes pure logical commit pair from durable atomic persistence.
+      - AC-122: Evidence explicitly records old deadline/alarm invalidation and next scheduling as deferred.
+      - AC-123: Evidence explicitly records presence/life-status Pause re-evaluation as deferred.
+      - AC-124: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
