@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   createInitialRoomState,
   FORBIDDEN_LOCAL_SELECTION_KEYS,
+  ForbiddenLocalSelectionKey,
   RoomAuthorityState,
   RoomLifecycle,
   RoomAlarmKind,
@@ -73,7 +74,39 @@ describe('Room Authority State Foundation', () => {
     expect(state2.members).toEqual([]);
   });
 
-  it('exhaustively excludes all 8 forbidden local-selection keys from RoomAuthorityState (AC-42, AC-43)', () => {
+  it('locks exact compile-time and runtime RoomAuthorityState key surface (AC-09, AC-42, AC-43)', () => {
+    // 1. Compile-time proof: RoomAuthorityState must extract NO forbidden local-selection key
+    type RoomSelectionLeak = Extract<
+      keyof RoomAuthorityState<unknown>,
+      ForbiddenLocalSelectionKey
+    >;
+    expectTypeOf<RoomSelectionLeak>().toEqualTypeOf<never>();
+
+    // 2. Compile-time proof: RoomAuthorityState key surface must match expected keys exactly
+    type ExpectedRoomAuthorityKey =
+      | 'roomId'
+      | 'lifecycle'
+      | 'revision'
+      | 'members'
+      | 'hostPlayerId'
+      | 'match'
+      | 'currentTurnId'
+      | 'currentTurnDeadline'
+      | 'activeAlarm';
+
+    type ExtraKeys = Exclude<
+      keyof RoomAuthorityState<unknown>,
+      ExpectedRoomAuthorityKey
+    >;
+    type MissingKeys = Exclude<
+      ExpectedRoomAuthorityKey,
+      keyof RoomAuthorityState<unknown>
+    >;
+
+    expectTypeOf<ExtraKeys>().toEqualTypeOf<never>();
+    expectTypeOf<MissingKeys>().toEqualTypeOf<never>();
+
+    // 3. Runtime constructed-state proof: runtime object contains zero forbidden key
     const sampleState = createInitialRoomState('room-test');
     const keys = Object.keys(sampleState);
 
