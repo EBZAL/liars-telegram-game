@@ -1704,7 +1704,7 @@ tasks:
     title: Authoritative Gameplay Commit Primitive
     stage: STAGE-04
     status: IMPLEMENTED
-    implementation_commit: a9f891fdca4e6eb5b3ebfb79faed5e1afbcf33eb
+    implementation_commit: a9f891f9b9d25efc4e26e81d3afa40c536f650b6
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative gameplay commit primitive composing strict protocol, revision idempotency, server actor authorization, verified Game Core command transition, exactly one new Room revision, exactly one actor-bound processed-action record, and one consistent next Room state + processed registry pair.

@@ -2,8 +2,9 @@
 
 ## Task Identity & Git Commit Chain
 - **Task ID**: `T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE`
-- **Task-Start Commit**: `e50fdd342797e8b6287f3bfafe15bb7c0411cfeb`
-- **Implementation Commit**: `a9f891fdca4e6eb5b3ebfb79faed5e1afbcf33eb`
+- **Task-Start Commit**: `e50fdd30f01c581cd620dcb36999ac1728cf6259`
+- **Authoritative Implementation Commit**: `a9f891f9b9d25efc4e26e81d3afa40c536f650b6`
+- **Evidence/State Before Metadata Reconciliation**: `14525db79b8c3730ce0b65d493675cd267edc41e`
 
 ---
 
