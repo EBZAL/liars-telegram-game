@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
-active_task: null
+active_task: T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -124,6 +124,7 @@ stages:
     status: IN_PROGRESS
     required_tasks:
       - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1419,4 +1420,114 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION:
+    title: Revision, Idempotency & Turn Admission
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent ADR-006 authority layer that combines actionId retry/idempotency admission, stale expectedRevision rejection, current turnId validation, and monotonic +1 revision primitive for one successful client gameplay commit.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-016-INVARIANT-PROPERTY-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+    acceptance_criteria:
+      - AC-01: A dedicated provider-independent gameplay-admission implementation exists.
+      - AC-02: No external dependency is added.
+      - AC-03: No Cloudflare/provider API is imported.
+      - AC-04: T-017 RoomAuthorityState source remains unchanged.
+      - AC-05: T-017 GameplayActionEnvelope/parser source remains unchanged.
+      - AC-06: Existing T-017 tests remain unchanged.
+      - AC-07: The new API is exported from room-runtime index.ts.
+      - AC-08: A processed-action retry-safety registry exists.
+      - AC-09: Fresh registry construction is independently allocated.
+      - AC-10: Registry is prototype-safe for arbitrary opaque actionIds.
+      - AC-11: __proto__ actionId is safely recordable/looked-up.
+      - AC-12: constructor actionId is safely recordable/looked-up.
+      - AC-13: Processed records contain enough detached request data to prove exact retry.
+      - AC-14: Processed records contain resultingRevision.
+      - AC-15: Processed records do not contain server hidden-state/randomness fields.
+      - AC-16: Stored PLAY cardIds are detached from the source envelope array.
+      - AC-17: Unseen action with exact revision, MATCH_ACTIVE and exact current turn is ACCEPT.
+      - AC-18: Exact previously successful request is DUPLICATE.
+      - AC-19: DUPLICATE is decided before stale revision evaluation.
+      - AC-20: DUPLICATE is decided before current-turn evaluation.
+      - AC-21: Exact retry remains DUPLICATE after Room revision advances.
+      - AC-22: Exact retry remains DUPLICATE after current turn changes.
+      - AC-23: Same actionId with different expectedRevision is ACTION_ID_CONFLICT.
+      - AC-24: Same actionId with different turnId is ACTION_ID_CONFLICT.
+      - AC-25: Same actionId with different actionType is ACTION_ID_CONFLICT.
+      - AC-26: Same actionId with different PLAY cardIds is ACTION_ID_CONFLICT.
+      - AC-27: Same actionId PLAY cardIds with different ordering is ACTION_ID_CONFLICT.
+      - AC-28: ACTION_ID_CONFLICT is never converted into ACCEPT.
+      - AC-29: ACTION_ID_CONFLICT is checked before ordinary revision/turn admission.
+      - AC-30: Unseen lower expectedRevision is STALE_REVISION.
+      - AC-31: Unseen higher expectedRevision is STALE_REVISION.
+      - AC-32: Revision mismatch never returns ACCEPT.
+      - AC-33: With matching revision, LOBBY rejects MATCH_NOT_ACTIVE.
+      - AC-34: With matching revision, MATCH_PAUSED_NO_LIVING_CONNECTIONS rejects MATCH_NOT_ACTIVE.
+      - AC-35: With matching revision, MATCH_FINISHED rejects MATCH_NOT_ACTIVE.
+      - AC-36: With matching revision, ABANDONED rejects MATCH_NOT_ACTIVE.
+      - AC-37: With matching revision and MATCH_ACTIVE, null currentTurnId rejects TURN_MISMATCH.
+      - AC-38: With matching revision and MATCH_ACTIVE, wrong turnId rejects TURN_MISMATCH.
+      - AC-39: Only an unseen exact-revision exact-turn MATCH_ACTIVE action reaches ACCEPT.
+      - AC-40: Admission evaluation does not mutate RoomAuthorityState.
+      - AC-41: Admission evaluation does not mutate the envelope.
+      - AC-42: Admission evaluation does not mutate the processed-action registry.
+      - AC-43: nextRoomRevision(0) = 1.
+      - AC-44: nextRoomRevision(n) = n + 1 for representative safe non-negative integers.
+      - AC-45: Negative revision input is rejected.
+      - AC-46: Non-integer revision input is rejected.
+      - AC-47: Non-safe revision input is rejected.
+      - AC-48: Number.MAX_SAFE_INTEGER cannot be incremented.
+      - AC-49: Successful recording requires resultingRevision = expectedRevision + 1.
+      - AC-50: Successful recording rejects any other resultingRevision.
+      - AC-51: Successful recording returns an immutable/fresh registry update or equivalent no-mutation behavior.
+      - AC-52: Original registry remains unchanged after a new successful record.
+      - AC-53: Original envelope remains unchanged after recording.
+      - AC-54: Recording preserves null-prototype/equivalent prototype safety.
+      - AC-55: Re-recording the exact same successful request/result is idempotent.
+      - AC-56: Re-recording same actionId with different request is rejected as conflict.
+      - AC-57: Re-recording same actionId with different resultingRevision is rejected as conflict.
+      - AC-58: Rejected admission itself never creates a processed-action record.
+      - AC-59: No RoomAuthorityState revision mutation occurs during admission evaluation.
+      - AC-60: No Game Core command is dispatched.
+      - AC-61: No actor/membership/card-ownership/legal-action authorization is claimed.
+      - AC-62: No Durable Object/WebSocket/SQLite implementation is introduced.
+      - AC-63: No deadline/alarm/presence/Pause/Resume implementation is introduced.
+      - AC-64: No Telegram authentication is introduced.
+      - AC-65: No recipient projection or T27 implementation is claimed.
+      - AC-66: No forbidden nondeterminism is used.
+      - AC-67: game-core source and tests remain unchanged.
+      - AC-68: package.json remains unchanged.
+      - AC-69: package-lock.json remains unchanged.
+      - AC-70: npm ci passes with zero unexpected tracked-file impact.
+      - AC-71: npm run typecheck passes.
+      - AC-72: npm test passes.
+      - AC-73: room-runtime direct typecheck passes.
+      - AC-74: room-runtime direct tests pass.
+      - AC-75: game-core direct typecheck/tests pass.
+      - AC-76: Evidence maps all ACs and explicitly records the duplicate-before-stale ordering proof.
+      - AC-77: Evidence explicitly states persistence/concurrency/Core dispatch/auth/projection remain deferred.
+      - AC-78: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
