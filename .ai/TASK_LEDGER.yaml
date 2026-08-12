@@ -1545,7 +1545,8 @@ tasks:
   T-019-SERVER-ACTOR-AUTHORIZATION-BINDING:
     title: Server Actor Authorization & Action Binding
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: df242ba43ce044cf4d6bbbd78b9ecafc2f7ff664
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Establish the server-derived actor authorization boundary required before Game Core dispatch, including ServerResolvedActor validation, Room membership authorization, actor-bound processed-action registry, cross-actor collision protection, current-player authorization, Core legal-action validation via getAllowedTurnActions, and PLAY card-ownership validation via validatePlaySelection.
