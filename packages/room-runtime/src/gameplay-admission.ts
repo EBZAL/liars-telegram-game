@@ -25,6 +25,7 @@ export type ProcessedGameplayActionRegistry = Record<string, ProcessedGameplayAc
 export type GameplayActionAdmissionDecision = 'ACCEPT' | 'DUPLICATE' | 'REJECT';
 
 export type GameplayActionRejectionReason =
+  | 'INVALID_ACTOR_CONTEXT'
   | 'ACTION_ID_CONFLICT'
   | 'STALE_REVISION'
   | 'MATCH_NOT_ACTIVE'
@@ -94,16 +95,29 @@ export function evaluateGameplayActionAdmission(
   roomState: RoomAuthorityState<unknown>,
   envelope: GameplayActionEnvelope,
   processedRegistry: ProcessedGameplayActionRegistry,
-  actor?: ServerResolvedActor
+  actor: ServerResolvedActor
 ): GameplayActionAdmissionResult {
+  // Step 0 — Validate mandatory ServerResolvedActor context
+  if (
+    typeof actor !== 'object' ||
+    actor === null ||
+    typeof actor.playerId !== 'string' ||
+    actor.playerId.trim() === ''
+  ) {
+    return {
+      decision: 'REJECT',
+      reason: 'INVALID_ACTOR_CONTEXT',
+    };
+  }
+
+  const actorPlayerId = actor.playerId.trim();
   const actionId = envelope.actionId;
   const hasExisting = Object.prototype.hasOwnProperty.call(processedRegistry, actionId);
 
   // Step 1 — actionId lookup
   if (hasExisting) {
     const existingRecord = processedRegistry[actionId];
-    const matchesActor = actor ? existingRecord.actorPlayerId === actor.playerId.trim() : true;
-    if (matchesActor && isExactRequest(existingRecord, envelope)) {
+    if (existingRecord.actorPlayerId === actorPlayerId && isExactRequest(existingRecord, envelope)) {
       return {
         decision: 'DUPLICATE',
         priorResultingRevision: existingRecord.resultingRevision,
