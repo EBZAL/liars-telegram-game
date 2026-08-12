@@ -1,58 +1,59 @@
 # Evidence: T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
 
-## Task Identity & Commit Chain
+## Task Identity & Authoritative Git Commit Chain
 - **Task ID**: `T-019-SERVER-ACTOR-AUTHORIZATION-BINDING`
-- **Task-Start Commit**: `ad653c6130d22076fa968b59e355ea7df8c805eb`
-- **Implementation Commit**: `df242ba43ce044cf4d6bbbd78b9ecafc2f7ff664`
-- **Base HEAD**: `d2ede5a95ac6a3e6903e7a02a4643965ca381cc4`
+- **Task-Start Commit**: `ad653c69edae336cf264a8282649b03cee163928`
+- **Initial Implementation Commit**: `df242ba38c1fdd274a9eb52c8cf445c0a99c36aa`
+- **Initial Evidence/State Commit**: `6914965ca2af0def2fd36b3fe03a61128131b3d5`
+- **Correction Reopen Commit**: `1371fe77b47e2ef306ed961fefcd893ff29ed8fb`
+- **Correction Implementation Commit**: `01418074dcefa29b71f0df4aeaa887c2b64d4204`
 
 ---
 
-## Technical Summary
+## Technical Summary & Correction Hardening
 
-### 1. Server Actor Context & Trust Boundary (`ServerResolvedActor`)
-- `ServerResolvedActor` defined in `@liars-telegram-game/room-runtime`:
+### 1. Mandatory Low-Level Actor Parameter (Architect Finding 1)
+- `evaluateGameplayActionAdmission` signature updated to require a mandatory `actor: ServerResolvedActor` parameter:
   ```ts
-  export interface ServerResolvedActor {
-    playerId: string;
-  }
+  export function evaluateGameplayActionAdmission(
+    roomState: RoomAuthorityState<unknown>,
+    envelope: GameplayActionEnvelope,
+    processedRegistry: ProcessedGameplayActionRegistry,
+    actor: ServerResolvedActor
+  ): GameplayActionAdmissionResult
   ```
-- Actor identity is server-derived only. No client `GameplayActionEnvelope` field was modified or added (`actionId`, `expectedRevision`, `turnId`, `actionType`, `payload` remain exact).
-- Invalid server actor contexts (`null`, `undefined`, non-object, blank string, non-string `playerId`) fail closed immediately as `INVALID_ACTOR_CONTEXT`.
-
-### 2. Room Membership Authorization Before Dedupe Disclosure
-- Room membership check (`roomState.members.some((m) => m.playerId === actorId)`) occurs BEFORE processed action lookup.
-- If a non-member submits an actionId that exists in the registry, the evaluator returns `ACTOR_NOT_MEMBER`, NOT `DUPLICATE`.
-- This prevents unauthorized non-members from probing whether an `actionId` was processed by a room member.
-
-### 3. Actor-Bound Processed Action Registry
-- `ProcessedGameplayActionRecord` evolved to include `actorPlayerId`:
+- No optional parameter `actor?: ServerResolvedActor`.
+- No default actor, no fallback actor, and no actorless dedupe lookup path exists.
+- Type-level proof established in test suite:
   ```ts
-  export interface ProcessedGameplayActionRecord {
-    actorPlayerId: string;
-    actionId: string;
-    expectedRevision: number;
-    turnId: string;
-    actionType: ClientGameplayActionType;
-    payload: PlayCardsPayload | CallLiarPayload;
-    resultingRevision: number;
-  }
+  type AdmissionActorParameter = Parameters<typeof evaluateGameplayActionAdmission>[3];
+  expectTypeOf<AdmissionActorParameter>().toEqualTypeOf<ServerResolvedActor>();
   ```
-- `recordSuccessfulGameplayAction` signature updated to require `ServerResolvedActor`.
-- Cross-actor actionId reuse produces `ACTION_ID_CONFLICT` and never discloses original actor identity.
 
-### 4. Game Core Integration & Legal-Action Delegation
-- Added `@liars-telegram-game/game-core` workspace dependency to `@liars-telegram-game/room-runtime`.
-- Delegates turn action legality directly to Core's `getAllowedTurnActions(seatOrder, players, currentPlayerId, actorId, hasPreviousPlay)`.
-- Delegates PLAY card selection validation directly to Core's `validatePlaySelection(actorHand, requestedCardIds)`.
-- First-turn `CALL_LIAR` rejected (`ACTION_NOT_ALLOWED`).
-- Forced-CALL state `PLAY_CARDS` rejected (`ACTION_NOT_ALLOWED`), while `CALL_LIAR` accepted (`ACCEPT`).
-- Foreign card ID or unknown card ID rejected (`INVALID_PLAY_SELECTION`).
-- Non-current turn player rejected (`ACTOR_NOT_CURRENT_PLAYER`). Host status provides zero bypass.
+### 2. Low-Level Malformed Actor Fail-Closed Behavior
+- `evaluateGameplayActionAdmission` fails closed immediately if `actor` is malformed (`undefined`, `null`, non-object, non-string `playerId`, or blank `playerId` after `trim()`):
+  Returns `{ decision: 'REJECT', reason: 'INVALID_ACTOR_CONTEXT' }`.
+- Added `'INVALID_ACTOR_CONTEXT'` to `GameplayActionRejectionReason` union.
 
-### 5. Purity & Immutability
-- Evaluator does not mutate `roomState`, `MatchState`, `envelope`, `actor`, or `processedRegistry`.
-- Zero Game Core state machine transitions dispatched; zero randomness consumed (`Math.random`, `Date.now`, `crypto` unused).
+### 3. Low-Level Actor-Bound Dedupe & Conflict Semantics
+- Direct test proofs against `evaluateGameplayActionAdmission`:
+  - Same actor exact retry on advanced room state => `DUPLICATE`.
+  - Cross-actor submitting an existing `actionId` => `REJECT` / `ACTION_ID_CONFLICT`.
+  - Malformed runtime `actor` => `REJECT` / `INVALID_ACTOR_CONTEXT`.
+
+### 4. High-Level Safe Evaluator (`evaluateServerGameplayActionRequest`)
+- Retains mandatory membership-before-dedupe ordering:
+  - Step 1: Validate server actor context -> `INVALID_ACTOR_CONTEXT`.
+  - Step 2: Validate room membership -> `ACTOR_NOT_MEMBER` (occurs BEFORE actionId dedupe lookup).
+  - Step 3: Actor-bound actionId lookup -> `DUPLICATE` (same actor exact request) or `ACTION_ID_CONFLICT` (cross-actor).
+  - Step 4: Unseen revision check -> `STALE_REVISION`.
+  - Step 5: Room lifecycle check -> `MATCH_NOT_ACTIVE`.
+  - Step 6: Match snapshot check -> `MATCH_STATE_MISSING` / `MATCH_NOT_ACTIVE`.
+  - Step 7: Room turnId check -> `TURN_MISMATCH`.
+  - Step 8: Match player & current turn player authorization -> `ACTOR_NOT_MATCH_PLAYER` / `ACTOR_NOT_CURRENT_PLAYER`.
+  - Step 9: Core `getAllowedTurnActions` legal action authorization -> `ACTION_NOT_ALLOWED`.
+  - Step 10: Core `validatePlaySelection` card ownership authorization -> `INVALID_PLAY_SELECTION`.
+  - Step 11: `ACCEPT`.
 
 ---
 
@@ -83,18 +84,18 @@
 - `npm ci`: PASS
 - `npm run typecheck`: PASS
 - `npm test`: PASS
-- `npm run typecheck --workspace=@liars-telegram-game/room-runtime` (from clean dist state): PASS
-- `npm run test --workspace=@liars-telegram-game/room-runtime` (from clean dist state): PASS
+- Direct `room-runtime` typecheck & test from clean dist state: PASS
 
 ### Regression Totals
-- **Total Project Tests**: 327 passed across 20 test files
+- **Total Project Tests**: 331 passed across 20 test files
   - `game-core`: 251 tests / 16 test files (100% UNCHANGED)
-  - `room-runtime`: 76 tests / 4 test files (22 new authorization tests + 54 admission/state/protocol tests)
+  - `room-runtime`: 80 tests / 4 test files (37 admission tests + 20 authorization tests + 16 protocol tests + 7 room-state tests)
 
-### Package & Dependency Delta
-- `packages/game-core`: zero source/test code changed. Package `exports` updated for workspace NodeNext resolution.
-- `packages/room-runtime`: added `"dependencies": { "@liars-telegram-game/game-core": "*" }`.
-- `package-lock.json`: updated internal workspace symlink only. Zero external dependency version changes.
+### Correction Package Delta
+- Correction package changes: 0
+- Correction package-lock changes: 0
+- External dependency changes: 0
+- Game-core source/test changes: 0
 
 ---
 
