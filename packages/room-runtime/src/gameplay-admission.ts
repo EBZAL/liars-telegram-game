@@ -143,16 +143,6 @@ export function recordSuccessfulGameplayAction(
   envelope: GameplayActionEnvelope,
   resultingRevision: number
 ): ProcessedGameplayActionRegistry {
-  if (
-    typeof resultingRevision !== 'number' ||
-    !Number.isSafeInteger(resultingRevision) ||
-    resultingRevision !== envelope.expectedRevision + 1
-  ) {
-    throw new Error(
-      `Invalid resultingRevision ${resultingRevision}: must equal expectedRevision + 1 (${envelope.expectedRevision + 1})`
-    );
-  }
-
   const actionId = envelope.actionId;
   const hasExisting = Object.prototype.hasOwnProperty.call(registry, actionId);
 
@@ -166,6 +156,16 @@ export function recordSuccessfulGameplayAction(
     }
     throw new Error(
       `Action ID conflict: actionId '${actionId}' already exists with different request or resultingRevision`
+    );
+  }
+
+  if (
+    typeof resultingRevision !== 'number' ||
+    !Number.isSafeInteger(resultingRevision) ||
+    resultingRevision !== envelope.expectedRevision + 1
+  ) {
+    throw new Error(
+      `Invalid resultingRevision ${resultingRevision}: must equal expectedRevision + 1 (${envelope.expectedRevision + 1})`
     );
   }
 

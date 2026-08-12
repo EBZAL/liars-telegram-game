@@ -251,7 +251,7 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       );
     });
 
-    it('rejects re-recording same actionId with different resultingRevision (AC-57)', () => {
+    it('rejects re-recording same actionId with different resultingRevision specifically as Action ID conflict (AC-57)', () => {
       const registry = createProcessedGameplayActionRegistry();
       const envelope1: GameplayActionEnvelope = {
         actionId: 'act-1',
@@ -262,8 +262,39 @@ describe('Gameplay Admission & Idempotency Layer', () => {
       };
       const updated = recordSuccessfulGameplayAction(registry, envelope1, 1);
 
-      // Suppose someone attempts to re-record act-1 with resultingRevision 2 (which is invalid anyway)
-      expect(() => recordSuccessfulGameplayAction(updated, envelope1, 2)).toThrow();
+      // Attempt to re-record exact same request with resultingRevision = 2 (AC-57 mandatory proof)
+      expect(() => recordSuccessfulGameplayAction(updated, envelope1, 2)).toThrow(
+        /Action ID conflict/
+      );
+    });
+
+    it('enforces existing actionId conflict precedence over new-record resultingRevision validation', () => {
+      const registry = createProcessedGameplayActionRegistry();
+      const envelope1: GameplayActionEnvelope = {
+        actionId: 'act-1',
+        expectedRevision: 0,
+        turnId: 'turn-1',
+        actionType: 'CALL_LIAR',
+        payload: {},
+      };
+      const updated = recordSuccessfulGameplayAction(registry, envelope1, 1);
+
+      // Re-recording with a different request AND an invalid resultingRevision (e.g. -1 or 99)
+      const conflictingEnvelope: GameplayActionEnvelope = {
+        actionId: 'act-1',
+        expectedRevision: 0,
+        turnId: 'turn-1',
+        actionType: 'PLAY_CARDS',
+        payload: { cardIds: ['c1'] },
+      };
+
+      // Must throw Action ID conflict, NOT generic invalid resultingRevision error
+      expect(() => recordSuccessfulGameplayAction(updated, conflictingEnvelope, -1)).toThrow(
+        /Action ID conflict/
+      );
+      expect(() => recordSuccessfulGameplayAction(updated, conflictingEnvelope, 99)).toThrow(
+        /Action ID conflict/
+      );
     });
   });
 
