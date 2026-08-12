@@ -3,7 +3,7 @@
 **Task ID:** T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION  
 **Task Title:** Room Authority & Protocol Foundation  
 **Stage:** STAGE-04 — Authoritative Multiplayer  
-**Implementation Commit:** `ceb93cf1153721a26e340ebcbba65946c33972dc`  
+**Implementation Commit:** `af714e1e17f5f88ae460903d83edbb6b2e367c67`  
 **Status:** IMPLEMENTED  
 
 ---
@@ -21,7 +21,7 @@ A new provider-independent workspace `@liars-telegram-game/room-runtime` (`packa
    - `RoomMember`: `{ playerId, joinOrder }` minimal stable identity/order data.
    - `RoomAuthorityState<TMatchSnapshot>`: generic provider-independent room state container holding `roomId`, `lifecycle`, `revision`, `members`, `hostPlayerId`, `match`, `currentTurnId`, `currentTurnDeadline`, `activeAlarm` (AC-09, AC-10).
    - `createInitialRoomState(roomId)`: pure constructor returning fresh LOBBY state with `revision=0`, empty `members`, and all optional/derived state as `null` (AC-11..20).
-   - `FORBIDDEN_LOCAL_SELECTION_KEYS`: compile-time and runtime proof excluding all 8 forbidden local-selection keys (`selectedCards`, `selectedCardIds`, `selectedButUnconfirmedCards`, `highlightedCards`, `highlightedCardIds`, `draftSelection`, `pendingSelection`, `localSelection`) from authoritative Room state (AC-42, AC-43).
+   - `FORBIDDEN_LOCAL_SELECTION_KEYS`: exhaustive compile-time forbidden-key extraction proof (`Extract<keyof RoomAuthorityState<unknown>, ForbiddenLocalSelectionKey> = never`), exact RoomAuthorityState key surface proof (`ExtraKeys = never`, `MissingKeys = never`), and runtime constructed-state proof excluding all 8 forbidden local-selection keys (`selectedCards`, `selectedCardIds`, `selectedButUnconfirmedCards`, `highlightedCards`, `highlightedCardIds`, `draftSelection`, `pendingSelection`, `localSelection`) from authoritative Room state (AC-42, AC-43).
 
 2. **Strict Untrusted Protocol Parser (`packages/room-runtime/src/gameplay-protocol.ts`)**:
    - `parseGameplayActionEnvelope(input)`: pure runtime validator/parser for untrusted client action envelopes.
@@ -56,7 +56,7 @@ A new provider-independent workspace `@liars-telegram-game/room-runtime` (`packa
 | AC-06 | `RoomLifecycle` exact value set | PASS | Verified in `room-state.ts` & `room-state.test.ts` |
 | AC-07 | `RoomAlarmKind` exact value set | PASS | Verified in `room-state.ts` & `room-state.test.ts` |
 | AC-08 | `ActiveRoomAlarm` fields | PASS | `{ kind, dueAt, generation }` verified |
-| AC-09 | Minimal Room authority state fields | PASS | All 9 required fields present |
+| AC-09 | Minimal Room authority state fields | PASS | All 9 required fields present; exact key surface locked in tests |
 | AC-10 | Generic match snapshot field | PASS | `match: TMatchSnapshot \| null` |
 | AC-11 | Constructor rejects empty/whitespace-only Room ID | PASS | Throws `Error` for `""`, `"   "`, `null`, `undefined` |
 | AC-12 | Initial `lifecycle` = `'LOBBY'` | PASS | Verified in constructor & tests |
@@ -89,7 +89,7 @@ A new provider-independent workspace `@liars-telegram-game/room-runtime` (`packa
 | AC-39 | Parser rejects null / arrays / primitives / malformed shapes | PASS | Verified in `gameplay-protocol.test.ts` |
 | AC-40 | Successful PLAY parse returns detached `cardIds` array | PASS | Verified array reference detachment |
 | AC-41 | Parser does not mutate untrusted input | PASS | Input object remains unmodified |
-| AC-42 | Exhaustive exclusion of 8 forbidden local-selection keys | PASS | Tested against `FORBIDDEN_LOCAL_SELECTION_KEYS` |
+| AC-42 | Exhaustive exclusion of 8 forbidden local-selection keys | PASS | Compile-time extract proof, exact surface proof, and runtime object test PASS |
 | AC-43 | No pre-confirm selection state added | PASS | Authoritative state contains zero draft/selection fields |
 | AC-44 | No revision-increment implemented yet | PASS | Scope boundary preserved |
 | AC-45 | No action-dedupe implemented yet | PASS | Scope boundary preserved |
@@ -125,6 +125,11 @@ A new provider-independent workspace `@liars-telegram-game/room-runtime` (`packa
   - `game-core`: 16 test files / 251 tests PASS
   - `room-runtime`: 2 test files / 23 tests PASS
 - Exit Code: 0
+
+### Type Boundary Proof Verification
+- Exhaustive compile-time forbidden-key proof (`Extract<keyof RoomAuthorityState<unknown>, ForbiddenLocalSelectionKey> = never`): PASS
+- Exact RoomAuthorityState surface key proof (`ExtraKeys = never`, `MissingKeys = never`): PASS
+- Runtime constructed-state forbidden-key proof: PASS
 
 ### Package & Dependency Audit
 - External dependency version changes: 0
