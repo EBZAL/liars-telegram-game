@@ -1424,7 +1424,7 @@ tasks:
   T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION:
     title: Revision, Idempotency & Turn Admission
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: IN_PROGRESS
     implementation_commit: 87cd63313500c059e900cfe2dd357fad31d2bab0
     workflow_profile: STANDARD
     risk_level: MEDIUM
