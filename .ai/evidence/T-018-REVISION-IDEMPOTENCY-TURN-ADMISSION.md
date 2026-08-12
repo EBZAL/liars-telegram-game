@@ -3,7 +3,9 @@
 **Task ID:** T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION  
 **Task Title:** Revision, Idempotency & Turn Admission  
 **Stage:** STAGE-04 — Authoritative Multiplayer  
-**Implementation Commit:** `87cd63313500c059e900cfe2dd357fad31d2bab0`  
+**Task Start Commit:** `39ce9ff8e00f9c574d8f44096c0a3a0a130104a0`  
+**Initial Evidence/State Commit:** `16a585f254a36cc6110960d605b16ad404e1c0c3`  
+**Correction Implementation Commit:** `7379f52ff4dacf891fea44cfc79cc08e426a4261`  
 **Status:** IMPLEMENTED  
 
 ---
@@ -23,12 +25,14 @@ A dedicated provider-independent gameplay admission and idempotency layer was ad
    - `createProcessedGameplayActionRegistry()` returns an independently allocated null-prototype object (`Object.getPrototypeOf(reg) === null`) (AC-08, AC-09).
    - Safely records and looks up arbitrary opaque `actionId` keys including `__proto__` and `constructor` without mutating object prototype (AC-10, AC-11, AC-12, AC-54).
    - `recordSuccessfulGameplayAction`:
-     - Requires `resultingRevision === envelope.expectedRevision + 1` (AC-49, AC-50).
+     - Looks up existing `actionId` in registry **FIRST** before new-record revision validation.
+     - Exact same request AND exact same `resultingRevision` → idempotent success / no-op (AC-55).
+     - Same `actionId` with different request OR different `resultingRevision` → fails specifically with `Action ID conflict` (AC-56, AC-57).
+     - Existing `actionId` conflict precedence holds even if the supplied `resultingRevision` is invalid (e.g. `-1` or `99`).
+     - Only for an unseen `actionId`, validates `resultingRevision === envelope.expectedRevision + 1` (safe integer) (AC-49, AC-50).
      - Returns a fresh registry copy while leaving the original input registry and envelope unmodified (AC-51, AC-52, AC-53).
      - Stores detached request snapshots (`cardIds` copied into a new array) (AC-13, AC-16).
      - Excludes server hidden state/randomness (AC-15).
-     - Allows idempotent re-recording of the exact same successful request and resulting revision (AC-55).
-     - Throws conflict error on duplicate `actionId` with different request or different `resultingRevision` (AC-56, AC-57).
 
 3. **Admission Decision Engine (`evaluateGameplayActionAdmission`)**:
    - Returns `ACCEPT`, `DUPLICATE`, or `REJECT` with specific rejection reasons (`ACTION_ID_CONFLICT`, `STALE_REVISION`, `MATCH_NOT_ACTIVE`, `TURN_MISMATCH`).
@@ -58,14 +62,18 @@ As required by ADR-006 and AC-18..22:
 - It does **NOT** return `STALE_REVISION`, `TURN_MISMATCH`, or `ACCEPT`.
 - This proves that exact retry/idempotency lookup occurs **BEFORE** stale revision and turn validation.
 
-### Action ID Conflict Proofs
+### Action ID Conflict Proofs & Recording Order
 - When an `actionId` already exists in `processedRegistry`, any attempt to reuse it with:
   - different `expectedRevision` → `ACTION_ID_CONFLICT` (AC-23)
   - different `turnId` → `ACTION_ID_CONFLICT` (AC-24)
   - different `actionType` (`CALL_LIAR` vs `PLAY_CARDS`) → `ACTION_ID_CONFLICT` (AC-25)
   - different PLAY `cardIds` → `ACTION_ID_CONFLICT` (AC-26)
   - different PLAY `cardIds` ordering (e.g. `['c1', 'c2']` vs `['c2', 'c1']`) → `ACTION_ID_CONFLICT` (AC-27)
-- `ACTION_ID_CONFLICT` is evaluated before ordinary revision/turn admission and is never converted to `ACCEPT` (AC-28, AC-29).
+- `recordSuccessfulGameplayAction` re-record conflict semantics (AC-56, AC-57):
+  - Existing `actionId` with exact request + exact `resultingRevision` = idempotent no-op.
+  - Existing `actionId` with exact request + modified `resultingRevision` = throws `Action ID conflict` (AC-57 mandatory proof).
+  - Existing `actionId` conflict takes precedence over generic `resultingRevision` validation (even if `resultingRevision` is invalid `-1` or `99`).
+  - Unseen `actionId` with invalid `resultingRevision` = throws generic `Invalid resultingRevision` error.
 
 ---
 
@@ -121,15 +129,15 @@ As required by ADR-006 and AC-18..22:
 | AC-46 | Non-integer revision input rejected | PASS | Throws error |
 | AC-47 | Non-safe revision input rejected | PASS | Throws error |
 | AC-48 | Number.MAX_SAFE_INTEGER cannot be incremented | PASS | Throws error |
-| AC-49 | Successful recording requires resultingRevision = expectedRevision + 1 | PASS | Enforced |
+| AC-49 | Successful recording requires resultingRevision = expectedRevision + 1 | PASS | Enforced for unseen actionIds |
 | AC-50 | Successful recording rejects any other resultingRevision | PASS | Throws error |
 | AC-51 | Successful recording returns immutable fresh update | PASS | Original registry untouched, new null-prototype returned |
 | AC-52 | Original registry unchanged after new successful record | PASS | Verified in `gameplay-admission.test.ts` |
 | AC-53 | Original envelope unchanged after recording | PASS | Verified in `gameplay-admission.test.ts` |
 | AC-54 | Recording preserves null-prototype safety | PASS | `Object.getPrototypeOf(reg) === null` |
 | AC-55 | Re-recording exact same successful request/result is idempotent | PASS | No-op return |
-| AC-56 | Re-recording same actionId with different request rejected as conflict | PASS | Throws error |
-| AC-57 | Re-recording same actionId with different resultingRevision rejected | PASS | Throws error |
+| AC-56 | Re-recording same actionId with different request rejected as conflict | PASS | Throws `Action ID conflict` |
+| AC-57 | Re-recording same actionId with different resultingRevision rejected as conflict | PASS | Throws `Action ID conflict` (AC-57 mandatory proof) |
 | AC-58 | Rejected admission never creates a processed-action record | PASS | Evaluator is pure read-only function |
 | AC-59 | No RoomAuthorityState revision mutation during admission evaluation | PASS | Verified |
 | AC-60 | No Game Core command is dispatched | PASS | Pure admission layer only |
@@ -144,9 +152,9 @@ As required by ADR-006 and AC-18..22:
 | AC-69 | package-lock.json remains unchanged | PASS | 0 changes to package-lock.json |
 | AC-70 | `npm ci` passes with zero unexpected tracked-file impact | PASS | Clean workspace |
 | AC-71 | `npm run typecheck` passes | PASS | All configured workspaces pass |
-| AC-72 | `npm test` passes | PASS | 304 tests passed across 19 test files |
+| AC-72 | `npm test` passes | PASS | 305 tests passed across 19 test files |
 | AC-73 | room-runtime direct typecheck passes | PASS | `tsc --noEmit` PASS |
-| AC-74 | room-runtime direct tests pass | PASS | 53 tests / 3 files PASS |
+| AC-74 | room-runtime direct tests pass | PASS | 54 tests / 3 files PASS |
 | AC-75 | game-core direct typecheck/tests pass | PASS | 251 tests / 16 files PASS |
 | AC-76 | Evidence maps all ACs and duplicate-before-stale ordering proof | PASS | Complete Evidence document |
 | AC-77 | Evidence states persistence/concurrency/Core dispatch/auth deferred | PASS | Section 5 explicitly details deferred items |
@@ -167,9 +175,9 @@ As required by ADR-006 and AC-18..22:
 
 ### `npm test`
 - Total Test Files: 19 passed (19)
-- Total Tests: 304 passed (304)
+- Total Tests: 305 passed (305)
   - `game-core`: 16 test files / 251 tests PASS
-  - `room-runtime`: 3 test files / 53 tests PASS (7 room-state, 16 gameplay-protocol, 30 gameplay-admission)
+  - `room-runtime`: 3 test files / 54 tests PASS (7 room-state, 16 gameplay-protocol, 31 gameplay-admission)
 - Exit code: 0
 
 ---

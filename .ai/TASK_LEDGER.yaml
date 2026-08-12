@@ -1424,8 +1424,8 @@ tasks:
   T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION:
     title: Revision, Idempotency & Turn Admission
     stage: STAGE-04
-    status: IN_PROGRESS
-    implementation_commit: 87cd63313500c059e900cfe2dd357fad31d2bab0
+    status: IMPLEMENTED
+    implementation_commit: 7379f52ff4dacf891fea44cfc79cc08e426a4261
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent ADR-006 authority layer that combines actionId retry/idempotency admission, stale expectedRevision rejection, current turnId validation, and monotonic +1 revision primitive for one successful client gameplay commit.
