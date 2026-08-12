@@ -5,8 +5,9 @@
 - **Task-Start Commit**: `ad653c69edae336cf264a8282649b03cee163928`
 - **Initial Implementation Commit**: `df242ba38c1fdd274a9eb52c8cf445c0a99c36aa`
 - **Initial Evidence/State Commit**: `6914965ca2af0def2fd36b3fe03a61128131b3d5`
-- **Correction Reopen Commit**: `1371fe77b47e2ef306ed961fefcd893ff29ed8fb`
-- **Correction Implementation Commit**: `01418074dcefa29b71f0df4aeaa887c2b64d4204`
+- **Correction Reopen Commit**: `1371fe7412cd8f83106b3fc3d6b7afac853fa503`
+- **Authoritative Correction Implementation Commit**: `0141807c91205d71639532367e651875020eef2a`
+- **Correction Evidence/State Before Metadata Reconciliation**: `836679eb5ded66211336e85720f7976ce41ca8d4`
 
 ---
 
