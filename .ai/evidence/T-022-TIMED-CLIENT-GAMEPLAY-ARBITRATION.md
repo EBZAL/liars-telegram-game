@@ -2,8 +2,9 @@
 
 ## Task Identity & Git Commit Chain
 - **Task ID**: `T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION`
-- **Task-Start Commit**: `8c45e089d8f3769c0d3810ec510444391da4dd38`
+- **Task-Start Commit**: `8c45e088c1745bde40e754d1133c5a137d15b0d2`
 - **Authoritative Implementation Commit**: `0ab99f6423216a3214d9628a7ba89ab7de820685`
+- **Evidence/State Before Metadata Reconciliation**: `f86601c5f76b8c8513ffbcb0b707a907ad3b157d`
 
 ---
 
