@@ -2,8 +2,9 @@
 
 ## Task Identity & Git Commit Chain
 - **Task ID**: `T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION`
-- **Task-Start Commit**: `7fda6a75afcff7df21469e3d93708e1762c2f602`
-- **Implementation Commit**: `f1bb532fea5283687c2472d837921484f3683a52`
+- **Task-Start Commit**: `7fda6a76580735d8ef4440a675cb5a457b536a28`
+- **Authoritative Implementation Commit**: `f1bb532fea5283687c2472d837921484f3683a52`
+- **Evidence/State Before Metadata Reconciliation**: `e40969bc535d5c876a40ebf8c6ee11754a003174`
 
 ---
 
