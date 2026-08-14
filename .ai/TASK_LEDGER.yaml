@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
-active_task: null
+active_task: T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -127,6 +127,7 @@ stages:
       - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
       - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
       - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -1869,6 +1870,157 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION:
+    title: Turn Deadline Authority Foundation
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative Turn Deadline state foundation required before SYSTEM_TIMEOUT execution or Cloudflare alarm integration, establishing exact 30-second active-turn deadline arming, canonical TURN_DEADLINE activeAlarm metadata, one-active-alarm state enforcement, deadline/alarm coherence validation, deterministic DUE/NOT_DUE evaluation, and stale-generation fail-closed behavior.
+    dependencies:
+      - T-001-DOMAIN-FOUNDATION
+      - T-002-MATCH-ROUND-INITIALIZATION
+      - T-003-PLAY-RULE-PRIMITIVES
+      - T-004-TURN-ACTION-ELIGIBILITY
+      - T-005-PLAY-CARDS-STATE-TRANSITION
+      - T-006-CHALLENGE-RESOLUTION-PRIMITIVES
+      - T-007-ROULETTE-SHOT-RESOLUTION
+      - T-008-NEXT-ROUND-INITIALIZATION
+      - T-009-CALL-LIAR-MATCH-TRANSITION
+      - T-010-FORCED-CALL-PLAY-ORCHESTRATION
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-012-TWO-PLAYER-FLOW-HARDENING
+      - T-013-THREE-PLAYER-FLOW-HARDENING
+      - T-014-FOUR-PLAYER-FLOW-HARDENING
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-016-INVARIANT-PROPERTY-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent turn-deadline module exists.
+      - AC-02: Public timing primitives exported from room-runtime.
+      - AC-03: TURN duration is exactly 30_000 ms.
+      - AC-04: No configurable/client turn duration exists.
+      - AC-05: No client timestamp is trusted.
+      - AC-06: No timing field added to GameplayActionEnvelope.
+      - AC-07: authoritativeNowMs is server-only input.
+      - AC-08: Date.now is not used.
+      - AC-09: Math.random is not used.
+      - AC-10: crypto entropy is not used.
+      - AC-11: RandomSource is not used.
+      - AC-12: Arming rejects non-safe/non-integer authoritativeNowMs.
+      - AC-13: Arming rejects negative authoritativeNowMs.
+      - AC-14: Arming guards dueAt safe-integer overflow.
+      - AC-15: Arming requires MATCH_ACTIVE.
+      - AC-16: Arming requires non-null Match.
+      - AC-17: Arming requires Core Match IN_PROGRESS.
+      - AC-18: Arming requires winnerId null.
+      - AC-19: Arming requires non-null/non-blank currentTurnId.
+      - AC-20: Arming requires currentTurnDeadline null.
+      - AC-21: Arming requires activeAlarm null.
+      - AC-22: Existing TURN_DEADLINE cannot be silently overwritten.
+      - AC-23: Existing HOST_GRACE cannot be silently overwritten.
+      - AC-24: Existing ROOM_RETENTION cannot be silently overwritten.
+      - AC-25: Armed deadline equals authoritativeNowMs + 30_000.
+      - AC-26: Armed activeAlarm.kind = TURN_DEADLINE.
+      - AC-27: Armed activeAlarm.dueAt equals currentTurnDeadline.
+      - AC-28: Armed activeAlarm.generation equals Room revision.
+      - AC-29: Arming does not increment Room revision.
+      - AC-30: Arming preserves roomId.
+      - AC-31: Arming preserves lifecycle MATCH_ACTIVE.
+      - AC-32: Arming preserves members.
+      - AC-33: Arming preserves hostPlayerId.
+      - AC-34: Arming preserves Match reference/content.
+      - AC-35: Arming preserves currentTurnId.
+      - AC-36: Arming returns a fresh Room state.
+      - AC-37: Input Room state not mutated.
+      - AC-38: Input Match not mutated.
+      - AC-39: Input Hands not mutated.
+      - AC-40: Deadline evaluator exists.
+      - AC-41: Evaluator validates authoritativeNowMs.
+      - AC-42: Coherent active deadline at now < dueAt returns NOT_DUE.
+      - AC-43: Coherent active deadline at now == dueAt returns DUE.
+      - AC-44: Coherent active deadline at now > dueAt returns DUE.
+      - AC-45: LOBBY returns NOT_APPLICABLE.
+      - AC-46: MATCH_PAUSED_NO_LIVING_CONNECTIONS returns NOT_APPLICABLE.
+      - AC-47: MATCH_FINISHED returns NOT_APPLICABLE.
+      - AC-48: ABANDONED returns NOT_APPLICABLE.
+      - AC-49: Active state with null deadline is INVALID_STATE.
+      - AC-50: Active state with null activeAlarm is INVALID_STATE.
+      - AC-51: Active state with wrong alarm kind is INVALID_STATE.
+      - AC-52: activeAlarm.dueAt mismatch is INVALID_STATE.
+      - AC-53: activeAlarm.generation mismatch is INVALID_STATE.
+      - AC-54: Invalid revision is rejected/fails closed.
+      - AC-55: Active state with null currentTurnId is INVALID_STATE.
+      - AC-56: Active state with blank currentTurnId is INVALID_STATE.
+      - AC-57: Active state with null Match is INVALID_STATE.
+      - AC-58: Active state with finished Core Match is INVALID_STATE.
+      - AC-59: Active state with winnerId non-null is INVALID_STATE.
+      - AC-60: Stale alarm generation never returns DUE.
+      - AC-61: Wrong alarm kind never returns DUE.
+      - AC-62: Deadline/alarm mismatch never returns DUE.
+      - AC-63: Evaluator does not mutate Room state.
+      - AC-64: Evaluator does not mutate Match.
+      - AC-65: Evaluator does not modify revision.
+      - AC-66: No Core transition is dispatched.
+      - AC-67: applySystemTimeout is not called.
+      - AC-68: applyPlayCardsCommand is not called.
+      - AC-69: applyCallLiar is not called.
+      - AC-70: No card is selected.
+      - AC-71: No SYSTEM_TIMEOUT client action type added.
+      - AC-72: No synthetic actionId created.
+      - AC-73: T-020 executeClientGameplayTransaction remains unchanged.
+      - AC-74: T-020 client transaction behavior remains unchanged.
+      - AC-75: T-020 one-command/one-revision behavior remains unchanged.
+      - AC-76: T-020 continuing commit can be armed without another revision.
+      - AC-77: T-020 finished commit cannot be armed.
+      - AC-78: One active alarm state invariant explicitly tested.
+      - AC-79: Revision-as-TURN_DEADLINE-generation rule explicitly tested.
+      - AC-80: Same-revision timing-completion boundary documented.
+      - AC-81: Evidence explicitly says timing completion must later be composed atomically with durable persistence.
+      - AC-82: No Durable Object provider API introduced.
+      - AC-83: No SQLite/persistence introduced.
+      - AC-84: No WebSocket introduced.
+      - AC-85: No provider alarm scheduling introduced.
+      - AC-86: No alarm handler introduced.
+      - AC-87: No alarm retry implementation introduced.
+      - AC-88: No client-vs-timeout arbitration introduced.
+      - AC-89: No SYSTEM_TIMEOUT Room orchestration introduced.
+      - AC-90: No presence accounting introduced.
+      - AC-91: No Pause/Resume implementation introduced.
+      - AC-92: No host-grace behavior introduced.
+      - AC-93: No retention behavior introduced.
+      - AC-94: No projections/T27 implementation claimed.
+      - AC-95: No game-core source change.
+      - AC-96: No game-core test change.
+      - AC-97: No package changes.
+      - AC-98: No package-lock changes.
+      - AC-99: No external dependency changes.
+      - AC-100: T-017/T-018/T-019/T-020 regression remains PASS.
+      - AC-101: npm ci passes.
+      - AC-102: npm run typecheck passes.
+      - AC-103: npm test passes.
+      - AC-104: room-runtime direct typecheck passes.
+      - AC-105: room-runtime direct tests pass.
+      - AC-106: game-core direct typecheck/tests pass unchanged.
+      - AC-107: Evidence maps AC-01 through AC-106.
+      - AC-108: Evidence records exact due boundary (< deadline NOT_DUE, == deadline DUE, > deadline DUE).
+      - AC-109: Evidence records stale generation fail-closed proof.
+      - AC-110: Evidence records wrong alarm-kind fail-closed proof.
+      - AC-111: Evidence records T-020 continuing state -> timing armed with same revision.
+      - AC-112: Evidence records finished T-020 state cannot be armed.
+      - AC-113: Evidence explicitly records provider alarm execution as deferred.
+      - AC-114: Evidence explicitly records client-vs-timeout arbitration as deferred.
+      - AC-115: Evidence explicitly records SYSTEM_TIMEOUT dispatch as deferred.
+      - AC-116: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
