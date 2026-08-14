@@ -2,7 +2,7 @@
 
 ## Task Identity & Git Commit Chain
 - **Task ID**: `T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION`
-- **Task-Start Commit**: `27b6f27b9525287f3408a28f731a57e3c1a329d4`
+- **Task-Start Commit**: `27b6f27fab3f3c7838b54d86038a417b359eada9`
 - **Authoritative Implementation Commit**: `50a9480fd9185460d47991859bd7ea906176ec75`
 
 ---
