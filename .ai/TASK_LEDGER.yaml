@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
-active_task: null
+active_task: T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -128,6 +128,7 @@ stages:
       - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
       - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
       - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2033,6 +2034,144 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION:
+    title: Timed Client Gameplay Arbitration
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent timed CLIENT gameplay transaction boundary that composes T-019 server actor authorization/idempotency + T-020 authoritative client gameplay commit + T-021 authoritative deadline evaluation/arming.
+    dependencies:
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+    acceptance_criteria:
+      - AC-01: Dedicated timed client gameplay transaction module exists.
+      - AC-02: Public timed API exported from room-runtime.
+      - AC-03: Existing executeClientGameplayTransaction remains exported.
+      - AC-04: Existing T-020 source remains unchanged.
+      - AC-05: Existing T-021 source remains unchanged.
+      - AC-06: GameplayActionEnvelope remains unchanged.
+      - AC-07: No SYSTEM_TIMEOUT client action type added.
+      - AC-08: No client timestamp field added.
+      - AC-09: authoritativeNowMs remains server-only input.
+      - AC-10: Timed API delegates initial request evaluation to evaluateServerGameplayActionRequest.
+      - AC-11: Authorization rules are not manually reimplemented.
+      - AC-12: DUPLICATE is returned before deadline evaluation.
+      - AC-13: Exact retry after deadline remains DUPLICATE.
+      - AC-14: Exact retry after turn/revision advance remains DUPLICATE.
+      - AC-15: DUPLICATE preserves priorResultingRevision.
+      - AC-16: DUPLICATE performs no Core dispatch.
+      - AC-17: DUPLICATE consumes no RandomSource.
+      - AC-18: DUPLICATE does not validate preparedNextTurn.
+      - AC-19: REJECT is returned before deadline arbitration.
+      - AC-20: REJECT preserves exact T-019 reason.
+      - AC-21: Non-member after deadline remains ACTOR_NOT_MEMBER.
+      - AC-22: Cross-actor actionId collision after deadline remains ACTION_ID_CONFLICT.
+      - AC-23: Rejected traffic does not trigger timeout.
+      - AC-24: Rejected traffic does not mutate Room state.
+      - AC-25: Rejected traffic does not consume RandomSource.
+      - AC-26: Only previously unseen T-019 ACCEPTed action reaches deadline evaluation.
+      - AC-27: Deadline evaluation delegates to evaluateTurnDeadlineDueState.
+      - AC-28: Valid accepted command at deadline - 1 may commit.
+      - AC-29: Valid accepted command at exact deadline returns DEADLINE_DUE.
+      - AC-30: Valid accepted command after deadline returns DEADLINE_DUE.
+      - AC-31: DEADLINE_DUE causes zero Core dispatch.
+      - AC-32: DEADLINE_DUE causes zero Room revision change.
+      - AC-33: DEADLINE_DUE creates zero processed action records.
+      - AC-34: DEADLINE_DUE does not rotate currentTurnId.
+      - AC-35: DEADLINE_DUE consumes zero RandomSource.
+      - AC-36: DEADLINE_DUE does not require valid preparedNextTurn.
+      - AC-37: DEADLINE_DUE does not clear old deadline.
+      - AC-38: DEADLINE_DUE does not clear old activeAlarm.
+      - AC-39: DEADLINE_DUE explicitly means client lost authority, not timeout committed.
+      - AC-40: Timing INVALID_STATE fails closed before T-020 dispatch.
+      - AC-41: Timing NOT_APPLICABLE after T-019 ACCEPT fails closed as invariant error.
+      - AC-42: NOT_DUE accepted command delegates mutation to executeClientGameplayTransaction.
+      - AC-43: Timed layer does not manually reproduce Core PLAY rules.
+      - AC-44: Timed layer does not manually reproduce CALL rules.
+      - AC-45: Ordinary PLAY before deadline reaches COMMITTED.
+      - AC-46: Legal CALL before deadline reaches COMMITTED.
+      - AC-47: Before-deadline COMMITTED Room revision = old revision + 1.
+      - AC-48: Processed record resultingRevision = new Room revision.
+      - AC-49: Exactly one processed client action record is added.
+      - AC-50: Continuing COMMITTED result is armed using armActiveTurnDeadline.
+      - AC-51: New deadline = authoritativeNowMs + 30000.
+      - AC-52: New activeAlarm.kind = TURN_DEADLINE.
+      - AC-53: New activeAlarm.dueAt = new currentTurnDeadline.
+      - AC-54: New activeAlarm.generation = resultingRevision.
+      - AC-55: Arming next turn adds zero extra revision.
+      - AC-56: One accepted client command remains exactly one Room revision increment.
+      - AC-57: Old consumed deadline is not preserved after COMMITTED.
+      - AC-58: Old consumed activeAlarm is not preserved after COMMITTED.
+      - AC-59: New currentTurnId is T-020 prepared next turn ID.
+      - AC-60: New deadline uses server transaction time, not old deadline.
+      - AC-61: No oldDeadline + 30000 calculation.
+      - AC-62: Match-finished T-020 result is not re-armed.
+      - AC-63: Finished lifecycle remains MATCH_FINISHED.
+      - AC-64: Finished currentTurnId remains null.
+      - AC-65: Finished currentTurnDeadline remains null.
+      - AC-66: Finished activeAlarm remains null.
+      - AC-67: Unexpected T-020 REJECT after preflight ACCEPT fails closed.
+      - AC-68: Unexpected T-020 DUPLICATE after preflight ACCEPT fails closed.
+      - AC-69: No SYSTEM_TIMEOUT Core API is called.
+      - AC-70: No timeout Card is selected.
+      - AC-71: No synthetic system actionId exists.
+      - AC-72: No system processed record exists.
+      - AC-73: No provider alarm API is called.
+      - AC-74: No Durable Object is implemented.
+      - AC-75: No SQLite/persistence is implemented.
+      - AC-76: No actual concurrency serialization is implemented.
+      - AC-77: No presence accounting is implemented.
+      - AC-78: No Pause/Resume is implemented.
+      - AC-79: No Telegram auth/session work is implemented.
+      - AC-80: No projection/T27 implementation is claimed.
+      - AC-81: REJECT path does not mutate inputs.
+      - AC-82: DUPLICATE path does not mutate inputs.
+      - AC-83: DEADLINE_DUE path does not mutate inputs.
+      - AC-84: TIMING_INVALID_STATE path does not mutate inputs.
+      - AC-85: COMMITTED preserves T-020/T-021 immutability.
+      - AC-86: No hidden Card rank/value metadata added to result.
+      - AC-87: COMMITTED Room state documented as internal server state, not safe broadcast.
+      - AC-88: No Date.now introduced.
+      - AC-89: No performance.now introduced.
+      - AC-90: No Math.random introduced.
+      - AC-91: No crypto entropy introduced.
+      - AC-92: Only supplied gameplay RandomSource reaches T-020/Core.
+      - AC-93: T-017 regression remains PASS.
+      - AC-94: T-018 regression remains PASS.
+      - AC-95: T-019 regression remains PASS.
+      - AC-96: T-020 regression remains PASS.
+      - AC-97: T-021 regression remains PASS.
+      - AC-98: No game-core source changes.
+      - AC-99: No game-core test changes.
+      - AC-100: No package changes.
+      - AC-101: No package-lock changes.
+      - AC-102: No external dependencies.
+      - AC-103: npm ci passes.
+      - AC-104: npm run typecheck passes.
+      - AC-105: npm test passes.
+      - AC-106: room-runtime direct typecheck passes.
+      - AC-107: room-runtime direct tests pass.
+      - AC-108: game-core direct typecheck/tests pass unchanged.
+      - AC-109: Evidence maps AC-01 through AC-108.
+      - AC-110: Evidence proves exact deadline boundary (-1ms COMMITTED, exact DEADLINE_DUE, +1ms DEADLINE_DUE).
+      - AC-111: Evidence proves duplicate-after-deadline remains DUPLICATE.
+      - AC-112: Evidence proves unauthorized-after-deadline remains authorization REJECT.
+      - AC-113: Evidence proves DEADLINE_DUE zero mutation/zero RNG.
+      - AC-114: Evidence proves continuing client commit receives new 30-second armed deadline at same resulting revision.
+      - AC-115: Evidence explicitly states SYSTEM_TIMEOUT execution remains deferred.
+      - AC-116: Evidence explicitly states provider alarm execution remains deferred.
+      - AC-117: Evidence distinguishes client deadline arbitration from system timeout mutation.
+      - AC-118: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
