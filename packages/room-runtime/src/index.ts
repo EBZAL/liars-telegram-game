@@ -8,3 +8,5 @@ export * from './timed-gameplay-transaction.js';
 export * from './system-timeout-transaction.js';
 export * from './presence.js';
 export * from './presence-lifecycle.js';
+export * from './system-timeout-presence-lifecycle.js';
+
