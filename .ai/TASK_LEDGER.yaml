@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
-active_task: null
+active_task: T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -135,6 +135,7 @@ stages:
       - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
       - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
       - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
+      - T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3199,6 +3200,266 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION:
+    title: Recipient-Specific Hidden-Information Projection
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STRICT
+    risk_level: HIGH
+    objective: Implement the smallest provider-independent recipient-specific authoritative Room snapshot projection boundary that closes GAME_RULES T27 and GAME_RULES §24 invariant I29.
+    dependencies:
+      - T-016-INVARIANT-PROPERTY-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+      - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent recipient projection module exists.
+      - AC-02: Projection API exported from room-runtime.
+      - AC-03: ServerResolvedRecipient semantic context exists.
+      - AC-04: Recipient context contains only server-resolved Player identity.
+      - AC-05: No GameplayActionEnvelope recipient field added.
+      - AC-06: Result discriminates PROJECTED.
+      - AC-07: Result discriminates REJECT.
+      - AC-08: Invalid recipient context fails closed.
+      - AC-09: Non-member recipient fails closed.
+      - AC-10: Reject result contains no projection.
+      - AC-11: Reject result contains no hidden information.
+      - AC-12: PublicRoomProjection is an explicit whitelist DTO.
+      - AC-13: PublicMatchProjection is an explicit whitelist DTO.
+      - AC-14: PublicPlayerProjection is an explicit whitelist DTO.
+      - AC-15: PublicRoundProjection is an explicit whitelist DTO.
+      - AC-16: Private recipient projection is an explicit whitelist DTO.
+      - AC-17: Private Card DTO contains only id + rank.
+      - AC-18: No output DTO embeds raw RoomAuthorityState.
+      - AC-19: No output DTO embeds raw MatchState.
+      - AC-20: No output DTO embeds raw PlayerState.
+      - AC-21: No output DTO embeds raw RoundState.
+      - AC-22: No output DTO embeds raw PlayState.
+      - AC-23: No output DTO embeds raw RevolverState.
+      - AC-24: No output DTO embeds ActiveRoomAlarm.
+      - AC-25: No broad raw Room object spread.
+      - AC-26: No broad raw Match object spread.
+      - AC-27: No broad raw Player object spread.
+      - AC-28: No broad raw Round object spread.
+      - AC-29: No broad raw previousPlay spread.
+      - AC-30: No broad raw Revolver spread.
+      - AC-31: No broad raw Card spread.
+      - AC-32: No JSON stringify/parse copy of raw authority for projection.
+      - AC-33: No structuredClone of raw authority for projection.
+      - AC-34: Public Room includes roomId.
+      - AC-35: Public Room includes lifecycle.
+      - AC-36: Public Room includes revision.
+      - AC-37: Public Room includes member Player IDs.
+      - AC-38: Public Room preserves deterministic member ordering.
+      - AC-39: Public Room includes hostPlayerId.
+      - AC-40: Public Room includes currentTurnId.
+      - AC-41: Public Room includes currentTurnDeadline.
+      - AC-42: Public Room excludes activeAlarm.
+      - AC-43: Public Room excludes raw RoomMember objects.
+      - AC-44: Public Match includes status.
+      - AC-45: Public Match includes seatOrder.
+      - AC-46: Public Match preserves seatOrder ordering.
+      - AC-47: Public Match includes public Player array.
+      - AC-48: Public Match includes public Round.
+      - AC-49: Public Match includes winnerId.
+      - AC-50: Public Match excludes firstRoundStarter.
+      - AC-51: Public Match excludes raw players Record.
+      - AC-52: Public Player includes playerId.
+      - AC-53: Public Player includes lifeStatus.
+      - AC-54: Public Player includes handCount.
+      - AC-55: handCount derives from authoritative hand.length.
+      - AC-56: Public Player includes shotsUsed.
+      - AC-57: shotsUsed derives from revolver.nextShotIndex.
+      - AC-58: Public Player excludes Hand values.
+      - AC-59: Public Player excludes raw hand.
+      - AC-60: Public Player excludes roundStatus.
+      - AC-61: Public Player excludes Revolver object.
+      - AC-62: Public Player excludes Revolver sequence.
+      - AC-63: Public Round includes roundNumber.
+      - AC-64: Public Round includes tableRank.
+      - AC-65: Public Round includes currentPlayerId.
+      - AC-66: Public Round includes previousPlay summary.
+      - AC-67: previousPlay summary includes playerId.
+      - AC-68: previousPlay summary includes count.
+      - AC-69: previousPlay summary includes claimedRank.
+      - AC-70: previousPlay summary excludes playId.
+      - AC-71: previousPlay summary excludes cardIds.
+      - AC-72: previousPlay summary excludes resolved.
+      - AC-73: Public Round excludes centralPile.
+      - AC-74: Public Round excludes undealtCards.
+      - AC-75: Public Round excludes playSequence.
+      - AC-76: Living recipient receives own current Hand.
+      - AC-77: Living recipient own Hand card IDs preserved.
+      - AC-78: Living recipient own Hand card ranks preserved.
+      - AC-79: Living recipient Hand ordering preserved.
+      - AC-80: Own projected Cards are explicitly cloned.
+      - AC-81: Own projected Card future properties do not leak.
+      - AC-82: Living recipient does not receive another Living Hand.
+      - AC-83: Living recipient does not receive Eliminated stale Hand.
+      - AC-84: Living recipient does not receive undealt cards.
+      - AC-85: Living recipient does not receive Central Pile values.
+      - AC-86: Living recipient does not receive previousPlay.cardIds.
+      - AC-87: Living recipient does not receive any Revolver future sequence.
+      - AC-88: Eliminated recipient privateState is null.
+      - AC-89: Eliminated recipient receives no own stale Hand.
+      - AC-90: Eliminated recipient receives no Living Hand.
+      - AC-91: Eliminated recipient receives no undealt card values.
+      - AC-92: Eliminated recipient receives no Central Pile values.
+      - AC-93: Eliminated recipient receives no previousPlay.cardIds.
+      - AC-94: Eliminated recipient receives no future Revolver sequence.
+      - AC-95: GAME_RULES T27 direct test passes.
+      - AC-96: GAME_RULES invariant I29 direct test passes.
+      - AC-97: Public state for p1/p2/eliminated p3 is deep-equal.
+      - AC-98: Recipient differences exist only in privateState.
+      - AC-99: Living p1 projection contains only p1 Hand.
+      - AC-100: Living p2 projection contains only p2 Hand.
+      - AC-101: Eliminated p3 projection contains no private Hand.
+      - AC-102: Undealt Card IDs absent from serialized Living projection.
+      - AC-103: Undealt Card IDs absent from serialized Eliminated projection.
+      - AC-104: Central Pile Card IDs absent from serialized Living projection.
+      - AC-105: Central Pile Card IDs absent from serialized Eliminated projection.
+      - AC-106: previousPlay card IDs absent from serialized Living projection.
+      - AC-107: previousPlay card IDs absent from serialized Eliminated projection.
+      - AC-108: Other-Player Hand Card IDs absent.
+      - AC-109: Eliminated stale Hand Card IDs absent.
+      - AC-110: Hidden future Revolver sequence key absent.
+      - AC-111: Public snapshot exposes no exact key hand.
+      - AC-112: Eliminated entire projection exposes no exact key hand.
+      - AC-113: Living projection permits exact key hand only at privateState.hand.
+      - AC-114: revolver key absent from public/entire transport.
+      - AC-115: sequence key absent.
+      - AC-116: undealtCards key absent.
+      - AC-117: centralPile key absent.
+      - AC-118: cardIds key absent.
+      - AC-119: playId key absent.
+      - AC-120: playSequence key absent.
+      - AC-121: firstRoundStarter key absent.
+      - AC-122: activeAlarm key absent.
+      - AC-123: futureRoomSecretCanary does not leak.
+      - AC-124: futureMatchSecretCanary does not leak.
+      - AC-125: futurePlayerSecretCanary does not leak.
+      - AC-126: futureRoundSecretCanary does not leak.
+      - AC-127: futurePlaySecretCanary does not leak.
+      - AC-128: futureRevolverSecretCanary does not leak.
+      - AC-129: futureCardSecretCanary does not leak.
+      - AC-130: Whitelist remains safe against synthetic unknown source fields.
+      - AC-131: Recipient membership check uses Room authority.
+      - AC-132: Non-null Match recipient must be an actual Match Player.
+      - AC-133: Match Player lookup is own-property/prototype-safe.
+      - AC-134: seatOrder lookup is prototype-safe.
+      - AC-135: Room member IDs validated for uniqueness.
+      - AC-136: seatOrder IDs validated for uniqueness.
+      - AC-137: Match seat set and Room member set coherence validated.
+      - AC-138: Match player id/key coherence validated.
+      - AC-139: State mismatch fails closed.
+      - AC-140: Projection does not silently repair Room/Match state.
+      - AC-141: __proto__ Player ID direct case passes.
+      - AC-142: constructor Player ID direct case passes.
+      - AC-143: toString Player ID direct case passes.
+      - AC-144: Projection uses no unsafe playerId-keyed ordinary output map.
+      - AC-145: LOBBY member projection works with match null.
+      - AC-146: LOBBY privateState null.
+      - AC-147: LOBBY contradictory Match fails closed.
+      - AC-148: MATCH_ACTIVE requires Match.
+      - AC-149: MATCH_ACTIVE requires active Core status/winner semantics.
+      - AC-150: MATCH_PAUSED requires Match.
+      - AC-151: MATCH_PAUSED preserves same hidden isolation.
+      - AC-152: MATCH_FINISHED requires Match.
+      - AC-153: MATCH_FINISHED never makes other Hands public.
+      - AC-154: Eliminated recipient in MATCH_FINISHED remains Public only.
+      - AC-155: ABANDONED does not invent new hidden-public policy.
+      - AC-156: Revolver nextShotIndex may be exposed only as public progress.
+      - AC-157: Revolver sequence remains hidden from its owner.
+      - AC-158: Revolver sequence remains hidden from other Living Players.
+      - AC-159: Revolver sequence remains hidden from Eliminated spectators.
+      - AC-160: Face-down previousPlay values remain hidden in snapshot.
+      - AC-161: previousPlay actor does not receive cardIds via snapshot projection.
+      - AC-162: Challenge/reveal event transport is not implemented.
+      - AC-163: No raw Core transaction result is designated transport-safe.
+      - AC-164: No raw Room transaction result is designated transport-safe.
+      - AC-165: Projection output detached from Room members.
+      - AC-166: Projection output detached from seatOrder.
+      - AC-167: Projection output detached from public Player DTO source objects.
+      - AC-168: Projection private Hand array detached from authoritative Hand.
+      - AC-169: Projection private Cards detached from authoritative Cards.
+      - AC-170: Mutating projection via test cast does not mutate Room.
+      - AC-171: Mutating projection via test cast does not mutate Match.
+      - AC-172: Mutating projection via test cast does not mutate Hands.
+      - AC-173: Same Room + same recipient produces deterministic deep-equal projection.
+      - AC-174: No RandomSource.
+      - AC-175: No authoritativeNowMs.
+      - AC-176: No Date.now.
+      - AC-177: No performance.now.
+      - AC-178: No Math.random.
+      - AC-179: No crypto entropy.
+      - AC-180: No Room revision mutation.
+      - AC-181: No nextRoomRevision call.
+      - AC-182: No lifecycle mutation.
+      - AC-183: No Core transition.
+      - AC-184: No deadline mutation.
+      - AC-185: No activeAlarm mutation.
+      - AC-186: No presence mutation.
+      - AC-187: No action-dedupe mutation.
+      - AC-188: No WebSocket.
+      - AC-189: No broadcast/send implementation.
+      - AC-190: No Cloudflare Worker.
+      - AC-191: No Durable Object.
+      - AC-192: No wrangler.
+      - AC-193: No SQLite/persistence.
+      - AC-194: No provider alarm API.
+      - AC-195: No reconnect orchestration.
+      - AC-196: No Telegram authentication.
+      - AC-197: No initData parsing.
+      - AC-198: No external spectator support.
+      - AC-199: GameplayActionEnvelope unchanged.
+      - AC-200: RoomAuthorityState unchanged.
+      - AC-201: MatchState unchanged.
+      - AC-202: PlayerState unchanged.
+      - AC-203: RoundState unchanged.
+      - AC-204: PlayState unchanged.
+      - AC-205: Card shape unchanged.
+      - AC-206: No game-core source change.
+      - AC-207: No game-core test change.
+      - AC-208: No existing room-runtime authority source change except index export.
+      - AC-209: No package change.
+      - AC-210: No package-lock change.
+      - AC-211: No external dependency.
+      - AC-212: T-016 regression remains PASS.
+      - AC-213: T-017 regression remains PASS.
+      - AC-214: T-025 regression remains PASS.
+      - AC-215: T-026 regression remains PASS.
+      - AC-216: T-027 regression remains PASS.
+      - AC-217: T-028 regression remains PASS.
+      - AC-218: npm ci PASS.
+      - AC-219: npm run typecheck PASS.
+      - AC-220: npm test PASS.
+      - AC-221: room-runtime direct typecheck PASS.
+      - AC-222: room-runtime direct tests PASS.
+      - AC-223: game-core direct typecheck/tests PASS unchanged.
+      - AC-224: Evidence maps AC-01 through AC-223 individually.
+      - AC-225: Evidence records direct GAME_RULES T27 proof.
+      - AC-226: Evidence records I29 closure proof.
+      - AC-227: Evidence records Living p1/p2 isolation proof.
+      - AC-228: Evidence records Eliminated stale-Hand defense proof.
+      - AC-229: Evidence records undealt/Pile/previousPlay isolation.
+      - AC-230: Evidence records Revolver sequence isolation.
+      - AC-231: Evidence records whitelist future-canary proof.
+      - AC-232: Evidence records hostile identifier proof.
+      - AC-233: Evidence records projection detachment proof.
+      - AC-234: Evidence records no raw authority output.
+      - AC-235: Evidence records no transport/provider implementation.
+      - AC-236: Evidence explicitly defers challenge/reveal event DTO.
+      - AC-237: Evidence explicitly requires future network transport to use a reviewed projection boundary.
+      - AC-238: Evidence records STRICT security review controls.
+      - AC-239: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: HIGH
+      Workflow Profile: STRICT
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
