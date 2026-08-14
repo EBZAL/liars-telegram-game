@@ -2038,7 +2038,8 @@ tasks:
   T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION:
     title: Timed Client Gameplay Arbitration
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 0ab99f6423216a3214d9628a7ba89ab7de820685
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent timed CLIENT gameplay transaction boundary that composes T-019 server actor authorization/idempotency + T-020 authoritative client gameplay commit + T-021 authoritative deadline evaluation/arming.
