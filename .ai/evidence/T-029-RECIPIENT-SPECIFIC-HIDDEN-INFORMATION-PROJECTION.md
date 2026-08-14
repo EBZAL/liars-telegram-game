@@ -6,7 +6,11 @@
 - **Risk Level**: `HIGH`
 - **Base Commit**: `a91540a74c4813b27d9d57990c8d538447a37394`
 - **Task Start Commit**: `5d299950342e67658ad5e14549c086207d733e5b`
-- **Implementation Commit**: `f8b1ec9987610af44f1d600553cc8161f08e8be5`
+- **Original Implementation Commit**: `f8b1ec9987610af44f1d600553cc8161f08e8be5`
+- **Architect Verification Decision**: `RETURN_TO_EXECUTOR`
+- **Correction Reason**: Public projection incorrectly narrowed authoritative nullable hostPlayerId.
+- **Correction Implementation Commit**: `3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58`
+- **Authoritative Implementation Commit for Verification**: `3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58`
 
 ---
 
@@ -28,6 +32,7 @@ It closes:
 - `previousPlay count/player != previousPlay.cardIds`
 - `own current Hand != permission to see other hidden Cards`
 - `Eliminated spectator = Public State only (privateState === null)`
+- `authoritative nullable hostPlayerId preserved (null -> null, string -> string)`
 
 ---
 
@@ -110,7 +115,7 @@ export interface PublicRoomProjection {
   lifecycle: RoomLifecycle;
   revision: number;
   memberPlayerIds: string[];
-  hostPlayerId: string;
+  hostPlayerId: string | null;
   currentTurnId: string | null;
   currentTurnDeadline: number | null;
   match: PublicMatchProjection | null;
@@ -194,6 +199,13 @@ export interface RecipientRoomProjection {
 - Pure derived projection function: 0 RNG calls, 0 Date/time calls, 0 Room mutations, 0 revisions added.
 - Same input + recipient produces deep-equal output repeatedly.
 - **Verdict**: PASS.
+
+### J. Nullable Host Verification Proofs (Correction Suite)
+- **LOBBY with null Host**: Verified `roomState.hostPlayerId === null` in LOBBY produces `publicState.hostPlayerId === null`, `privateState === null`. (Verdict: PASS).
+- **ABANDONED with null Host**: Verified `roomState.hostPlayerId === null` in ABANDONED produces `publicState.hostPlayerId === null`, `privateState === null`. (Verdict: PASS).
+- **Non-null Host**: Verified existing string host (`'p1'`) is preserved in `publicState.hostPlayerId`. (Verdict: PASS).
+- **Malformed Host**: Verified empty string (`''`), whitespace (`'   '`), and non-string runtime types (`123`) reject fail-closed with `INVALID_ROOM_STATE`. (Verdict: PASS).
+- **Security Regression under null Host**: Verified null-host Room with retained Match preserves exact same Living own-Hand isolation, Eliminated `privateState === null`, and 0 leakage of other Hands, Revolver sequences, undealt cards, or central pile cards. (Verdict: PASS).
 
 ---
 
@@ -463,6 +475,6 @@ export interface RecipientRoomProjection {
 
 ## 6. Final Regression Summary
 - **Total Test Files**: 30 (14 in `room-runtime`, 16 in `game-core`)
-- **Total Tests**: 562 passed (311 in `room-runtime`, 251 in `game-core`)
+- **Total Tests**: 567 passed (316 in `room-runtime`, 251 in `game-core`)
 - **Typecheck**: All workspaces clean (0 errors)
 - **Status**: IMPLEMENTED

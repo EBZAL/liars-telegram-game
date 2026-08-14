@@ -3205,7 +3205,7 @@ tasks:
     title: Recipient-Specific Hidden-Information Projection
     stage: STAGE-04
     status: IMPLEMENTED
-    implementation_commit: f8b1ec9987610af44f1d600553cc8161f08e8be5
+    implementation_commit: 3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Implement the smallest provider-independent recipient-specific authoritative Room snapshot projection boundary that closes GAME_RULES T27 and GAME_RULES §24 invariant I29.
