@@ -633,6 +633,38 @@
 - latest regression 470 tests / 28 files PASS
 - room-runtime 219 tests / 12 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN VERIFIED
+- pure provider-independent alarm planning PASS
+- Room→provider authority direction PASS
+- final-state-only synchronization PASS
+- T-021 ACTIVE coherence delegation PASS
+- ACTIVE provider missing → SET PASS
+- ACTIVE provider drift → SET authoritative dueAt PASS
+- ACTIVE provider match → NO_CHANGE PASS
+- PAUSED stale provider alarm → DELETE PASS
+- PAUSED provider clear → NO_CHANGE PASS
+- Finished stale provider deadline → DELETE PASS
+- T-027 COMMITTED_ACTIVE final sync PASS
+- T-027 COMMITTED_PAUSED final sync PASS
+- T-027 intermediate alarm not synchronized PASS
+- T-026 ACTIVE/PAUSED/FINISHED final sync PASS
+- T-025 Resume fresh alarm sync PASS
+- drift-repair SET/DELETE semantics PASS
+- zero Room revision for provider sync PASS
+- durable kind/dueAt/generation identity remains Room-owned PASS
+- timestamp-only provider observation PASS
+- equal dueAt / changed durable identity → no provider timestamp operation PASS
+- future HOST_GRACE metadata sync compatibility PASS
+- future ROOM_RETENTION metadata sync compatibility PASS
+- HOST_GRACE producer semantics deferred PASS
+- ROOM_RETENTION producer semantics deferred PASS
+- no provider API implementation PASS
+- no Worker/wrangler scaffold PASS
+- no Durable Object/SQLite/WebSocket PASS
+- no package/dependency changes PASS
+- latest regression 537 tests / 29 files PASS
+- room-runtime 286 tests / 13 files PASS
+- game-core 251 tests / 16 files unchanged
 
 
 

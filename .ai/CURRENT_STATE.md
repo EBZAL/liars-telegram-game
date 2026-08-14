@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
 
 **Current Active Task:**
 None
@@ -2551,16 +2551,190 @@ T27 remains mandatory STAGE-04 security work.
   - evidence/state: 901a75645164f4abdb1cff904f2dc420db1fe79b
   - evidence metadata reconciliation: 0eef168dde99b5f727115d0b56f6b5acfa6d740c
 
-**Explicitly NOT IMPLEMENTED BY T-027:**
-- provider alarm synchronization
-- provider alarm handler
-- Durable Object serialization
-- SQLite atomic persistence/reload
+- T-028 Final-State Provider Alarm Synchronization Plan VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Architecture:
+  - provider-independent pure planning layer
+  - RoomAuthorityState.activeAlarm remains authoritative durable desired metadata
+  - provider scheduled timestamp is derived external wake-up state
+  - authority direction strictly: FINAL Room state → provider synchronization intent
+  - provider observation never mutates Room state
+- API:
+  deriveProviderAlarmSyncPlan(
+    finalRoomState,
+    observedProviderAlarmDueAt
+  )
+- Provider observation:
+  number | null
+- Result decisions:
+  - NO_CHANGE
+  - SET_ALARM
+  - DELETE_ALARM
+  - INVALID_STATE
+- SET_ALARM payload:
+  - dueAt only
+  - no kind
+  - no generation
+  - no hidden gameplay data
+- FINAL-state-only contract:
+  - planner consumes final composed Room state
+  - not T-022/T-023 intermediate active state
+  - T-027 intermediate next-turn alarm may be cleared by T-025 Pause before sync
+  - T-026 intermediate next-turn alarm may likewise be cleared before sync
+  - only final authoritative activeAlarm determines provider intent
+- MATCH_ACTIVE:
+  - coherence validation delegates to T-021
+  - deterministic validation sentinel = 0
+  - T-021 NOT_DUE/DUE accepted
+  - T-021 INVALID_STATE/NOT_APPLICABLE rejected
+  - desired dueAt = final activeAlarm.dueAt
+  - provider null → SET_ALARM
+  - provider mismatched timestamp → SET_ALARM authoritative dueAt
+  - provider matching timestamp → NO_CHANGE
+  - zero Room revision
+- MATCH_PAUSED_NO_LIVING_CONNECTIONS:
+  - requires currentTurnDeadline null
+  - requires activeAlarm null
+  - provider timestamp present → DELETE_ALARM
+  - provider null → NO_CHANGE
+  - stale Room timing/alarm metadata → INVALID_STATE
+- LOBBY:
+  - requires currentTurnDeadline null
+  - null activeAlarm supported
+  - structurally valid HOST_GRACE supported
+  - TURN_DEADLINE rejected
+  - ROOM_RETENTION rejected
+  - T-028 does not create HOST_GRACE
+  - T-028 does not calculate 60-second Host grace
+  - Host migration remains deferred
+- MATCH_FINISHED:
+  - requires currentTurnDeadline null
+  - null activeAlarm supported
+  - structurally valid ROOM_RETENTION supported
+  - TURN_DEADLINE/HOST_GRACE rejected
+  - current T-026/T-027 finished results with null alarm remain valid
+  - stale provider timeout timestamp → DELETE_ALARM
+  - T-028 does not invent retention metadata
+  - T-028 does not calculate 24-hour retention
+- ABANDONED:
+  - requires currentTurnDeadline null
+  - null activeAlarm supported
+  - structurally valid ROOM_RETENTION supported
+  - TURN_DEADLINE/HOST_GRACE rejected
+  - abandonment/retention producer policy deferred
+- Non-turn alarm validation:
+  - HOST_GRACE / ROOM_RETENTION dueAt safe integer >=0
+  - generation safe integer >=0
+  - no new generation==revision semantic invented for these future alarm kinds
+- Generic reconciliation:
+  - desired null + observed null → NO_CHANGE
+  - desired null + observed timestamp → DELETE_ALARM
+  - desired timestamp + observed null → SET_ALARM
+  - desired timestamp differs from observed → SET_ALARM authoritative timestamp
+  - desired timestamp equals observed → NO_CHANGE
+  - exactly one intent maximum
+- Alarm identity:
+  - kind/dueAt/generation remain durable Room identity
+  - provider observation is timestamp-only
+  - equal provider dueAt requires no timestamp operation even if durable kind/generation identity changed
+  - provider timestamp does not encode alarm identity
+- T-027 integration:
+  - final COMMITTED_ACTIVE old provider 31000 / final deadline 32000 → SET_ALARM 32000
+  - matching final provider deadline → NO_CHANGE
+  - final COMMITTED_PAUSED + old provider deadline → DELETE_ALARM
+  - final COMMITTED_PAUSED + hypothetical T-022 intermediate deadline → DELETE_ALARM
+  - proves final state wins
+- T-026 integration:
+  - COMMITTED_ACTIVE synchronizes final TURN_DEADLINE
+  - COMMITTED_PAUSED synchronizes final null alarm
+  - COMMITTED_FINISHED synchronizes final null alarm
+  - stale provider deadline removed for Pause/Finish
+- T-025 Resume:
+  - exact Living 0→1 Resume
+  - fresh active deadline = resumeTime +30000
+  - provider null → SET_ALARM fresh deadline
+  - sync adds zero Room revisions
+- Drift repair:
+  - Room desired alarm / provider null → SET_ALARM
+  - Room desired alarm / provider wrong timestamp → SET_ALARM authoritative dueAt
+  - Room no alarm / provider stale timestamp → DELETE_ALARM
+  - provider drift repair never mutates Room revision
+- Purity:
+  - zero Room revision
+  - no nextRoomRevision
+  - no lifecycle mutation
+  - no Match mutation
+  - no members mutation
+  - no turnId mutation
+  - no deadline mutation
+  - no activeAlarm mutation
+  - no processed-action registry mutation
+- Time/randomness:
+  - no authoritativeNowMs parameter
+  - no Date.now
+  - no performance.now
+  - no Math.random
+  - no crypto entropy
+  - past dueAt is synchronized as authoritative metadata, not rewritten
+- Security:
+  - no client alarm authority
+  - no client dueAt authority
+  - GameplayActionEnvelope unchanged
+  - no hidden Match data emitted
+  - no recipient projection
+  - GAME_RULES T27 remains mandatory/deferred
+- Provider boundary:
+  - no Worker scaffold
+  - no wrangler
+  - no storage.setAlarm
+  - no storage.getAlarm
+  - no storage.deleteAlarm
+  - no alarm() handler
+  - no Durable Object
+  - no WebSocket
+- Persistence boundary:
+  - no SQLite
+  - no reload/recovery orchestration
+  - no durable atomicity claim
+  - no crash ordering implementation
+  - no actual concurrency serialization
+  - durable Room activeAlarm remains authority for future reconciliation
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 537 tests / 29 files
+  - room-runtime: 286 tests / 13 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core source/test changes.
+- No existing authority source changes except index export addition.
+- Git metadata:
+  - authoritative T-028 task-start: 5f9c361567fffef26a9886364e3748980e30cd30
+  - implementation: 2f1d7dd20c8efc1f39efaa8f5c55751b5c3a0154
+  - evidence/state: b8ca279880f4ab4546fb90b2b6af1b0a4f0214c2
+
+**Explicitly NOT IMPLEMENTED BY T-028:**
+- Cloudflare Worker scaffold
+- wrangler configuration
+- concrete provider alarm adapter
+- storage.setAlarm/getAlarm/deleteAlarm execution
+- alarm() handler
+- Durable Object
+- SQLite persistence/reload
+- persist-vs-alarm crash ordering
 - actual concurrency serialization
-- WebSocket/reconnect orchestration
-- Telegram authentication/session
-- recipient-specific hidden-information projections
-- T27
+- WebSocket/reconnect
+- HOST_GRACE producer
+- Host migration
+- ROOM_RETENTION producer
+- 24-hour retention calculation
+- Telegram auth/session
+- recipient-specific projections
+- GAME_RULES T27
 
 T27 remains mandatory STAGE-04 security work.
 
@@ -2571,7 +2745,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-027 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-028 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2592,4 +2766,5 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-027 verification State Sync. No T-028 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-028 verification State Sync. No T-029 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+
