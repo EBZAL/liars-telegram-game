@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
-active_task: T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+last_verified_task: T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -2821,20 +2821,20 @@ tasks:
   T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION:
     title: Client Gameplay Presence Lifecycle Composition
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 50a9480fd9185460d47991859bd7ea906176ec75
     verification:
-      decision: NOT_EVALUATED
-      verified_implementation_commit: null
+      decision: VERIFIED
+      verified_implementation_commit: 50a9480fd9185460d47991859bd7ea906176ec75
       evidence:
         - .ai/evidence/T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION.md
       architect_review:
-        contract_review: NOT_EVALUATED
-        architecture_review: NOT_EVALUATED
-        security_review: NOT_EVALUATED
-        quality_review: NOT_EVALUATED
-        risk_controls: NOT_EVALUATED
-        regression_impact: NOT_EVALUATED
+        contract_review: PASS
+        architecture_review: PASS
+        security_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative composition layer that executes VERIFIED T-022 timed client gameplay and, only after a successful continuing gameplay commit, reconciles the resulting Match using VERIFIED T-025 zero-Living Pause semantics. Establish exact client retry/revision contract when a successful client gameplay action is immediately followed by a separate ACTIVE → PAUSED lifecycle transition.

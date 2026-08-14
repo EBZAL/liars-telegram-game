@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
 
 **Current Active Task:**
 None
@@ -2405,18 +2405,161 @@ T27 remains mandatory STAGE-04 security work.
 - No game-core changes.
 - No T-023/T-024/T-025 source changes.
 
-**Explicitly NOT IMPLEMENTED BY T-026:**
-- client T-020/T-022 presence lifecycle composition
-- client retry/final-revision contract after lifecycle Pause
+- T-027 Client Gameplay Presence Lifecycle Composition VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Composition ordering:
+  1. T-022 timed client gameplay first
+  2. REJECT / DUPLICATE / DEADLINE_DUE pass through
+  3. MATCH_FINISHED has absolute precedence
+  4. continuing MATCH_ACTIVE delegates to T-025 zero-Living Pause reconciliation
+- Non-COMMITTED:
+  - exact REJECT reason preserved
+  - DUPLICATE priorResultingRevision preserved
+  - DEADLINE_DUE preserved
+  - no Pause reconciliation
+  - no additional Room revision
+  - no additional RNG
+  - no processed registry mutation
+- COMMITTED_ACTIVE:
+  - client gameplay Core transition N → N+1
+  - actionResultingRevision = N+1
+  - finalResultingRevision = N+1
+  - Room revision = N+1
+  - processed record resultingRevision = N+1
+  - lifecycle MATCH_ACTIVE
+  - prepared next turnId preserved
+  - deadline = authoritativeNowMs + 30000
+  - alarm generation = N+1
+  - zero extra lifecycle revision
+- COMMITTED_PAUSED:
+  - client gameplay transition N → N+1
+  - T-025 Pause transition N+1 → N+2
+  - exactly two total Room revisions
+  - actionResultingRevision = N+1
+  - finalResultingRevision = N+2
+  - final Room revision = N+2
+  - processed action record resultingRevision remains N+1
+  - processed registry is exactly the T-022 returned registry
+  - no re-recording
+  - no third revision
+  - lifecycle MATCH_PAUSED_NO_LIVING_CONNECTIONS
+  - T-022 resulting Match preserved
+  - prepared next turnId preserved
+  - final deadline null
+  - final activeAlarm null
+  - intermediate T-022 alarm does not survive Pause
+- Historical duplicate revision contract:
+  - priorResultingRevision means the revision produced by the already-successful client action
+  - it is NOT the latest/current Room revision
+  - after action→Pause, priorResultingRevision may be N+1 while Room is N+2
+  - after later Resume, priorResultingRevision remains N+1 while Room is N+3
+  - authoritative current Room revision must come from Room state/resync
+- Exact retry after Pause:
+  - final Room revision N+2
+  - original expectedRevision N
+  - exact original actionId/envelope → DUPLICATE
+  - priorResultingRevision = N+1
+  - not N+2
+  - zero Core
+  - zero RNG
+  - zero revision
+  - zero Pause
+  - zero timing mutation
+- Exact retry after Resume:
+  - Room may be N+3
+  - same historical action → DUPLICATE
+  - priorResultingRevision still N+1
+  - no deadline reset
+  - no lifecycle mutation
+- ActionId conflict precedence:
+  - same actionId with modified request → ACTION_ID_CONFLICT
+  - conflict precedes stale revision
+  - conflict precedes MATCH_NOT_ACTIVE
+  - conflict precedes turn mismatch
+- Unseen action against final Paused Room:
+  - expectedRevision N+1 vs current N+2 → STALE_REVISION
+  - expectedRevision N+2 → MATCH_NOT_ACTIVE
+- This proves:
+  historical action result revision != current authoritative Room revision.
+- Post-action elimination reconciliation:
+  - same presence registry may remain unchanged
+  - successful client Core transition can change ALIVE→ELIMINATED
+  - if only connected Living Player becomes Eliminated
+  - Match remains IN_PROGRESS
+  - other Living Players remain disconnected
+  - connectedLivingPlayers becomes zero
+  - final result COMMITTED_PAUSED
+- Current Player/global presence:
+  - current/acting Player disconnect/elimination alone does not force Pause if another Living Player remains connected
+  - T-024 global unique Living semantics remain authority
+- Finished precedence:
+  - gameplay-produced MATCH_FINISHED → COMMITTED_FINISHED
+  - actionResultingRevision = finalResultingRevision = N+1
+  - processed record revision = N+1
+  - winner preserved
+  - no Pause lifecycle revision
+  - currentTurnId null
+  - deadline null
+  - activeAlarm null
+  - winner never becomes PAUSED
+- Deadline arbitration:
+  - before deadline unseen valid client may commit
+  - at deadline → DEADLINE_DUE
+  - after deadline → DEADLINE_DUE
+  - DEADLINE_DUE creates no processed record
+  - DEADLINE_DUE does not invoke Pause
+  - exact duplicate keeps duplicate precedence over deadline arbitration
+- Resume compatibility:
+  - COMMITTED_PAUSED N+2
+  - exact Living 0→1 Resume → N+3
+  - same prepared next turnId
+  - fresh resumeTime +30000 deadline
+  - alarm generation N+3
+  - historical processed record remains N+1
+- Security:
+  - no client presence authority
+  - no client Pause authority
+  - no client final revision override
+  - GameplayActionEnvelope unchanged
+  - no recipient projection
+  - no hidden state added to processed records
+  - T27 remains mandatory/deferred
+- Provider boundary:
+  - no WebSocket
+  - no Durable Object
+  - no SQLite
+  - no storage alarm API
+  - no persistence
+  - no actual concurrency
+  - no client resync transport
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 470 tests / 28 files
+  - room-runtime: 219 tests / 12 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core changes.
+- No existing authority source changes.
+- Git metadata:
+  - authoritative T-027 task-start: 27b6f27fab3f3c7838b54d86038a417b359eada9
+  - implementation: 50a9480fd9185460d47991859bd7ea906176ec75
+  - evidence/state: 901a75645164f4abdb1cff904f2dc420db1fe79b
+  - evidence metadata reconciliation: 0eef168dde99b5f727115d0b56f6b5acfa6d740c
+
+**Explicitly NOT IMPLEMENTED BY T-027:**
 - provider alarm synchronization
 - provider alarm handler
-- Durable Object
-- SQLite persistence/reload
-- durable atomic persistence
+- Durable Object serialization
+- SQLite atomic persistence/reload
 - actual concurrency serialization
-- WebSocket/reconnect
-- Telegram auth/session
-- recipient-specific projections
+- WebSocket/reconnect orchestration
+- Telegram authentication/session
+- recipient-specific hidden-information projections
 - T27
 
 T27 remains mandatory STAGE-04 security work.
@@ -2428,7 +2571,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-026 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-027 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2449,4 +2592,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-026 verification State Sync. No T-027 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-027 verification State Sync. No T-028 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.

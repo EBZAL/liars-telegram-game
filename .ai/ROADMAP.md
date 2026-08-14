@@ -603,6 +603,37 @@
 - latest regression 455 tests / 27 files PASS
 - room-runtime 204 tests / 11 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION VERIFIED
+- T-022-first client composition ordering PASS
+- REJECT pass-through PASS
+- DUPLICATE pass-through PASS
+- DEADLINE_DUE pass-through PASS
+- Finished-before-Pause precedence PASS
+- continuing gameplay → T-025 reconciliation PASS
+- one-revision COMMITTED_ACTIVE PASS
+- two-revision COMMITTED_PAUSED PASS
+- no third revision PASS
+- processed action record remains action revision N+1 PASS
+- final paused Room revision N+2 distinct from record N+1 PASS
+- historical priorResultingRevision semantics PASS
+- exact duplicate after Pause returns historical N+1 PASS
+- exact duplicate after Resume still returns historical N+1 PASS
+- ACTION_ID_CONFLICT precedence after Pause PASS
+- unseen stale-vs-paused ordering PASS
+- same-registry post-gameplay ALIVE→ELIMINATED Pause PASS
+- global unique Living semantics preserved PASS
+- winner never converted to PAUSED PASS
+- exact/after deadline DEADLINE_DUE PASS
+- duplicate precedence over deadline arbitration PASS
+- Resume compatibility PASS
+- no idempotency-record rewrite PASS
+- no existing authority source modifications PASS
+- no provider/persistence/concurrency implementation PASS
+- corrected authoritative task-start metadata PASS
+- latest regression 470 tests / 28 files PASS
+- room-runtime 219 tests / 12 files PASS
+- game-core 251 tests / 16 files unchanged
+
 
 
 ## STAGE-05 — Telegram Integration
