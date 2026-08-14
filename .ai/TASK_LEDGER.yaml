@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
-active_task: null
+active_task: T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -130,6 +130,7 @@ stages:
       - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
       - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
       - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2333,6 +2334,138 @@ tasks:
       - AC-116: Evidence explicitly distinguishes pure alarm identity from provider API.
       - AC-117: Evidence explicitly distinguishes system timeout event from client actionId registry.
       - AC-118: Evidence explicitly records provider/persistence/concurrency as deferred.
+  T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION:
+    title: Unique Living Presence Foundation
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authenticated Room presence foundation required before Pause/Resume and provider alarm integration. Establish server-authenticated connection registry semantics, unique connection identity, multiple sockets per Player, prototype-safe immutable register/unregister behavior, unique connected Room-member accounting, unique connected Living-player accounting, Eliminated spectator exclusion from connectedLivingPlayers, deterministic internal presence summaries, and zero Room revision/lifecycle/deadline mutation from raw presence noise.
+    dependencies:
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+      - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent presence module exists.
+      - AC-02: Presence API exported from room-runtime.
+      - AC-03: Server-authenticated connection type exists.
+      - AC-04: Presence registry is separate from RoomAuthorityState.
+      - AC-05: RoomAuthorityState shape unchanged.
+      - AC-06: GameplayActionEnvelope unchanged.
+      - AC-07: connectionId non-empty validation.
+      - AC-08: playerId non-empty validation.
+      - AC-09: registration requires Room membership.
+      - AC-10: non-member registration fails closed.
+      - AC-11: exact duplicate registration is idempotent.
+      - AC-12: duplicate registration does not create second connection.
+      - AC-13: one connectionId cannot belong to two Players.
+      - AC-14: cross-player connectionId collision fails closed.
+      - AC-15: collision does not steal connection.
+      - AC-16: one Player may own multiple unique connections.
+      - AC-17: unregister removes only exact connection.
+      - AC-18: unregister one of multiple connections keeps Player connected.
+      - AC-19: unregister final connection disconnects Player.
+      - AC-20: missing exact unregister is idempotent.
+      - AC-21: cross-player unregister conflict fails closed.
+      - AC-22: cross-player unregister cannot remove victim connection.
+      - AC-23: registry implementation is prototype-safe.
+      - AC-24: playerId "__proto__" supported safely.
+      - AC-25: playerId "constructor" supported safely.
+      - AC-26: connectionId "__proto__" supported safely.
+      - AC-27: connectionId "constructor" supported safely.
+      - AC-28: connected member IDs derived only from Room members.
+      - AC-29: one Player with multiple sockets appears once in connected members.
+      - AC-30: connected member ordering follows Room membership/join order.
+      - AC-31: Match null → connectedLivingPlayers 0.
+      - AC-32: Match null may still report connected Room members.
+      - AC-33: ALIVE connected Player counts as Living.
+      - AC-34: ALIVE Player with 2+ sockets counts exactly once.
+      - AC-35: ALIVE disconnected Player does not count.
+      - AC-36: ELIMINATED connected Player does not count.
+      - AC-37: Eliminated spectator connections may remain tracked.
+      - AC-38: Eliminated spectator never increases connectedLivingPlayers.
+      - AC-39: lifeStatus is the Living authority.
+      - AC-40: roundStatus WITH_CARDS does not independently determine life.
+      - AC-41: roundStatus EMPTY_PENDING_CHALLENGE with ALIVE still counts.
+      - AC-42: roundStatus EMPTY_SAFE with ALIVE still counts.
+      - AC-43: hand length is not Living-presence authority.
+      - AC-44: Host status does not bypass lifeStatus.
+      - AC-45: Living Host counts normally.
+      - AC-46: Eliminated Host does not count Living.
+      - AC-47: current-player identity does not control overall Living count.
+      - AC-48: disconnected current Player + connected other Living Player → count >0.
+      - AC-49: connectedLivingPlayers equals connectedLivingPlayerIds.length.
+      - AC-50: connectedLivingPlayerIds contain no duplicates.
+      - AC-51: connectedLivingPlayerIds deterministic by Room order.
+      - AC-52: summary is internal server data.
+      - AC-53: summary is not recipient projection.
+      - AC-54: no spectator projection implemented.
+      - AC-55: no hidden information included in presence summary.
+      - AC-56: register does not mutate Room.
+      - AC-57: unregister does not mutate Room.
+      - AC-58: evaluation does not mutate Room.
+      - AC-59: register does not mutate input registry.
+      - AC-60: unregister does not mutate input registry.
+      - AC-61: evaluator does not mutate registry.
+      - AC-62: input connection object not mutated.
+      - AC-63: raw connect causes zero Room revision.
+      - AC-64: raw disconnect causes zero Room revision.
+      - AC-65: duplicate connect causes zero Room revision.
+      - AC-66: duplicate disconnect causes zero Room revision.
+      - AC-67: no nextRoomRevision call.
+      - AC-68: no lifecycle mutation.
+      - AC-69: no MATCH_ACTIVE→PAUSED implementation.
+      - AC-70: no PAUSED→MATCH_ACTIVE implementation.
+      - AC-71: no deadline clearing.
+      - AC-72: no deadline re-arming.
+      - AC-73: no activeAlarm mutation.
+      - AC-74: no Core transition.
+      - AC-75: no gameplay transaction dispatch.
+      - AC-76: no SYSTEM_TIMEOUT dispatch.
+      - AC-77: no processed gameplay record.
+      - AC-78: no RandomSource required.
+      - AC-79: no Date.now.
+      - AC-80: no performance.now.
+      - AC-81: no Math.random.
+      - AC-82: no crypto entropy.
+      - AC-83: no WebSocket implementation.
+      - AC-84: no Durable Object implementation.
+      - AC-85: no SQLite/persistence implementation.
+      - AC-86: no provider alarm API.
+      - AC-87: no reconnect orchestration.
+      - AC-88: no Telegram authentication implementation.
+      - AC-89: task assumes identity already authenticated/server-resolved.
+      - AC-90: no client-supplied presence count authority.
+      - AC-91: no client-supplied lifeStatus authority.
+      - AC-92: T27 remains deferred.
+      - AC-93: T-017 regression remains PASS.
+      - AC-94: T-019 regression remains PASS.
+      - AC-95: T-021 regression remains PASS.
+      - AC-96: T-022 regression remains PASS.
+      - AC-97: T-023 regression remains PASS.
+      - AC-98: no game-core source changes.
+      - AC-99: no game-core test changes.
+      - AC-100: no package changes.
+      - AC-101: no package-lock changes.
+      - AC-102: no external dependencies.
+      - AC-103: npm ci PASS.
+      - AC-104: npm run typecheck PASS.
+      - AC-105: npm test PASS.
+      - AC-106: room-runtime direct typecheck PASS.
+      - AC-107: room-runtime direct tests PASS.
+      - AC-108: game-core direct typecheck/tests PASS unchanged.
+      - AC-109: Evidence records exact multi-socket unique-player proof.
+      - AC-110: Evidence records final-socket disconnect proof.
+      - AC-111: Evidence records Eliminated spectator exclusion proof.
+      - AC-112: Evidence records ALIVE empty-round-status presence proof.
+      - AC-113: Evidence records prototype-safe hostile identifiers.
+      - AC-114: Evidence records zero revision/lifecycle/timing mutation.
+      - AC-115: Evidence explicitly states Pause/Resume remains deferred.
+      - AC-116: Evidence explicitly states provider/WebSocket integration remains deferred.
+      - AC-117: Evidence distinguishes authenticated presence facts from authentication.
+      - AC-118: Evidence distinguishes internal presence summary from recipient projection.
       - AC-119: Task ends IMPLEMENTED only, never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
