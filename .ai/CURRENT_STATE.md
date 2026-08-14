@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
 
 **Current Active Task:**
 None
@@ -1786,23 +1786,157 @@ T27 remains mandatory STAGE-04 security work.
 - No room-state changes.
 - No gameplay-protocol changes.
 - No gameplay-transaction changes.
+- T-022 Timed Client Gameplay Arbitration VERIFIED
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Composition:
+  - T-019 authorization/idempotency
+  - T-021 authoritative deadline evaluation
+  - T-020 authoritative gameplay commit
+  - T-021 next-turn re-arm
+- Mandatory ordering:
+  1. evaluateServerGameplayActionRequest
+  2. DUPLICATE early return
+  3. REJECT early return
+  4. evaluateTurnDeadlineDueState
+  5. DUE → DEADLINE_DUE
+  6. NOT_DUE → executeClientGameplayTransaction
+  7. continuing Match → armActiveTurnDeadline
+  8. finished Match → no re-arm
+- DUPLICATE precedence:
+  - exact successful retry wins over deadline arbitration
+  - retry after deadline remains DUPLICATE
+  - retry after revision/turn advance remains DUPLICATE
+  - priorResultingRevision preserved
+  - no deadline evaluation required
+  - no preparedNextTurn validation
+  - no Core dispatch
+  - no gameplay randomness
+- Authorization precedence:
+  - rejected traffic remains rejected before timing arbitration
+  - non-member after deadline → ACTOR_NOT_MEMBER
+  - cross-actor actionId collision after deadline → ACTION_ID_CONFLICT
+  - stale revision remains STALE_REVISION
+  - unauthorized traffic does not reveal/trigger timeout state
+- Deadline policy:
+  - authoritativeNowMs < currentTurnDeadline → client may commit
+  - authoritativeNowMs == currentTurnDeadline → DEADLINE_DUE
+  - authoritativeNowMs > currentTurnDeadline → DEADLINE_DUE
+  - no grace period
+  - no client timestamp authority
+- DEADLINE_DUE semantics:
+  - means client authority for that turn expired
+  - does NOT mean SYSTEM_TIMEOUT committed
+  - no Core dispatch
+  - no Room revision change
+  - no processed action record
+  - no turn rotation
+  - no RandomSource consumption
+  - no prepared-next-turn validation
+  - old deadline remains unchanged
+  - old activeAlarm remains unchanged
+- Before-deadline COMMITTED behavior:
+  - delegates mutation to verified T-020
+  - ordinary PLAY supported
+  - legal CALL_LIAR supported
+  - Room revision increments exactly once
+  - one processed client action record
+  - processed resultingRevision equals Room revision
+  - continuing Match installs prepared next turn
+  - consumed old timing metadata cleared by T-020
+  - T-021 arms fresh next-turn deadline
+- Next-turn timing:
+  - new deadline = authoritativeNowMs + 30000
+  - not oldDeadline + 30000
+  - activeAlarm.kind = TURN_DEADLINE
+  - activeAlarm.dueAt = new deadline
+  - activeAlarm.generation = resultingRevision
+  - arming adds zero extra revision
+- One-command/one-revision:
+  - one successful client command = exactly one Room revision increment
+  - T-021 timing completion retains that resulting revision
+  - no extra revision for re-arm
+- Match finish:
+  - successful winning client command remains COMMITTED
+  - lifecycle = MATCH_FINISHED
+  - winnerId present
+  - currentTurnId = null
+  - currentTurnDeadline = null
+  - activeAlarm = null
+  - no next-turn re-arm
+- Timing coherence:
+  - INVALID_STATE after T-019 ACCEPT fails closed before T-020
+  - NOT_APPLICABLE after T-019 ACCEPT treated as invariant failure
+  - no silent repair
+- Purity:
+  - non-COMMITTED outcomes do not mutate Room
+  - Match not mutated directly by timed layer
+  - Hands not mutated directly
+  - envelope not mutated
+  - actor not mutated
+  - registry not mutated
+  - T-020/T-021 immutable semantics retained on COMMITTED
+- Randomness:
+  - only supplied RandomSource may reach T-020/Core
+  - DUPLICATE consumes zero gameplay randomness
+  - REJECT consumes zero gameplay randomness
+  - DEADLINE_DUE consumes zero gameplay randomness
+  - no Date.now
+  - no performance.now
+  - no Math.random
+  - no crypto entropy
+- SYSTEM_TIMEOUT boundary:
+  - applySystemTimeout not imported
+  - applySystemTimeout not called
+  - no timeout Card selection
+  - no synthetic system actionId
+  - no system processed-action record
+- Provider boundary:
+  - no storage.setAlarm
+  - no storage.getAlarm
+  - no storage.deleteAlarm
+  - no Durable Object alarm handler
+  - no provider scheduling
+- Security/hidden-information boundary:
+  - GameplayActionEnvelope unchanged
+  - no client timestamp/deadline fields
+  - no client SYSTEM_TIMEOUT
+  - no hidden Card-value metadata added to timed result
+  - COMMITTED Room state is internal authoritative server state
+  - not safe broadcast projection
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 386 tests / 23 files
+  - room-runtime: 135 tests / 7 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core source/test changes.
+- No room-state changes.
+- No gameplay-protocol changes.
+- No gameplay-admission changes.
+- No gameplay-authorization changes.
+- No gameplay-transaction changes.
+- No turn-deadline changes.
 
-**Explicitly NOT IMPLEMENTED BY T-021:**
+**Explicitly NOT IMPLEMENTED BY T-022:**
 - SYSTEM_TIMEOUT execution
-- client-vs-timeout arbitration
-- late-client command arbitration
+- system deadline transaction
 - provider alarm scheduling
 - provider alarm handler
-- alarm retries
+- alarm retry/idempotent provider execution
 - Durable Object
 - SQLite persistence/reload
-- durable atomic transaction
-- WebSocket
+- durable atomic persistence
+- actual concurrency serialization
 - presence accounting
 - Pause/Resume
 - life-status-triggered Pause
-- host grace
-- retention alarm behavior
+- WebSocket/reconnect
 - Telegram auth/session
 - recipient-specific projections
 - T27
@@ -1816,7 +1950,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-021 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-022 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1837,4 +1971,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-021 verification State Sync. No T-022 or future task is pre-authorized. Only after successful reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-022 verification State Sync. No T-023 or future implementation task is pre-authorized. Only after successful reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.

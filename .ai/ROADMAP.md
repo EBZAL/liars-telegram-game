@@ -458,6 +458,41 @@
 - latest regression 369 tests / 22 files PASS
 - room-runtime 118 tests / 6 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION VERIFIED
+- provider-independent timed client boundary PASS
+- T-019 preflight delegation PASS
+- DUPLICATE-before-timing precedence PASS
+- duplicate-after-deadline remains DUPLICATE PASS
+- authorization-before-timing precedence PASS
+- non-member-after-deadline ACTOR_NOT_MEMBER PASS
+- cross-actor actionId conflict precedence PASS
+- exact deadline boundary PASS:
+  - before deadline COMMITTED
+  - exact deadline DEADLINE_DUE
+  - after deadline DEADLINE_DUE
+- DEADLINE_DUE zero Core dispatch PASS
+- DEADLINE_DUE zero revision mutation PASS
+- DEADLINE_DUE zero registry mutation PASS
+- DEADLINE_DUE zero turn rotation PASS
+- DEADLINE_DUE zero gameplay RNG PASS
+- DEADLINE_DUE preserves old deadline/alarm PASS
+- DEADLINE_DUE distinguished from SYSTEM_TIMEOUT commit PASS
+- before-deadline PLAY commit PASS
+- before-deadline CALL_LIAR commit PASS
+- one client command = one Room revision PASS
+- processed resultingRevision = Room revision PASS
+- continuing Match fresh 30-second re-arm PASS
+- next deadline uses authoritative transaction time PASS
+- activeAlarm generation = resultingRevision PASS
+- no extra revision from timing arming PASS
+- Match finish no-rearm PASS
+- timing-invalid fail-closed PASS
+- SYSTEM_TIMEOUT not imported/dispatched PASS
+- no provider alarm API PASS
+- metadata reconciliation PASS
+- latest regression 386 tests / 23 files PASS
+- room-runtime 135 tests / 7 files PASS
+- game-core 251 tests / 16 files unchanged
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED
