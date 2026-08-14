@@ -2337,7 +2337,8 @@ tasks:
   T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION:
     title: Unique Living Presence Foundation
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 2e75481c8b81d2ff369e0d84be6bb4ed93acbfe8
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authenticated Room presence foundation required before Pause/Resume and provider alarm integration. Establish server-authenticated connection registry semantics, unique connection identity, multiple sockets per Player, prototype-safe immutable register/unregister behavior, unique connected Room-member accounting, unique connected Living-player accounting, Eliminated spectator exclusion from connectedLivingPlayers, deterministic internal presence summaries, and zero Room revision/lifecycle/deadline mutation from raw presence noise.
