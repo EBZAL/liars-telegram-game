@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
-active_task: null
+active_task: T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -131,6 +131,7 @@ stages:
       - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
       - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
       - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2480,6 +2481,169 @@ tasks:
       - AC-117: Evidence distinguishes authenticated presence facts from authentication.
       - AC-118: Evidence distinguishes internal presence summary from recipient projection.
       - AC-119: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE:
+    title: Living Presence Pause Resume Lifecycle
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative Room lifecycle foundation that composes T-024 Living-presence facts with the existing Room revision and T-021 deadline primitives to establish 1. MATCH_ACTIVE + connectedLivingPlayers == 0 → MATCH_PAUSED_NO_LIVING_CONNECTIONS, 2. MATCH_PAUSED_NO_LIVING_CONNECTIONS + exact Living presence transition 0 → 1 → MATCH_ACTIVE, 3. Pause preserves authoritative gameplay state but increments Room revision exactly once, clears currentTurnDeadline, clears activeAlarm, and preserves currentTurnId, 4. Resume increments Room revision exactly once, preserves the same gameplay turn/state, establishes a completely fresh deadline (authoritativeResumeTimeMs + 30000) and fresh TURN_DEADLINE alarm whose generation equals the resumed Room revision without restoring old remaining time, 5. Eliminated spectator presence cannot Resume and cannot prevent Pause.
+    dependencies:
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+      - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent presence lifecycle module exists.
+      - AC-02: Public APIs exported from room-runtime.
+      - AC-03: RoomAuthorityState shape unchanged.
+      - AC-04: Presence registry remains separate from Room state.
+      - AC-05: GameplayActionEnvelope unchanged.
+      - AC-06: No client PAUSE action added.
+      - AC-07: No client RESUME action added.
+      - AC-08: Pause delegates Living count to evaluateRoomPresence.
+      - AC-09: Pause does not reproduce T-024 counting logic.
+      - AC-10: MATCH_ACTIVE + Living count >0 → NO_CHANGE.
+      - AC-11: NO_CHANGE causes zero revision mutation.
+      - AC-12: NO_CHANGE preserves deadline/alarm.
+      - AC-13: Disconnected current Player with another Living connected remains ACTIVE.
+      - AC-14: Host presence has no special Pause authority.
+      - AC-15: MATCH_ACTIVE + Living count 0 → PAUSED.
+      - AC-16: Pause lifecycle = MATCH_PAUSED_NO_LIVING_CONNECTIONS.
+      - AC-17: Pause increments Room revision exactly once.
+      - AC-18: Pause validates revision before transition.
+      - AC-19: Pause preserves Match.
+      - AC-20: Pause preserves currentTurnId.
+      - AC-21: Pause preserves current Player.
+      - AC-22: Pause preserves Hands.
+      - AC-23: Pause preserves table rank.
+      - AC-24: Pause preserves previousPlay.
+      - AC-25: Pause preserves round state.
+      - AC-26: Pause preserves roulette progress.
+      - AC-27: Pause sets currentTurnDeadline = null.
+      - AC-28: Pause sets activeAlarm = null.
+      - AC-29: Deadline clearing adds no second revision.
+      - AC-30: Alarm clearing adds no second revision.
+      - AC-31: Pause requires coherent active TURN_DEADLINE metadata.
+      - AC-32: Active timing dueAt must equal currentTurnDeadline.
+      - AC-33: Active alarm generation must equal Room revision.
+      - AC-34: Wrong active alarm kind fails closed.
+      - AC-35: Pause does not depend on whether deadline is already due.
+      - AC-36: Pause takes no authoritative wall-clock input.
+      - AC-37: Old timeout trigger after Pause cannot execute SYSTEM_TIMEOUT.
+      - AC-38: Old timeout trigger after Pause consumes zero Core RNG.
+      - AC-39: Paused client gameplay cannot COMMIT through T-022.
+      - AC-40: Pause performs zero Core transition.
+      - AC-41: Pause creates zero gameplay processed records.
+      - AC-42: Pause does not modify presence registry.
+      - AC-43: Resume delegates before/after Living facts to evaluateRoomPresence.
+      - AC-44: Resume does not reproduce T-024 counting logic.
+      - AC-45: Resume applies only to MATCH_PAUSED_NO_LIVING_CONNECTIONS.
+      - AC-46: Paused state requires Match IN_PROGRESS.
+      - AC-47: Paused state requires winnerId null.
+      - AC-48: Paused state preserves non-empty currentTurnId.
+      - AC-49: Paused state requires currentTurnDeadline null.
+      - AC-50: Paused state requires activeAlarm null.
+      - AC-51: Paused Room with retained alarm fails closed.
+      - AC-52: Resume requires exact Living count transition 0→1.
+      - AC-53: 0→0 does not Resume.
+      - AC-54: 1→1 paused-before state fails closed.
+      - AC-55: 1→2 paused-before state fails closed.
+      - AC-56: 0→2 fails closed / does not silently Resume.
+      - AC-57: Eliminated spectator reconnect yields Living 0→0.
+      - AC-58: Eliminated spectator cannot Resume.
+      - AC-59: Eliminated Host cannot Resume.
+      - AC-60: Living Player connection can produce 0→1 Resume.
+      - AC-61: Resume validates authoritativeResumeTimeMs.
+      - AC-62: Resume time safe non-negative integer.
+      - AC-63: Resume deadline overflow rejected before mutation.
+      - AC-64: Resume computes next Room revision before timing arming.
+      - AC-65: Resume increments revision exactly once.
+      - AC-66: Resume lifecycle = MATCH_ACTIVE.
+      - AC-67: Resume preserves Match.
+      - AC-68: Resume preserves currentTurnId.
+      - AC-69: Resume preserves current Player.
+      - AC-70: Resume preserves Hands.
+      - AC-71: Resume preserves table rank.
+      - AC-72: Resume preserves previousPlay.
+      - AC-73: Resume preserves round.
+      - AC-74: Resume preserves roulette progress.
+      - AC-75: Resume uses T-021 armActiveTurnDeadline.
+      - AC-76: Fresh deadline = authoritativeResumeTimeMs + 30000.
+      - AC-77: Fresh deadline does not use old deadline.
+      - AC-78: Fresh deadline does not use old remaining time.
+      - AC-79: New alarm kind = TURN_DEADLINE.
+      - AC-80: New alarm dueAt = new deadline.
+      - AC-81: New alarm generation = resumed resultingRevision.
+      - AC-82: T-021 arming adds zero extra revision.
+      - AC-83: One Resume = one Room revision increment.
+      - AC-84: Additional Living reconnect on active Room is NOT_APPLICABLE.
+      - AC-85: Additional Living reconnect does not reset deadline.
+      - AC-86: Extra socket for already-connected Living Player does not reset deadline.
+      - AC-87: Pause primitive reacts to lifeStatus elimination even with unchanged registry.
+      - AC-88: Resulting in-progress Match with zero connected Living players can Pause.
+      - AC-89: T-020 is not modified for elimination composition.
+      - AC-90: T-023 is not modified for elimination composition.
+      - AC-91: MATCH_FINISHED Pause = NOT_APPLICABLE.
+      - AC-92: MATCH_FINISHED Resume = NOT_APPLICABLE.
+      - AC-93: Winner state never converted to PAUSED.
+      - AC-94: Evidence states Finished precedence over future Pause composition.
+      - AC-95: LOBBY Pause/Resume NOT_APPLICABLE.
+      - AC-96: ABANDONED Pause/Resume NOT_APPLICABLE.
+      - AC-97: No RandomSource required.
+      - AC-98: No Date.now.
+      - AC-99: No performance.now.
+      - AC-100: No Math.random.
+      - AC-101: No crypto entropy.
+      - AC-102: Input Room immutable.
+      - AC-103: Input Match immutable.
+      - AC-104: Input Hands immutable.
+      - AC-105: Input presence registries immutable.
+      - AC-106: No WebSocket implementation.
+      - AC-107: No Durable Object implementation.
+      - AC-108: No provider alarm API.
+      - AC-109: No SQLite/persistence implementation.
+      - AC-110: No actual concurrency implementation.
+      - AC-111: No recipient projection.
+      - AC-112: No client presence authority.
+      - AC-113: No client lifecycle authority.
+      - AC-114: T27 remains deferred.
+      - AC-115: T-021 regression remains PASS.
+      - AC-116: T-022 regression remains PASS.
+      - AC-117: T-023 regression remains PASS.
+      - AC-118: T-024 regression remains PASS.
+      - AC-119: T-017/T-018 regression remains PASS.
+      - AC-120: No game-core source changes.
+      - AC-121: No game-core test changes.
+      - AC-122: No package changes.
+      - AC-123: No package-lock changes.
+      - AC-124: No external dependencies.
+      - AC-125: npm ci PASS.
+      - AC-126: npm run typecheck PASS.
+      - AC-127: npm test PASS.
+      - AC-128: room-runtime direct typecheck PASS.
+      - AC-129: room-runtime direct tests PASS.
+      - AC-130: game-core direct typecheck/tests PASS unchanged.
+      - AC-131: Evidence maps AC-01 through AC-130.
+      - AC-132: Evidence records exact zero-Living Pause proof.
+      - AC-133: Evidence records exact 0→1 Resume proof.
+      - AC-134: Evidence records fresh resume-time +30000 deadline proof.
+      - AC-135: Evidence records old timeout trigger stale after Pause.
+      - AC-136: Evidence records paused client gameplay blocked.
+      - AC-137: Evidence records additional reconnect no timer reset.
+      - AC-138: Evidence records Eliminated reconnect cannot Resume.
+      - AC-139: Evidence records unchanged-registry post-elimination Pause proof.
+      - AC-140: Evidence records Match-finished precedence boundary.
+      - AC-141: Evidence explicitly defers gameplay/presence composition.
+      - AC-142: Evidence explicitly defers WebSocket/provider/persistence integration.
+      - AC-143: Task ends IMPLEMENTED only, never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
