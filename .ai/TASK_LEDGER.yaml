@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
-active_task: null
+active_task: T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -129,6 +129,7 @@ stages:
       - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
       - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
       - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+      - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2180,6 +2181,146 @@ tasks:
       - AC-116: Evidence explicitly states provider alarm execution remains deferred.
       - AC-117: Evidence distinguishes client deadline arbitration from system timeout mutation.
       - AC-118: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION:
+    title: System Timeout Deadline Transaction
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative Room transaction that consumes one exact due TURN_DEADLINE trigger, executes the already VERIFIED Core applySystemTimeout transition exactly once, advances Room revision exactly once, and either arms the next active turn at authoritativeNowMs + 30000 or maps a finished Core Match to MATCH_FINISHED with no turn alarm.
+    dependencies:
+      - T-011-SYSTEM-TIMEOUT-AUTO-PLAY
+      - T-015-SELECTED-UNCONFIRMED-TIMEOUT-HARDENING
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent system-timeout Room transaction exists.
+      - AC-02: API exported from room-runtime.
+      - AC-03: ServerTurnDeadlineTrigger is server-only.
+      - AC-04: Trigger kind must be TURN_DEADLINE.
+      - AC-05: Trigger dueAt safe integer validation.
+      - AC-06: Trigger generation safe integer validation.
+      - AC-07: No client protocol change.
+      - AC-08: No SYSTEM_TIMEOUT client action added.
+      - AC-09: Exact trigger identity checked before timing evaluation.
+      - AC-10: Null current alarm → STALE_ALARM.
+      - AC-11: Wrong current alarm kind → STALE_ALARM.
+      - AC-12: dueAt mismatch → STALE_ALARM.
+      - AC-13: generation mismatch → STALE_ALARM.
+      - AC-14: STALE_ALARM zero Core dispatch.
+      - AC-15: STALE_ALARM zero RNG.
+      - AC-16: STALE_ALARM zero revision mutation.
+      - AC-17: STALE_ALARM does not validate preparedNextTurn.
+      - AC-18: Exact current alarm delegates timing to T-021 evaluator.
+      - AC-19: Exact trigger before due → NOT_DUE.
+      - AC-20: Exact trigger at due → executable DUE.
+      - AC-21: Exact trigger after due → executable DUE.
+      - AC-22: NOT_DUE zero Core dispatch.
+      - AC-23: NOT_DUE zero RNG.
+      - AC-24: NOT_DUE preserves current alarm/deadline.
+      - AC-25: NOT_APPLICABLE produces no Core transition.
+      - AC-26: INVALID_STATE produces no Core transition.
+      - AC-27: DUE validates preparedNextTurn before Core.
+      - AC-28: Invalid prepared next turn consumes zero RNG.
+      - AC-29: nextRoomRevision validated before Core RNG.
+      - AC-30: Revision overflow consumes zero RNG.
+      - AC-31: DUE dispatches exactly applySystemTimeout.
+      - AC-32: No direct applyPlayCardsCommand call.
+      - AC-33: No manual timeout card selection.
+      - AC-34: No manual claim construction.
+      - AC-35: Core derives timedOutPlayerId.
+      - AC-36: Core derives autoPlayedCardId.
+      - AC-37: Core RandomSource forwarded unchanged.
+      - AC-38: Successful timeout increments Room revision exactly once.
+      - AC-39: No processed client action record created.
+      - AC-40: No synthetic actionId created.
+      - AC-41: No client envelope created.
+      - AC-42: Core IN_PROGRESS/winner consistency checked.
+      - AC-43: Core FINISHED/winner consistency checked.
+      - AC-44: Continuing Match lifecycle MATCH_ACTIVE.
+      - AC-45: Continuing Match uses prepared next turnId.
+      - AC-46: Old consumed deadline cleared before re-arm.
+      - AC-47: Old consumed alarm cleared before re-arm.
+      - AC-48: Continuing next deadline = authoritativeNowMs + 30000.
+      - AC-49: New alarm kind TURN_DEADLINE.
+      - AC-50: New alarm dueAt equals new deadline.
+      - AC-51: New alarm generation equals resultingRevision.
+      - AC-52: Re-arm adds zero extra revision.
+      - AC-53: One SYSTEM_TIMEOUT = one Room revision.
+      - AC-54: Match FINISHED maps to MATCH_FINISHED.
+      - AC-55: Finished currentTurnId null.
+      - AC-56: Finished deadline null.
+      - AC-57: Finished activeAlarm null.
+      - AC-58: Finished state not re-armed.
+      - AC-59: ROOM_RETENTION not implemented.
+      - AC-60: Old trigger replay after continuing commit → STALE_ALARM.
+      - AC-61: Old trigger replay after new turn becomes due still → STALE_ALARM.
+      - AC-62: Old trigger replay cannot timeout second turn.
+      - AC-63: Old trigger after finished Match causes zero second Core transition.
+      - AC-64: Same-generation/wrong-dueAt stale proof.
+      - AC-65: Same-dueAt/wrong-generation stale proof.
+      - AC-66: Mandatory CALL-only Core guard not bypassed.
+      - AC-67: No automatic CALL invented.
+      - AC-68: Core mandatory-CALL rejection leaves Room input unchanged.
+      - AC-69: Local selection fields absent from API.
+      - AC-70: Local highlights cannot bias timeout.
+      - AC-71: No Date.now.
+      - AC-72: No performance.now.
+      - AC-73: No Math.random.
+      - AC-74: No crypto entropy.
+      - AC-75: Only injected authoritativeNowMs used for timing.
+      - AC-76: Input Room immutable.
+      - AC-77: Input Match immutable.
+      - AC-78: Input Hands immutable.
+      - AC-79: Input trigger immutable.
+      - AC-80: Input preparedNextTurn immutable.
+      - AC-81: No provider alarm API.
+      - AC-82: No Durable Object.
+      - AC-83: No SQLite.
+      - AC-84: No persistence.
+      - AC-85: No WebSocket.
+      - AC-86: No actual concurrency implementation.
+      - AC-87: T-022 sequential timeout-wins proof.
+      - AC-88: Old unseen client command cannot override committed timeout.
+      - AC-89: Internal timeout metadata not described as public projection.
+      - AC-90: No hidden info broadcast implementation.
+      - AC-91: T27 remains deferred.
+      - AC-92: No game-core source changes.
+      - AC-93: No game-core test changes.
+      - AC-94: No package changes.
+      - AC-95: No package-lock changes.
+      - AC-96: No external dependencies.
+      - AC-97: T-017 regression remains PASS.
+      - AC-98: T-018 regression remains PASS.
+      - AC-99: T-020 regression remains PASS.
+      - AC-100: T-021 regression remains PASS.
+      - AC-101: T-022 regression remains PASS.
+      - AC-102: T-011/T-015 timeout regression remains PASS.
+      - AC-103: npm ci passes.
+      - AC-104: npm run typecheck passes.
+      - AC-105: npm test passes.
+      - AC-106: room-runtime direct typecheck passes.
+      - AC-107: room-runtime direct tests pass.
+      - AC-108: game-core direct typecheck/tests pass unchanged.
+      - AC-109: Evidence maps AC-01 through AC-108.
+      - AC-110: Evidence records exact stale replay protection.
+      - AC-111: Evidence records exact ==deadline execution boundary.
+      - AC-112: Evidence records one timeout/one revision.
+      - AC-113: Evidence records continuing re-arm +30000.
+      - AC-114: Evidence records Match-finish no-rearm.
+      - AC-115: Evidence records mandatory-CALL guard preservation.
+      - AC-116: Evidence explicitly distinguishes pure alarm identity from provider API.
+      - AC-117: Evidence explicitly distinguishes system timeout event from client actionId registry.
+      - AC-118: Evidence explicitly records provider/persistence/concurrency as deferred.
+      - AC-119: Task ends IMPLEMENTED only, never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
