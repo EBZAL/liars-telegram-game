@@ -428,6 +428,36 @@
 - game-core 251 tests / 16 files unchanged
 - no package/dependency change
 - authoritative metadata reconciliation PASS
+- T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION VERIFIED
+- provider-independent timing authority PASS
+- exact 30000ms turn duration PASS
+- trusted server-time input boundary PASS
+- dueAt safe-integer overflow protection PASS
+- current active-turn invariant validation PASS
+- same-revision deadline arming PASS
+- Room revision remains unchanged by arming PASS
+- activeAlarm.generation = Room revision PASS
+- one-active-alarm overwrite protection PASS
+- TURN_DEADLINE/HOST_GRACE/ROOM_RETENTION overwrite rejection PASS
+- exact due boundary PASS:
+  - before deadline NOT_DUE
+  - at deadline DUE
+  - after deadline DUE
+- stale generation fail-closed PASS
+- dueAt mismatch fail-closed PASS
+- wrong alarm kind fail-closed PASS
+- paused/finished/non-active lifecycle NOT_APPLICABLE PASS
+- T-020 continuing state integration PASS
+- T-020 finished state cannot arm PASS
+- immutable/pure timing behavior PASS
+- no Core dispatch PASS
+- no SYSTEM_TIMEOUT execution PASS
+- no provider alarm scheduling PASS
+- same-revision timing completion distinguished from durable persistence PASS
+- authoritative metadata reconciliation PASS
+- latest regression 369 tests / 22 files PASS
+- room-runtime 118 tests / 6 files PASS
+- game-core 251 tests / 16 files unchanged
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

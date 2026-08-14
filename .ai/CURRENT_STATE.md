@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
 
 **Current Active Task:**
 None
@@ -1283,6 +1283,7 @@ YES
 - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION VERIFIED
 - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING VERIFIED
 - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE VERIFIED
+- T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION VERIFIED
 
 **Exit Gate:**
 NOT_EVALUATED
@@ -1672,6 +1673,142 @@ NOT_EVALUATED
 
 T27 remains mandatory STAGE-04 security work.
 
+**T-021 Turn Deadline Authority Foundation VERIFIED:**
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Turn duration:
+  - exact TURN_DURATION_MS = 30000
+  - no configurable client duration
+  - no client clock authority
+- Server-time boundary:
+  - authoritativeNowMs is trusted server-side input
+  - must be safe non-negative integer
+  - dueAt overflow guarded
+  - no Date.now
+  - no performance.now
+  - no Math.random
+  - no crypto entropy
+  - no RandomSource
+- Arming primitive:
+  - armActiveTurnDeadline exists
+  - requires MATCH_ACTIVE
+  - requires non-null Core Match
+  - requires Match IN_PROGRESS
+  - requires winnerId null
+  - requires non-blank currentTurnId
+  - requires currentTurnDeadline null
+  - requires activeAlarm null
+  - requires valid Room revision
+  - refuses to overwrite any existing active alarm
+- Canonical armed state:
+  - currentTurnDeadline = authoritativeNowMs + 30000
+  - activeAlarm:
+    - kind = TURN_DEADLINE
+    - dueAt = currentTurnDeadline
+    - generation = Room revision
+- Revision semantics:
+  - arming does NOT increment Room revision
+  - activeAlarm.generation equals existing Room revision
+  - timing completion belongs to same logical authoritative revision
+  - T-020 continuing COMMITTED state can be armed while retaining same revision
+- One-active-alarm:
+  - existing TURN_DEADLINE rejected
+  - existing HOST_GRACE rejected
+  - existing ROOM_RETENTION rejected
+  - no implicit alarm replacement
+- Due evaluation:
+  - evaluateTurnDeadlineDueState exists
+  - coherent MATCH_ACTIVE state required
+  - now < dueAt → NOT_DUE
+  - now == dueAt → DUE
+  - now > dueAt → DUE
+- Fail-closed timing coherence:
+  - null deadline → INVALID_STATE
+  - null activeAlarm → INVALID_STATE
+  - wrong alarm kind → INVALID_STATE
+  - alarm dueAt mismatch → INVALID_STATE
+  - alarm generation mismatch → INVALID_STATE
+  - invalid revision → INVALID_STATE
+  - blank/null turnId → INVALID_STATE
+  - missing Match → INVALID_STATE
+  - finished Core Match while Room active → INVALID_STATE
+  - active Match with winner → INVALID_STATE
+- Stale alarm safety:
+  - alarm generation older/different from Room revision never authorizes timeout
+  - stale generation returns INVALID_STATE, not DUE
+- Lifecycle applicability:
+  - LOBBY → NOT_APPLICABLE
+  - MATCH_PAUSED_NO_LIVING_CONNECTIONS → NOT_APPLICABLE
+  - MATCH_FINISHED → NOT_APPLICABLE
+  - ABANDONED → NOT_APPLICABLE
+- T-020 integration:
+  - continuing client gameplay commit produces new turn with deadline/alarm null
+  - T-021 arms that turn at the SAME revision
+  - finished T-020 result cannot be armed
+  - T-020 gameplay transaction source remains unchanged
+  - T-020 one-command/one-revision semantics preserved
+- Purity:
+  - input Room state not mutated
+  - input Match not mutated
+  - Hands not mutated
+  - revision not mutated by arming/evaluation
+  - due evaluator is pure
+  - fresh Room state returned by arming
+- No gameplay execution:
+  - no Core transition
+  - no applySystemTimeout
+  - no applyPlayCardsCommand
+  - no applyCallLiar
+  - no Card selection
+  - no SYSTEM_TIMEOUT client action
+  - no synthetic actionId
+- Important boundary:
+  - activeAlarm here is authoritative Room metadata
+  - it is NOT Cloudflare alarm scheduling
+  - no provider setAlarm/getAlarm/deleteAlarm
+  - no alarm handler
+- Important persistence distinction:
+  - same-revision timing completion is pure in-memory state composition
+  - it is NOT durable atomic persistence
+  - future coordinator must persist gameplay result + timing metadata atomically
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 369 tests / 22 files
+  - room-runtime: 118 tests / 6 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core changes.
+- No room-state changes.
+- No gameplay-protocol changes.
+- No gameplay-transaction changes.
+
+**Explicitly NOT IMPLEMENTED BY T-021:**
+- SYSTEM_TIMEOUT execution
+- client-vs-timeout arbitration
+- late-client command arbitration
+- provider alarm scheduling
+- provider alarm handler
+- alarm retries
+- Durable Object
+- SQLite persistence/reload
+- durable atomic transaction
+- WebSocket
+- presence accounting
+- Pause/Resume
+- life-status-triggered Pause
+- host grace
+- retention alarm behavior
+- Telegram auth/session
+- recipient-specific projections
+- T27
+
+T27 remains mandatory STAGE-04 security work.
+
 **Known Risks:**
 * realtime concurrency
 * deadline/reconnect races
@@ -1679,7 +1816,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-020 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-021 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1700,4 +1837,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-020 verification State Sync. No T-021 or future implementation task is pre-authorized. Only after reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state, derive the smallest bounded next task, run Risk/Consistency Gates and issue one Executor prompt.
+Project Architect must re-read this T-021 verification State Sync. No T-022 or future task is pre-authorized. Only after successful reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
