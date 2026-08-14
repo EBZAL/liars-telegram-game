@@ -493,6 +493,40 @@
 - latest regression 386 tests / 23 files PASS
 - room-runtime 135 tests / 7 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION VERIFIED
+- provider-independent system timeout Room transaction PASS
+- server-only TURN_DEADLINE trigger PASS
+- exact kind/dueAt/generation identity PASS
+- stale-alarm-before-due-evaluation PASS
+- null/wrong-kind/dueAt/generation stale filtering PASS
+- stale paths zero RNG/Core/revision PASS
+- exact deadline boundary PASS:
+  - before deadline NOT_DUE
+  - exact deadline SYSTEM_TIMEOUT eligible/COMMITTED
+  - after deadline SYSTEM_TIMEOUT eligible/COMMITTED
+- T-021 due evaluator delegation PASS
+- preparedNextTurn-before-Core validation PASS
+- revision validation before Core RNG PASS
+- verified applySystemTimeout delegation PASS
+- no manual Room card selection PASS
+- no manual Room claim derivation PASS
+- one SYSTEM_TIMEOUT = one Room revision PASS
+- no synthetic client actionId/record PASS
+- continuing Match next-turn +30000 re-arm PASS
+- next alarm generation = resultingRevision PASS
+- zero extra revision from re-arm PASS
+- finished Match no-rearm PASS
+- stale old trigger replay protection PASS
+- stale trigger remains stale after next deadline passes PASS
+- old trigger cannot timeout second turn PASS
+- mandatory-CALL Core guard preserved PASS
+- no automatic CALL invented PASS
+- timeout-wins sequential client race PASS
+- no provider alarm API PASS
+- no persistence/concurrency implementation PASS
+- latest regression 405 tests / 24 files PASS
+- room-runtime 154 tests / 8 files PASS
+- game-core 251 tests / 16 files unchanged
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

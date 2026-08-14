@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
-active_task: T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+last_verified_task: T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -2189,8 +2189,20 @@ tasks:
   T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION:
     title: System Timeout Deadline Transaction
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 7666e3074e2bf2004753358e04fcaf1bee6cf7de
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 7666e3074e2bf2004753358e04fcaf1bee6cf7de
+      evidence:
+        - .ai/evidence/T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION.md
+      architect_review:
+        contract_review: PASS
+        architecture_review: PASS
+        security_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative Room transaction that consumes one exact due TURN_DEADLINE trigger, executes the already VERIFIED Core applySystemTimeout transition exactly once, advances Room revision exactly once, and either arms the next active turn at authoritativeNowMs + 30000 or maps a finished Core Match to MATCH_FINISHED with no turn alarm.

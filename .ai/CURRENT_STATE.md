@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
 
 **Current Active Task:**
 None
@@ -1922,24 +1922,170 @@ T27 remains mandatory STAGE-04 security work.
 - No gameplay-authorization changes.
 - No gameplay-transaction changes.
 - No turn-deadline changes.
+- T-023 System Timeout Deadline Transaction VERIFIED
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Server-only trigger:
+  - ServerTurnDeadlineTrigger:
+    - kind = TURN_DEADLINE
+    - dueAt
+    - generation
+    - not client input
+- Trigger validation:
+  - trigger object required
+  - kind exactly TURN_DEADLINE
+  - dueAt safe non-negative integer
+  - generation safe non-negative integer
+  - authoritativeNowMs safe non-negative integer
+- Exact alarm identity:
+  - trigger compared against current activeAlarm before due evaluation
+  - kind must match
+  - dueAt must match
+  - generation must match
+- STALE_ALARM:
+  - null current alarm → STALE_ALARM
+  - wrong current alarm kind → STALE_ALARM
+  - dueAt mismatch → STALE_ALARM
+  - generation mismatch → STALE_ALARM
+  - zero Core dispatch
+  - zero RNG
+  - zero revision mutation
+  - no preparedNextTurn validation
+- Stale/retry safety:
+  - old trigger after successful timeout → STALE_ALARM
+  - old trigger remains STALE_ALARM even after next turn's deadline becomes due
+  - old trigger can never timeout the next turn
+  - old trigger after Match finish cannot execute Core again
+- Deadline evaluation:
+  - delegates to T-021 evaluateTurnDeadlineDueState
+- Exact boundary:
+  - now < dueAt → NOT_DUE
+  - now == dueAt → DUE / eligible for SYSTEM_TIMEOUT
+  - now > dueAt → DUE / eligible for SYSTEM_TIMEOUT
+- NOT_DUE:
+  - no Core dispatch
+  - no RNG
+  - no state mutation
+  - existing deadline/alarm preserved
+- NOT_APPLICABLE:
+  - no Core transition
+- INVALID_STATE:
+  - no Core transition
+- DUE preparation:
+  - preparedNextTurn validated before Core
+  - prepared turnId non-empty
+  - prepared turnId differs from current turnId
+  - nextRoomRevision validated before Core RNG
+  - revision overflow fails before RNG
+- Core delegation:
+  - exactly applySystemTimeout(roomState.match, random)
+  - no direct applyPlayCardsCommand
+  - no Room manual card selection
+  - no Room manual claim construction
+  - Core derives timedOutPlayerId
+  - Core derives autoPlayedCardId
+  - same injected RandomSource forwarded
+- Revision:
+  - successful SYSTEM_TIMEOUT = exactly one Room revision increment
+  - resultingRevision = previous revision + 1
+  - no client actionId
+  - no synthetic GameplayActionEnvelope
+  - no processed client action record
+  - system-event replay protection uses alarm identity/generation
+- Continuing Match:
+  - lifecycle = MATCH_ACTIVE
+  - Core Match = returned IN_PROGRESS state
+  - currentTurnId = preparedNextTurn.turnId
+  - old deadline cleared
+  - old activeAlarm cleared
+  - T-021 re-arms next turn
+  - currentTurnDeadline = authoritativeNowMs + 30000
+  - activeAlarm.kind = TURN_DEADLINE
+  - activeAlarm.dueAt = new deadline
+  - activeAlarm.generation = resultingRevision
+  - no additional revision for re-arm
+- Finished Match:
+  - lifecycle = MATCH_FINISHED
+  - winnerId non-null
+  - currentTurnId = null
+  - currentTurnDeadline = null
+  - activeAlarm = null
+  - no turn re-arm
+  - ROOM_RETENTION intentionally not implemented by T-023
+- Core consistency:
+  - IN_PROGRESS + winnerId non-null fails closed
+  - FINISHED + winnerId null fails closed
+- Mandatory CALL defensive guard:
+  - Core mandatory CALL-only rejection preserved
+  - failure propagated
+  - no manual timeout fallback
+  - no auto-CALL invented
+  - no Room mutation
+  - Core rejects before timeout RNG
+- Local selection boundary:
+  - no selected/highlighted/draft state accepted
+  - local selection cannot influence SYSTEM_TIMEOUT
+  - timeout card remains Core + injected RNG authority
+- T-022 race integration:
+  - timeout COMMITTED advances Room revision
+  - unseen client command using old revision/turn cannot override timeout
+  - deterministic proof rejects old command with STALE_REVISION
+- Purity:
+  - input Room not mutated
+  - input Match not mutated
+  - input Hands not mutated
+  - trigger not mutated
+  - preparedNextTurn not mutated
+  - COMMITTED returns fresh authoritative Room state
+- Security:
+  - SYSTEM_TIMEOUT is not a client action
+  - timeout trigger is internal server state
+  - timeout metadata is internal server data
+  - autoPlayedCardId must not be treated as recipient-safe projection
+  - no hidden-information broadcast introduced
+- Provider boundary:
+  - no storage.setAlarm
+  - no storage.getAlarm
+  - no storage.deleteAlarm
+  - no Durable Object alarm()
+  - no provider alarm handler
+  - no SQLite
+  - no persistence
+  - no WebSocket
+  - no actual concurrency implementation
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 405 tests / 24 files
+  - room-runtime: 154 tests / 8 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core source/test changes.
+- No T-020 source changes.
+- No T-021 source changes.
+- No T-022 source changes.
 
-**Explicitly NOT IMPLEMENTED BY T-022:**
-- SYSTEM_TIMEOUT execution
-- system deadline transaction
-- provider alarm scheduling
+**Explicitly NOT IMPLEMENTED BY T-023:**
+- Cloudflare provider alarm scheduling
 - provider alarm handler
-- alarm retry/idempotent provider execution
+- provider retry wiring
+- durable atomic persistence
 - Durable Object
 - SQLite persistence/reload
-- durable atomic persistence
 - actual concurrency serialization
-- presence accounting
-- Pause/Resume
+- connectedLivingPlayers accounting
+- zero-Living Pause
+- Living-only Resume
 - life-status-triggered Pause
 - WebSocket/reconnect
 - Telegram auth/session
 - recipient-specific projections
 - T27
+- ROOM_RETENTION scheduling
 
 T27 remains mandatory STAGE-04 security work.
 
@@ -1950,7 +2096,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-022 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-023 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -1971,4 +2117,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-022 verification State Sync. No T-023 or future implementation task is pre-authorized. Only after successful reconciliation may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-023 verification State Sync. No T-024 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
