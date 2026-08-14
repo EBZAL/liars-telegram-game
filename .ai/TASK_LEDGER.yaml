@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
-active_task: null
+active_task: T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -132,6 +132,7 @@ stages:
       - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
       - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
       - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+      - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2657,6 +2658,159 @@ tasks:
       - AC-141: Evidence explicitly defers gameplay/presence composition.
       - AC-142: Evidence explicitly defers WebSocket/provider/persistence integration.
       - AC-143: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION:
+    title: System Timeout Presence Lifecycle Composition
+    stage: STAGE-04
+    status: IN_PROGRESS
+    implementation_commit: null
+    verification:
+      decision: NOT_EVALUATED
+      verified_implementation_commit: null
+      evidence: []
+      architect_review:
+        contract_review: NOT_EVALUATED
+        architecture_review: NOT_EVALUATED
+        security_review: NOT_EVALUATED
+        quality_review: NOT_EVALUATED
+        risk_controls: NOT_EVALUATED
+        regression_impact: NOT_EVALUATED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative composition layer that executes the VERIFIED T-023 SYSTEM_TIMEOUT deadline transaction and, only after a successful continuing timeout transition, reconciles the resulting authoritative Match against VERIFIED T-024 Living presence using VERIFIED T-025 zero-Living Pause semantics.
+    dependencies:
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent composition module exists.
+      - AC-02: API exported from room-runtime.
+      - AC-03: T-023 called exactly once per execution.
+      - AC-04: No duplicate timeout/deadline algorithm.
+      - AC-05: No manual timeout Card selection.
+      - AC-06: No manual life-status calculation.
+      - AC-07: No manual zero-Living counting.
+      - AC-08: No manual Pause implementation.
+      - AC-09: STALE_ALARM passes through without Pause.
+      - AC-10: NOT_DUE passes through without Pause.
+      - AC-11: NOT_APPLICABLE passes through without Pause.
+      - AC-12: INVALID_STATE passes through without Pause.
+      - AC-13: Non-COMMITTED path causes zero additional revision.
+      - AC-14: Non-COMMITTED path causes zero additional RNG.
+      - AC-15: T-023 COMMITTED FINISHED has precedence.
+      - AC-16: FINISHED does not invoke Pause.
+      - AC-17: FINISHED remains MATCH_FINISHED.
+      - AC-18: FINISHED adds no lifecycle revision.
+      - AC-19: FINISHED preserves winnerId.
+      - AC-20: FINISHED turnId null.
+      - AC-21: FINISHED deadline null.
+      - AC-22: FINISHED activeAlarm null.
+      - AC-23: Continuing T-023 result delegates Pause decision to T-025.
+      - AC-24: T-025 NO_CHANGE → COMMITTED_ACTIVE.
+      - AC-25: COMMITTED_ACTIVE final revision equals timeout revision.
+      - AC-26: COMMITTED_ACTIVE remains MATCH_ACTIVE.
+      - AC-27: COMMITTED_ACTIVE retains T-023 next turnId.
+      - AC-28: COMMITTED_ACTIVE retains T-023 +30000 deadline.
+      - AC-29: COMMITTED_ACTIVE retains T-023 alarm generation.
+      - AC-30: COMMITTED_ACTIVE adds zero lifecycle revision.
+      - AC-31: T-025 PAUSED → COMMITTED_PAUSED.
+      - AC-32: COMMITTED_PAUSED final revision = timeout revision +1.
+      - AC-33: Total initial→paused revision delta = 2.
+      - AC-34: First revision represents SYSTEM_TIMEOUT/Core transition.
+      - AC-35: Second revision represents ACTIVE→PAUSED lifecycle transition.
+      - AC-36: No third revision.
+      - AC-37: COMMITTED_PAUSED lifecycle = MATCH_PAUSED_NO_LIVING_CONNECTIONS.
+      - AC-38: COMMITTED_PAUSED preserves T-023 resulting Match.
+      - AC-39: COMMITTED_PAUSED preserves prepared next turnId.
+      - AC-40: COMMITTED_PAUSED deadline null.
+      - AC-41: COMMITTED_PAUSED activeAlarm null.
+      - AC-42: Intermediate T-023 alarm does not survive final Pause.
+      - AC-43: Intermediate alarm is not provider-scheduled by T-026.
+      - AC-44: Post-timeout Living count uses resulting Match lifeStatus.
+      - AC-45: Same registry may produce different Living count after Core.
+      - AC-46: Actual timeout ALIVE→ELIMINATED continuing-Match scenario covered.
+      - AC-47: That scenario reaches COMMITTED_PAUSED.
+      - AC-48: Presence registry remains unchanged.
+      - AC-49: Other disconnected Living Players remain eligible but unconnected.
+      - AC-50: Match-finished precedence tested with zero Living presence.
+      - AC-51: Winner never becomes PAUSED.
+      - AC-52: Old trigger replay after final Pause → STALE_ALARM.
+      - AC-53: Old trigger replay executes zero second timeout.
+      - AC-54: Old trigger replay consumes zero Core RNG.
+      - AC-55: Final PAUSED result is compatible with T-025 exact 0→1 Resume.
+      - AC-56: Resume preserves T-023 prepared next turnId.
+      - AC-57: Resume uses fresh resume-time +30000 deadline.
+      - AC-58: Resume revision follows final paused revision.
+      - AC-59: T-025 unexpected outcome fails closed.
+      - AC-60: No silent repair of composition divergence.
+      - AC-61: Timeout metadata timedOutPlayerId preserved.
+      - AC-62: Timeout metadata autoPlayedCardId preserved.
+      - AC-63: Metadata remains internal server data.
+      - AC-64: No client GameplayActionEnvelope added.
+      - AC-65: No client SYSTEM_TIMEOUT authority.
+      - AC-66: No client Pause authority.
+      - AC-67: No client presence authority.
+      - AC-68: No recipient projection added.
+      - AC-69: T27 remains deferred.
+      - AC-70: No ProcessedGameplayActionRegistry modification.
+      - AC-71: No actionId synthesis.
+      - AC-72: No priorResultingRevision semantics change.
+      - AC-73: Client gameplay/presence composition remains deferred.
+      - AC-74: No T-020 source changes.
+      - AC-75: No T-022 source changes.
+      - AC-76: No T-023 source changes.
+      - AC-77: No T-024 source changes.
+      - AC-78: No T-025 source changes.
+      - AC-79: No RoomAuthorityState shape change.
+      - AC-80: No GameplayActionEnvelope shape change.
+      - AC-81: Input Room immutable.
+      - AC-82: Input Match immutable.
+      - AC-83: Input Hands immutable.
+      - AC-84: trigger immutable.
+      - AC-85: preparedNextTurn immutable.
+      - AC-86: presenceRegistry immutable.
+      - AC-87: Only supplied RandomSource reaches T-023.
+      - AC-88: T-025 consumes zero RNG.
+      - AC-89: No Date.now.
+      - AC-90: No performance.now.
+      - AC-91: No Math.random.
+      - AC-92: No crypto entropy.
+      - AC-93: No WebSocket.
+      - AC-94: No Durable Object.
+      - AC-95: No provider alarm APIs.
+      - AC-96: No SQLite/persistence.
+      - AC-97: No actual concurrency implementation.
+      - AC-98: No package changes.
+      - AC-99: No package-lock changes.
+      - AC-100: No external dependencies.
+      - AC-101: No game-core source changes.
+      - AC-102: No game-core test changes.
+      - AC-103: T-023 regression remains PASS.
+      - AC-104: T-024 regression remains PASS.
+      - AC-105: T-025 regression remains PASS.
+      - AC-106: T-021 regression remains PASS.
+      - AC-107: npm ci PASS.
+      - AC-108: npm run typecheck PASS.
+      - AC-109: npm test PASS.
+      - AC-110: room-runtime direct typecheck PASS.
+      - AC-111: room-runtime direct tests PASS.
+      - AC-112: game-core direct typecheck/tests PASS unchanged.
+      - AC-113: Evidence maps AC-01 through AC-112.
+      - AC-114: Evidence records one-revision ACTIVE case.
+      - AC-115: Evidence records two-revision PAUSED case.
+      - AC-116: Evidence records real post-timeout elimination reconciliation.
+      - AC-117: Evidence records Finished precedence.
+      - AC-118: Evidence records intermediate alarm never provider-scheduled.
+      - AC-119: Evidence records old-trigger stale after composed Pause.
+      - AC-120: Evidence records Resume compatibility.
+      - AC-121: Evidence explicitly defers client-gameplay presence composition.
+      - AC-122: Evidence explicitly defers provider/persistence/concurrency.
+      - AC-123: Task ends IMPLEMENTED only, never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
