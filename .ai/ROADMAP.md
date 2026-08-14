@@ -552,9 +552,35 @@
 - raw presence zero deadline/alarm mutation PASS
 - no Pause/Resume implementation PASS
 - no WebSocket/provider implementation PASS
-- internal summary distinguished from recipient projection PASS
 - latest regression 425 tests / 25 files PASS
 - room-runtime 174 tests / 9 files PASS
+- game-core 251 tests / 16 files unchanged
+- T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE VERIFIED
+- provider-independent Pause/Resume foundation PASS
+- T-024 Living evaluator delegation PASS
+- active + Living >0 NO_CHANGE PASS
+- zero-Living ACTIVE→PAUSED PASS
+- Pause one-revision semantics PASS
+- Pause gameplay-state preservation PASS
+- Pause deadline/alarm invalidation PASS
+- old timeout stale after Pause PASS
+- paused client gameplay blocked PASS
+- exact Living 0→1 Resume PASS
+- Eliminated reconnect cannot Resume PASS
+- 0→2 fail-closed PASS
+- Resume one-revision semantics PASS
+- fresh resume-time +30000 deadline PASS
+- new alarm generation = resumed revision PASS
+- zero extra revision from re-arm PASS
+- old timer/remaining time not restored PASS
+- additional reconnect no timer reset PASS
+- multi-socket no timer reset PASS
+- unchanged-registry post-elimination Pause foundation PASS
+- MATCH_FINISHED precedence boundary PASS
+- no Core transition PASS
+- no provider/persistence implementation PASS
+- latest regression 445 tests / 26 files PASS
+- room-runtime 194 tests / 10 files PASS
 - game-core 251 tests / 16 files unchanged
 
 ## STAGE-05 — Telegram Integration

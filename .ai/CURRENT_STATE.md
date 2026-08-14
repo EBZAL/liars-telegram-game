@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
 
 **Current Active Task:**
 None
@@ -2179,17 +2179,134 @@ T27 remains mandatory STAGE-04 security work.
 - No game-core changes.
 - No existing authority source changes.
 
-**Explicitly NOT IMPLEMENTED BY T-024:**
-- MATCH_ACTIVE → MATCH_PAUSED_NO_LIVING_CONNECTIONS
-- MATCH_PAUSED_NO_LIVING_CONNECTIONS → MATCH_ACTIVE
-- life-status-triggered Pause composition
-- fresh Resume deadline
-- provider TURN_DEADLINE alarm scheduling
+- T-025 Living Presence Pause Resume Lifecycle VERIFIED
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Pause authority:
+  - delegates Living presence to T-024 evaluateRoomPresence
+  - MATCH_ACTIVE + connectedLivingPlayers > 0 → NO_CHANGE
+  - MATCH_ACTIVE + connectedLivingPlayers == 0 → PAUSED
+  - current Player disconnect alone does not Pause if another Living Player is connected
+  - host has no special presence authority
+- Pause transition:
+  - lifecycle → MATCH_PAUSED_NO_LIVING_CONNECTIONS
+  - revision increments exactly once
+  - Match preserved
+  - currentTurnId preserved
+  - current Player preserved
+  - Hands preserved
+  - table rank preserved
+  - previousPlay preserved
+  - round preserved
+  - roulette progress preserved
+  - currentTurnDeadline → null
+  - activeAlarm → null
+  - no Core transition
+  - no gameplay processed record
+- Pause timing coherence:
+  - active Room requires coherent TURN_DEADLINE
+  - dueAt equals currentTurnDeadline
+  - generation equals Room revision
+  - wrong alarm kind fails closed
+  - Pause does not depend on whether deadline is already due
+  - Pause takes no wall-clock input
+- Old timeout after Pause:
+  - old TURN_DEADLINE trigger → STALE_ALARM
+  - zero SYSTEM_TIMEOUT
+  - zero Core transition
+  - zero gameplay RNG
+- Paused gameplay:
+  - T-022 client gameplay → REJECT / MATCH_NOT_ACTIVE
+  - no client gameplay can commit while paused
+- Resume authority:
+  - only MATCH_PAUSED_NO_LIVING_CONNECTIONS
+  - derives before/after Living facts through T-024
+  - before connectedLivingPlayers must equal 0
+  - after connectedLivingPlayers must equal 1
+  - exact 0→1 only
+- Resume fail-closed:
+  - 0→0 → NO_CHANGE
+  - paused before-count nonzero → INVALID_STATE
+  - 0→2 → INVALID_STATE
+  - retained paused deadline/alarm → INVALID_STATE
+- Eliminated spectator:
+  - reconnect produces Living 0→0
+  - cannot Resume
+  - Eliminated Host cannot Resume
+  - cannot prevent Pause
+- Resume transition:
+  - lifecycle → MATCH_ACTIVE
+  - revision increments exactly once
+  - same Match preserved
+  - same currentTurnId preserved
+  - same gameplay turn preserved
+  - no Core transition
+- Fresh Resume timer:
+  - authoritativeResumeTimeMs server-injected
+  - validated safe non-negative integer
+  - deadline = authoritativeResumeTimeMs + 30000
+  - old deadline not restored
+  - old remaining time not restored
+  - T-021 armActiveTurnDeadline used
+  - alarm kind = TURN_DEADLINE
+  - alarm dueAt = fresh deadline
+  - alarm generation = resultingRevision
+  - timing arming adds zero extra revision
+- Additional reconnect:
+  - ACTIVE Room Resume evaluation → NOT_APPLICABLE
+  - second Living reconnect does not reset timer
+  - extra socket for already-connected Living Player does not reset timer
+- Post-elimination foundation:
+  - presence registry may remain unchanged
+  - authoritative lifeStatus ALIVE→ELIMINATED can reduce Living count to zero
+  - resulting IN_PROGRESS Room can then Pause
+  - T-020/T-023 composition not yet implemented
+- Finished precedence:
+  - MATCH_FINISHED Pause → NOT_APPLICABLE
+  - MATCH_FINISHED Resume → NOT_APPLICABLE
+  - winner state is never converted to PAUSED
+  - future post-Core orchestration must apply finished precedence before Pause
+- LOBBY / ABANDONED:
+  - Pause NOT_APPLICABLE
+  - Resume NOT_APPLICABLE
+- Security:
+  - no client Pause authority
+  - no client Resume authority
+  - no client Living-count authority
+  - presence registries remain internal
+  - no recipient projection
+  - T27 remains deferred
+- Provider boundary:
+  - no WebSocket
+  - no Durable Object
+  - no SQLite
+  - no provider alarm API
+  - no persistence
+  - no actual concurrency
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 445 tests / 26 files
+  - room-runtime: 194 tests / 10 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core source/test changes.
+- No existing authority source changes.
+
+**Explicitly NOT IMPLEMENTED BY T-025:**
+- automatic post-T-020 presence/lifecycle composition
+- automatic post-T-023 presence/lifecycle composition
+- finished-before-pause orchestration wiring
+- provider TURN_DEADLINE scheduling
 - provider alarm handler
 - Durable Object
 - SQLite persistence/reload
 - durable atomic persistence
-- actual concurrency
+- actual concurrency serialization
 - WebSocket/reconnect
 - Telegram auth/session
 - recipient-specific projections
@@ -2204,7 +2321,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-024 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-025 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2225,4 +2342,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-024 verification State Sync. No T-025 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-025 verification State Sync. No T-026 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
