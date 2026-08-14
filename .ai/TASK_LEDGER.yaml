@@ -3204,7 +3204,8 @@ tasks:
   T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION:
     title: Recipient-Specific Hidden-Information Projection
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: f8b1ec9987610af44f1d600553cc8161f08e8be5
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Implement the smallest provider-independent recipient-specific authoritative Room snapshot projection boundary that closes GAME_RULES T27 and GAME_RULES §24 invariant I29.
