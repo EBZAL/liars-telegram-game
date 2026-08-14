@@ -1874,7 +1874,8 @@ tasks:
   T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION:
     title: Turn Deadline Authority Foundation
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: f1bb532fea5283687c2472d837921484f3683a52
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative Turn Deadline state foundation required before SYSTEM_TIMEOUT execution or Cloudflare alarm integration, establishing exact 30-second active-turn deadline arming, canonical TURN_DEADLINE activeAlarm metadata, one-active-alarm state enforcement, deadline/alarm coherence validation, deterministic DUE/NOT_DUE evaluation, and stale-generation fail-closed behavior.
