@@ -582,6 +582,28 @@
 - latest regression 445 tests / 26 files PASS
 - room-runtime 194 tests / 10 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION VERIFIED
+- T-023-first composition ordering PASS
+- non-COMMITTED pass-through PASS
+- Finished-before-Pause precedence PASS
+- continuing timeout → T-025 reconciliation PASS
+- one-revision COMMITTED_ACTIVE PASS
+- two-revision COMMITTED_PAUSED PASS
+- no third revision PASS
+- post-timeout ALIVE→ELIMINATED presence reconciliation PASS
+- same-registry changed-lifeStatus proof PASS
+- intermediate timeout alarm cleared by final Pause PASS
+- intermediate alarm not provider-scheduled PASS
+- winner never converted to PAUSED PASS
+- old trigger stale after composed Pause PASS
+- composed paused Resume compatibility PASS
+- client ProcessedGameplayActionRegistry semantics untouched PASS
+- client gameplay presence composition deferred PASS
+- no provider/persistence/concurrency implementation PASS
+- latest regression 455 tests / 27 files PASS
+- room-runtime 204 tests / 11 files PASS
+- game-core 251 tests / 16 files unchanged
+
 
 ## STAGE-05 — Telegram Integration
 **Status**: NOT_STARTED

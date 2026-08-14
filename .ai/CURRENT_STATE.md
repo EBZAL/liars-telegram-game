@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
 
 **Current Active Task:**
 None
@@ -2297,11 +2297,118 @@ T27 remains mandatory STAGE-04 security work.
 - No game-core source/test changes.
 - No existing authority source changes.
 
-**Explicitly NOT IMPLEMENTED BY T-025:**
-- automatic post-T-020 presence/lifecycle composition
-- automatic post-T-023 presence/lifecycle composition
-- finished-before-pause orchestration wiring
-- provider TURN_DEADLINE scheduling
+- T-026 System Timeout Presence Lifecycle Composition VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Composition ordering:
+  1. T-023 executeSystemTimeoutDeadlineTransaction first
+  2. non-COMMITTED outcomes pass through
+  3. MATCH_FINISHED has absolute precedence
+  4. continuing MATCH_ACTIVE delegates to T-025 Pause reconciliation
+- Non-COMMITTED:
+  - STALE_ALARM → pass through
+  - NOT_DUE → pass through
+  - NOT_APPLICABLE → pass through
+  - INVALID_STATE → pass through
+  - no additional lifecycle revision
+  - no additional RNG
+  - no Pause composition
+- COMMITTED_ACTIVE:
+  - T-023 timeout transition only
+  - initial revision N
+  - timeout revision N+1
+  - final revision N+1
+  - lifecycle MATCH_ACTIVE
+  - prepared next turnId preserved
+  - deadline = authoritativeNowMs + 30000
+  - TURN_DEADLINE generation = timeout revision
+  - zero additional lifecycle revision
+- COMMITTED_PAUSED:
+  - T-023 Core timeout transition N → N+1
+  - T-025 ACTIVE→PAUSED transition N+1 → N+2
+  - final revision = timeout revision +1
+  - exactly two total Room revisions
+  - lifecycle MATCH_PAUSED_NO_LIVING_CONNECTIONS
+  - T-023 resulting Match preserved
+  - prepared next turnId preserved
+  - final deadline null
+  - final activeAlarm null
+  - intermediate T-023 alarm does not survive
+  - no third revision
+- Post-timeout elimination reconciliation:
+  - same presence registry may remain unchanged
+  - authoritative Core lifeStatus change ALIVE→ELIMINATED can change connectedLivingPlayers
+  - verified 3-player scenario:
+    only connected Living player eliminated
+    Match remains IN_PROGRESS
+    other Living players disconnected
+    resulting connected Living count = 0
+    final result = COMMITTED_PAUSED
+- Finished precedence:
+  - timeout-produced MATCH_FINISHED → COMMITTED_FINISHED
+  - winner preserved
+  - no T-025 Pause
+  - no lifecycle revision after timeout
+  - currentTurnId null
+  - deadline null
+  - activeAlarm null
+  - winner state never becomes PAUSED
+- Old trigger replay:
+  - original pre-timeout trigger against composed paused Room → STALE_ALARM
+  - no second SYSTEM_TIMEOUT
+  - zero Core execution
+  - zero RNG
+- Resume compatibility:
+  - final COMMITTED_PAUSED state is compatible with T-025
+  - exact Living 0→1 Resume
+  - revision N+2 → N+3
+  - same prepared next turnId preserved
+  - fresh resumeTime + 30000 deadline
+  - alarm generation = resumed revision
+  - no Core transition during Resume
+- Timeout metadata:
+  - timedOutPlayerId preserved
+  - autoPlayedCardId preserved
+  - both internal server data
+- Client idempotency boundary:
+  - ProcessedGameplayActionRegistry unchanged
+  - actionId semantics unchanged
+  - priorResultingRevision semantics unchanged
+  - client gameplay + presence lifecycle composition NOT implemented
+- Security:
+  - no client SYSTEM_TIMEOUT authority
+  - no client Pause authority
+  - no client presence authority
+  - no recipient projection
+  - T27 remains mandatory/deferred
+- Provider boundary:
+  - no storage.setAlarm/getAlarm/deleteAlarm
+  - no alarm handler
+  - no Durable Object
+  - no SQLite
+  - no persistence
+  - no WebSocket
+  - no actual concurrency
+- Intermediate pure activeAlarm metadata:
+  - not provider scheduling
+  - future provider orchestration must act on FINAL composed Room state
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 455 tests / 27 files
+  - room-runtime: 204 tests / 11 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependencies.
+- No game-core changes.
+- No T-023/T-024/T-025 source changes.
+
+**Explicitly NOT IMPLEMENTED BY T-026:**
+- client T-020/T-022 presence lifecycle composition
+- client retry/final-revision contract after lifecycle Pause
+- provider alarm synchronization
 - provider alarm handler
 - Durable Object
 - SQLite persistence/reload
@@ -2321,7 +2428,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-025 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-026 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2342,4 +2449,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-025 verification State Sync. No T-026 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-026 verification State Sync. No T-027 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
