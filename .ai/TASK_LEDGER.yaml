@@ -2489,7 +2489,8 @@ tasks:
   T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE:
     title: Living Presence Pause Resume Lifecycle
     stage: STAGE-04
-    status: IN_PROGRESS
+    status: IMPLEMENTED
+    implementation_commit: 2dfed314a15374073f9d34124108a8dab02232db
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authoritative Room lifecycle foundation that composes T-024 Living-presence facts with the existing Room revision and T-021 deadline primitives to establish 1. MATCH_ACTIVE + connectedLivingPlayers == 0 → MATCH_PAUSED_NO_LIVING_CONNECTIONS, 2. MATCH_PAUSED_NO_LIVING_CONNECTIONS + exact Living presence transition 0 → 1 → MATCH_ACTIVE, 3. Pause preserves authoritative gameplay state but increments Room revision exactly once, clears currentTurnDeadline, clears activeAlarm, and preserves currentTurnId, 4. Resume increments Room revision exactly once, preserves the same gameplay turn/state, establishes a completely fresh deadline (authoritativeResumeTimeMs + 30000) and fresh TURN_DEADLINE alarm whose generation equals the resumed Room revision without restoring old remaining time, 5. Eliminated spectator presence cannot Resume and cannot prevent Pause.
