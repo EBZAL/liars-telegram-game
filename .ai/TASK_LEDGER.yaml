@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-04
-last_verified_task: T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
-active_task: T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+last_verified_task: T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -2337,8 +2337,20 @@ tasks:
   T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION:
     title: Unique Living Presence Foundation
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 2e75481c8b81d2ff369e0d84be6bb4ed93acbfe8
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 2e75481c8b81d2ff369e0d84be6bb4ed93acbfe8
+      evidence:
+        - .ai/evidence/T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION.md
+      architect_review:
+        contract_review: PASS
+        architecture_review: PASS
+        security_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the smallest provider-independent authenticated Room presence foundation required before Pause/Resume and provider alarm integration. Establish server-authenticated connection registry semantics, unique connection identity, multiple sockets per Player, prototype-safe immutable register/unregister behavior, unique connected Room-member accounting, unique connected Living-player accounting, Eliminated spectator exclusion from connectedLivingPlayers, deterministic internal presence summaries, and zero Room revision/lifecycle/deadline mutation from raw presence noise.

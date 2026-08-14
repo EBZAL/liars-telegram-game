@@ -523,9 +523,38 @@
 - no automatic CALL invented PASS
 - timeout-wins sequential client race PASS
 - no provider alarm API PASS
-- no persistence/concurrency implementation PASS
 - latest regression 405 tests / 24 files PASS
 - room-runtime 154 tests / 8 files PASS
+- game-core 251 tests / 16 files unchanged
+- T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION VERIFIED
+- provider-independent presence registry PASS
+- presence separate from RoomAuthorityState PASS
+- authenticated/server-resolved identity boundary PASS
+- membership-only connection registration PASS
+- connection identity uniqueness PASS
+- cross-Player collision fail-closed PASS
+- multi-socket per Player PASS
+- unique-Player deduplication PASS
+- final-socket disconnect semantics PASS
+- missing unregister idempotency PASS
+- wrong-Player unregister fail-closed PASS
+- prototype-safe hostile identifiers PASS
+- deterministic connected-member ordering PASS
+- connectedLivingPlayers unique-player semantics PASS
+- lifeStatus ALIVE authority PASS
+- EMPTY_SAFE Living presence PASS
+- EMPTY_PENDING_CHALLENGE Living presence PASS
+- Eliminated spectator tracked-but-not-Living PASS
+- current Player may be disconnected PASS
+- Match-null connected-Living count zero PASS
+- raw connect/disconnect zero Room revision PASS
+- raw presence zero lifecycle mutation PASS
+- raw presence zero deadline/alarm mutation PASS
+- no Pause/Resume implementation PASS
+- no WebSocket/provider implementation PASS
+- internal summary distinguished from recipient projection PASS
+- latest regression 425 tests / 25 files PASS
+- room-runtime 174 tests / 9 files PASS
 - game-core 251 tests / 16 files unchanged
 
 ## STAGE-05 — Telegram Integration

@@ -4,7 +4,7 @@
 STAGE-04 — Authoritative Multiplayer
 
 **Last Verified Task:**
-T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION
+T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
 
 **Current Active Task:**
 None
@@ -2069,23 +2069,131 @@ T27 remains mandatory STAGE-04 security work.
 - No T-021 source changes.
 - No T-022 source changes.
 
-**Explicitly NOT IMPLEMENTED BY T-023:**
-- Cloudflare provider alarm scheduling
+- T-024 Unique Living Presence Foundation VERIFIED
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Provider-independent: YES
+- Presence authority:
+  - separate RoomPresenceRegistry
+  - NOT stored in RoomAuthorityState
+  - server-authenticated/server-resolved connection identity assumed
+  - authentication itself not implemented
+- Connection model:
+  - connectionId → playerId unique binding
+  - Player may own multiple connectionIds
+  - exact duplicate registration idempotent
+  - exact missing unregister idempotent
+  - cross-Player connection collision fails closed
+  - wrong-Player unregister fails closed
+  - no connection stealing/rebinding
+- Prototype safety:
+  - prototype-safe null-prototype maps
+  - __proto__ playerId safe
+  - constructor playerId safe
+  - __proto__ connectionId safe
+  - constructor connectionId safe
+- Membership:
+  - registration requires existing Room membership
+  - non-member registration rejected
+- Connected members:
+  - only Room members with >=1 registered connection
+  - multiple sockets appear once
+  - deterministic Room membership ordering
+- Living presence:
+  - connectedLivingPlayers = count of unique connected Room members whose authoritative Match lifeStatus == ALIVE
+- Living authority:
+  - lifeStatus only
+  - hand size is not authority
+  - roundStatus is not authority
+  - host status is not authority
+  - current-turn identity is not authority
+- ALIVE states:
+  - WITH_CARDS counts
+  - EMPTY_PENDING_CHALLENGE counts
+  - EMPTY_SAFE counts
+- Eliminated spectator:
+  - may remain tracked as connected Room member
+  - does not enter connectedLivingPlayerIds
+  - contributes zero to connectedLivingPlayers
+  - cannot prevent future Pause
+  - cannot cause future Resume
+- Multi-socket:
+  - one Living Player / one connection → count 1
+  - one Living Player / multiple connections → still count 1
+  - removing one of many → still connected
+  - removing final connection → disconnected
+- Current Player:
+  - may be disconnected
+  - another connected Living Player keeps connectedLivingPlayers > 0
+- Match-null/Lobby:
+  - connected Room members may be tracked
+  - connectedLivingPlayers = 0
+  - no fake Core Living semantics
+- Raw presence noise:
+  - connect = zero Room revision
+  - disconnect = zero Room revision
+  - duplicate connect = zero Room revision
+  - duplicate disconnect = zero Room revision
+  - zero lifecycle mutation
+  - zero deadline mutation
+  - zero alarm mutation
+  - zero Core transition
+  - zero gameplay processed record
+- Purity:
+  - Room input not mutated
+  - registry input not mutated
+  - connection input not mutated
+  - evaluator does not mutate registry
+  - immutable fresh registry returned when change occurs
+- Security:
+  - no client presence-count authority
+  - no client lifeStatus authority
+  - presence summary is internal server authority data
+  - not a recipient projection
+  - no spectator projection added
+  - T27 remains deferred
+- No:
+  - Pause implementation
+  - Resume implementation
+  - deadline clearing on disconnect
+  - re-arm on reconnect
+  - nextRoomRevision use
+  - gameplay transaction dispatch
+  - SYSTEM_TIMEOUT dispatch
+  - WebSocket
+  - Durable Object
+  - SQLite
+  - provider alarm API
+  - Telegram authentication implementation
+  - reconnect orchestration
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 425 tests / 25 files
+  - room-runtime: 174 tests / 9 files
+  - game-core: 251 tests / 16 files unchanged
+- No package changes.
+- No package-lock changes.
+- No external dependency changes.
+- No game-core changes.
+- No existing authority source changes.
+
+**Explicitly NOT IMPLEMENTED BY T-024:**
+- MATCH_ACTIVE → MATCH_PAUSED_NO_LIVING_CONNECTIONS
+- MATCH_PAUSED_NO_LIVING_CONNECTIONS → MATCH_ACTIVE
+- life-status-triggered Pause composition
+- fresh Resume deadline
+- provider TURN_DEADLINE alarm scheduling
 - provider alarm handler
-- provider retry wiring
-- durable atomic persistence
 - Durable Object
 - SQLite persistence/reload
-- actual concurrency serialization
-- connectedLivingPlayers accounting
-- zero-Living Pause
-- Living-only Resume
-- life-status-triggered Pause
+- durable atomic persistence
+- actual concurrency
 - WebSocket/reconnect
 - Telegram auth/session
 - recipient-specific projections
 - T27
-- ROOM_RETENTION scheduling
 
 T27 remains mandatory STAGE-04 security work.
 
@@ -2096,7 +2204,7 @@ T27 remains mandatory STAGE-04 security work.
 * hidden information leakage
 * free-tier operational constraints
 
-These known risks belong to later stages and do not block Stage-03 completion or T-023 verification.
+These known risks belong to later stages and do not block Stage-03 completion or T-024 verification.
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2117,4 +2225,4 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-023 verification State Sync. No T-024 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+Project Architect must re-read this T-024 verification State Sync. No T-025 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
