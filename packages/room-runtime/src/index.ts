@@ -10,3 +10,4 @@ export * from './presence.js';
 export * from './presence-lifecycle.js';
 export * from './system-timeout-presence-lifecycle.js';
 export * from './timed-gameplay-presence-lifecycle.js';
+export * from './provider-alarm-sync.js';
