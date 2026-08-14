@@ -2821,12 +2821,13 @@ tasks:
   T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION:
     title: Client Gameplay Presence Lifecycle Composition
     stage: STAGE-04
-    status: IN_PROGRESS
-    implementation_commit: null
+    status: IMPLEMENTED
+    implementation_commit: 50a9480fd9185460d47991859bd7ea906176ec75
     verification:
       decision: NOT_EVALUATED
       verified_implementation_commit: null
-      evidence: []
+      evidence:
+        - .ai/evidence/T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION.md
       architect_review:
         contract_review: NOT_EVALUATED
         architecture_review: NOT_EVALUATED
