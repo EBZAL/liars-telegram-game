@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
-active_task: null
+active_task: T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -134,6 +134,7 @@ stages:
       - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
       - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
       - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3018,6 +3019,174 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN:
+    title: Final-State Provider Alarm Synchronization Plan
+    stage: STAGE-04
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent final-state alarm synchronization planning layer.
+    dependencies:
+      - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+      - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent alarm sync planning module exists.
+      - AC-02: API exported from room-runtime.
+      - AC-03: Input explicitly represents FINAL authoritative Room state.
+      - AC-04: Provider observation represented without Cloudflare types.
+      - AC-05: Result discriminates NO_CHANGE.
+      - AC-06: Result discriminates SET_ALARM.
+      - AC-07: Result discriminates DELETE_ALARM.
+      - AC-08: Result discriminates INVALID_STATE.
+      - AC-09: SET_ALARM carries desired dueAt only.
+      - AC-10: No provider alarm kind/generation payload is invented.
+      - AC-11: Observed null is accepted.
+      - AC-12: Observed safe non-negative integer is accepted.
+      - AC-13: Negative provider observation fails closed.
+      - AC-14: Fractional provider observation fails closed.
+      - AC-15: NaN provider observation fails closed.
+      - AC-16: Infinity provider observation fails closed.
+      - AC-17: Unsafe integer provider observation fails closed.
+      - AC-18: Invalid Room revision fails closed.
+      - AC-19: MATCH_ACTIVE validation delegates to T-021.
+      - AC-20: T-021 NOT_DUE active state accepted.
+      - AC-21: T-021 DUE active state accepted.
+      - AC-22: T-021 INVALID_STATE maps INVALID_STATE.
+      - AC-23: T-021 NOT_APPLICABLE from claimed MATCH_ACTIVE fails closed.
+      - AC-24: No full T-021 timing algorithm duplication.
+      - AC-25: Coherent ACTIVE desired dueAt comes from activeAlarm.
+      - AC-26: ACTIVE provider null -> SET_ALARM.
+      - AC-27: ACTIVE provider different dueAt -> SET_ALARM.
+      - AC-28: ACTIVE provider matching dueAt -> NO_CHANGE.
+      - AC-29: ACTIVE plan adds zero Room revision.
+      - AC-30: ACTIVE plan does not mutate deadline.
+      - AC-31: ACTIVE plan does not mutate alarm metadata.
+      - AC-32: PAUSED requires currentTurnDeadline null.
+      - AC-33: PAUSED requires activeAlarm null.
+      - AC-34: PAUSED with stale deadline fails closed.
+      - AC-35: PAUSED with stale alarm fails closed.
+      - AC-36: PAUSED observed null -> NO_CHANGE.
+      - AC-37: PAUSED observed timestamp -> DELETE_ALARM.
+      - AC-38: LOBBY requires currentTurnDeadline null.
+      - AC-39: LOBBY permits no activeAlarm.
+      - AC-40: LOBBY permits structurally valid HOST_GRACE.
+      - AC-41: LOBBY rejects TURN_DEADLINE.
+      - AC-42: LOBBY rejects ROOM_RETENTION.
+      - AC-43: HOST_GRACE dueAt safe non-negative.
+      - AC-44: HOST_GRACE generation safe non-negative.
+      - AC-45: T-028 does not create HOST_GRACE metadata.
+      - AC-46: T-028 does not calculate 60-second host grace.
+      - AC-47: MATCH_FINISHED requires currentTurnDeadline null.
+      - AC-48: MATCH_FINISHED permits activeAlarm null.
+      - AC-49: MATCH_FINISHED permits structurally valid ROOM_RETENTION.
+      - AC-50: MATCH_FINISHED rejects TURN_DEADLINE.
+      - AC-51: MATCH_FINISHED rejects HOST_GRACE.
+      - AC-52: T-028 does not create ROOM_RETENTION metadata.
+      - AC-53: T-028 does not calculate 24-hour retention.
+      - AC-54: ABANDONED requires currentTurnDeadline null.
+      - AC-55: ABANDONED permits null alarm.
+      - AC-56: ABANDONED permits structurally valid ROOM_RETENTION.
+      - AC-57: ABANDONED rejects TURN_DEADLINE/HOST_GRACE.
+      - AC-58: Non-turn alarm dueAt validation implemented.
+      - AC-59: Non-turn alarm generation validation implemented.
+      - AC-60: No new HOST_GRACE generation/revision semantic invented.
+      - AC-61: No new ROOM_RETENTION generation/revision semantic invented.
+      - AC-62: desired null + observed null -> NO_CHANGE.
+      - AC-63: desired null + observed timestamp -> DELETE_ALARM.
+      - AC-64: desired timestamp + observed null -> SET_ALARM.
+      - AC-65: desired timestamp differs from observed -> SET_ALARM desired.
+      - AC-66: desired timestamp equals observed -> NO_CHANGE.
+      - AC-67: Exactly one synchronization intent maximum.
+      - AC-68: Provider state never overwrites Room activeAlarm.
+      - AC-69: Provider state never overwrites Room lifecycle.
+      - AC-70: Provider state never overwrites Room revision.
+      - AC-71: Equal dueAt with changed durable kind/generation requires no timestamp operation.
+      - AC-72: Durable alarm identity remains Room-owned.
+      - AC-73: Provider observation is timestamp-only.
+      - AC-74: T-027 COMMITTED_ACTIVE final state can produce SET_ALARM.
+      - AC-75: T-027 COMMITTED_ACTIVE matching provider can produce NO_CHANGE.
+      - AC-76: T-027 COMMITTED_PAUSED final state produces DELETE when old alarm exists.
+      - AC-77: T-027 COMMITTED_PAUSED deletes hypothetical intermediate deadline timestamp.
+      - AC-78: T-027 intermediate active state is not automatically synchronized.
+      - AC-79: T-026 COMMITTED_ACTIVE integration covered.
+      - AC-80: T-026 COMMITTED_PAUSED integration covered.
+      - AC-81: T-026 COMMITTED_FINISHED integration covered.
+      - AC-82: Finished final null alarm deletes stale previous deadline.
+      - AC-83: T-025 Resume final active state produces SET_ALARM fresh deadline.
+      - AC-84: Resume synchronization adds zero revision.
+      - AC-85: No old remaining timer calculation.
+      - AC-86: Drift null-provider/desired-alarm repairs with SET.
+      - AC-87: Drift wrong-provider-dueAt repairs with SET.
+      - AC-88: Drift provider-alarm/desired-null repairs with DELETE.
+      - AC-89: Drift repair adds zero Room revision.
+      - AC-90: No nextRoomRevision call.
+      - AC-91: No Match mutation.
+      - AC-92: No currentTurnId mutation.
+      - AC-93: No currentTurnDeadline mutation.
+      - AC-94: No activeAlarm mutation.
+      - AC-95: No processed-action registry mutation.
+      - AC-96: No authoritativeNowMs parameter.
+      - AC-97: No Date.now.
+      - AC-98: No performance.now.
+      - AC-99: No Math.random.
+      - AC-100: No crypto entropy.
+      - AC-101: Past dueAt is not rewritten based on local clock.
+      - AC-102: Input Room immutable.
+      - AC-103: Input Match immutable.
+      - AC-104: Input members immutable.
+      - AC-105: Input activeAlarm immutable.
+      - AC-106: No hidden Match data emitted in result.
+      - AC-107: No GameplayActionEnvelope change.
+      - AC-108: No client alarm authority.
+      - AC-109: No client dueAt authority.
+      - AC-110: No recipient projection.
+      - AC-111: T27 remains deferred.
+      - AC-112: No storage.setAlarm.
+      - AC-113: No storage.getAlarm.
+      - AC-114: No storage.deleteAlarm.
+      - AC-115: No alarm() handler.
+      - AC-116: No Durable Object implementation.
+      - AC-117: No SQLite/persistence.
+      - AC-118: No WebSocket.
+      - AC-119: No actual concurrency implementation.
+      - AC-120: No Worker package/scaffold.
+      - AC-121: No wrangler configuration.
+      - AC-122: No package changes.
+      - AC-123: No package-lock changes.
+      - AC-124: No external dependency.
+      - AC-125: No game-core source changes.
+      - AC-126: No game-core test changes.
+      - AC-127: T-021 regression remains PASS.
+      - AC-128: T-025 regression remains PASS.
+      - AC-129: T-026 regression remains PASS.
+      - AC-130: T-027 regression remains PASS.
+      - AC-131: npm ci PASS.
+      - AC-132: npm run typecheck PASS.
+      - AC-133: npm test PASS.
+      - AC-134: room-runtime direct typecheck PASS.
+      - AC-135: room-runtime direct tests PASS.
+      - AC-136: game-core direct typecheck/tests PASS unchanged.
+      - AC-137: Evidence maps AC-01 through AC-136.
+      - AC-138: Evidence records final-state-only synchronization contract.
+      - AC-139: Evidence records T-027 ACTIVE set/no-change proof.
+      - AC-140: Evidence records T-027 PAUSED delete proof.
+      - AC-141: Evidence records T-026 ACTIVE/PAUSED/FINISHED proof.
+      - AC-142: Evidence records Resume fresh alarm proof.
+      - AC-143: Evidence records drift-repair semantics.
+      - AC-144: Evidence records alarm identity vs provider timestamp distinction.
+      - AC-145: Evidence records HOST_GRACE/ROOM_RETENTION producer semantics deferred.
+      - AC-146: Evidence records durable atomicity/crash ordering deferred.
+      - AC-147: Evidence records no provider API implementation.
+      - AC-148: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
