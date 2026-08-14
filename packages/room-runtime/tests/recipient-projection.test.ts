@@ -770,4 +770,116 @@ describe('Recipient-Specific Hidden-Information Projection [T-029]', () => {
     const invalidLc = { ...fixture.roomState, lifecycle: 'NOT_A_LIFECYCLE' as any };
     expect(deriveRecipientRoomProjection(invalidLc, { playerId: 'p1' }).decision).toBe('REJECT');
   });
+
+  // =========================================================================
+  // NULLABLE HOST TESTS (CORRECTION SUITE)
+  // =========================================================================
+
+  it('NULLABLE HOST TEST A — LOBBY with null Host projects cleanly', () => {
+    const lobbyNullHost: RoomAuthorityState<MatchState> = {
+      roomId: 'lobby-null-host',
+      lifecycle: 'LOBBY',
+      revision: 0,
+      members: [
+        { playerId: 'p1', joinOrder: 0 },
+        { playerId: 'p2', joinOrder: 1 },
+      ],
+      hostPlayerId: null,
+      currentTurnId: null,
+      currentTurnDeadline: null,
+      activeAlarm: null,
+      match: null,
+    };
+
+    const res = deriveRecipientRoomProjection(lobbyNullHost, { playerId: 'p1' });
+    expect(res.decision).toBe('PROJECTED');
+    if (res.decision !== 'PROJECTED') return;
+
+    expect(res.projection.publicState.hostPlayerId).toBeNull();
+    expect(res.projection.publicState.lifecycle).toBe('LOBBY');
+    expect(res.projection.publicState.match).toBeNull();
+    expect(res.projection.privateState).toBeNull();
+  });
+
+  it('NULLABLE HOST TEST B — ABANDONED with null Host projects cleanly', () => {
+    const abandonedNullHost: RoomAuthorityState<MatchState> = {
+      roomId: 'abandoned-null-host',
+      lifecycle: 'ABANDONED',
+      revision: 3,
+      members: [{ playerId: 'p1', joinOrder: 0 }],
+      hostPlayerId: null,
+      currentTurnId: null,
+      currentTurnDeadline: null,
+      activeAlarm: null,
+      match: null,
+    };
+
+    const res = deriveRecipientRoomProjection(abandonedNullHost, { playerId: 'p1' });
+    expect(res.decision).toBe('PROJECTED');
+    if (res.decision !== 'PROJECTED') return;
+
+    expect(res.projection.publicState.hostPlayerId).toBeNull();
+    expect(res.projection.publicState.lifecycle).toBe('ABANDONED');
+    expect(res.projection.publicState.match).toBeNull();
+    expect(res.projection.privateState).toBeNull();
+  });
+
+  it('NULLABLE HOST TEST C — Non-null Host regression preserves string host', () => {
+    const fixture = createAuthoritativeRoomFixture(['p1', 'p2', 'p3']);
+    expect(fixture.roomState.hostPlayerId).toBe('p1');
+
+    const res = deriveRecipientRoomProjection(fixture.roomState, { playerId: 'p1' });
+    expect(res.decision).toBe('PROJECTED');
+    if (res.decision !== 'PROJECTED') return;
+
+    expect(res.projection.publicState.hostPlayerId).toBe('p1');
+  });
+
+  it('NULLABLE HOST TEST D — Malformed Host values reject fail-closed', () => {
+    const fixture = createAuthoritativeRoomFixture(['p1', 'p2', 'p3']);
+
+    // Empty string host
+    const emptyHost = { ...fixture.roomState, hostPlayerId: '' };
+    expect(deriveRecipientRoomProjection(emptyHost, { playerId: 'p1' }).decision).toBe('REJECT');
+
+    // Whitespace string host
+    const wsHost = { ...fixture.roomState, hostPlayerId: '   ' };
+    expect(deriveRecipientRoomProjection(wsHost, { playerId: 'p1' }).decision).toBe('REJECT');
+
+    // Non-string non-null host
+    const numHost = { ...fixture.roomState, hostPlayerId: 123 as any };
+    expect(deriveRecipientRoomProjection(numHost, { playerId: 'p1' }).decision).toBe('REJECT');
+  });
+
+  it('NULLABLE HOST TEST E — Security regression with null Host and retained Match', () => {
+    const fixture = createAuthoritativeRoomFixture(['p1', 'p2', 'p3']);
+    const abandonedWithMatchNullHost: RoomAuthorityState<MatchState> = {
+      ...fixture.roomState,
+      lifecycle: 'ABANDONED',
+      hostPlayerId: null,
+    };
+
+    // Living p1 projection
+    const res1 = deriveRecipientRoomProjection(abandonedWithMatchNullHost, { playerId: 'p1' });
+    expect(res1.decision).toBe('PROJECTED');
+    if (res1.decision !== 'PROJECTED') return;
+    expect(res1.projection.publicState.hostPlayerId).toBeNull();
+    expect(res1.projection.privateState?.playerId).toBe('p1');
+    expect(res1.projection.privateState?.hand).toHaveLength(3);
+
+    // Eliminated p3 projection
+    const res3 = deriveRecipientRoomProjection(abandonedWithMatchNullHost, { playerId: 'p3' });
+    expect(res3.decision).toBe('PROJECTED');
+    if (res3.decision !== 'PROJECTED') return;
+    expect(res3.projection.publicState.hostPlayerId).toBeNull();
+    expect(res3.projection.privateState).toBeNull();
+
+    // Verify all hidden isolations remain intact under null host
+    const serialized3 = JSON.stringify(res3.projection);
+    expect(serialized3).not.toContain('secret-card-p1-alpha');
+    expect(serialized3).not.toContain('secret-card-p2-delta');
+    expect(serialized3).not.toContain('secret-card-undealt-1');
+    expect(serialized3).not.toContain('secret-card-central-1');
+    expect(serialized3).not.toContain('secret-play-card-x');
+  });
 });

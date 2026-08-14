@@ -48,7 +48,7 @@ export interface PublicRoomProjection {
   lifecycle: RoomLifecycle;
   revision: number;
   memberPlayerIds: string[];
-  hostPlayerId: string;
+  hostPlayerId: string | null;
   currentTurnId: string | null;
   currentTurnDeadline: number | null;
   match: PublicMatchProjection | null;
@@ -128,7 +128,7 @@ export function deriveRecipientRoomProjection(
   if (!Array.isArray(roomState.members)) {
     return { decision: 'REJECT', reason: 'INVALID_ROOM_STATE' };
   }
-  if (typeof roomState.hostPlayerId !== 'string' || roomState.hostPlayerId.trim().length === 0) {
+  if (roomState.hostPlayerId !== null && (typeof roomState.hostPlayerId !== 'string' || roomState.hostPlayerId.trim().length === 0)) {
     return { decision: 'REJECT', reason: 'INVALID_ROOM_STATE' };
   }
   if (roomState.currentTurnId !== null && typeof roomState.currentTurnId !== 'string') {
