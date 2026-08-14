@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-04
 last_verified_task: T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
-active_task: null
+active_task: T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -133,6 +133,7 @@ stages:
       - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
       - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
       - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -2812,6 +2813,206 @@ tasks:
       - AC-121: Evidence explicitly defers client-gameplay presence composition.
       - AC-122: Evidence explicitly defers provider/persistence/concurrency.
       - AC-123: Task ends IMPLEMENTED only, never VERIFIED.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION:
+    title: Client Gameplay Presence Lifecycle Composition
+    stage: STAGE-04
+    status: IN_PROGRESS
+    implementation_commit: null
+    verification:
+      decision: NOT_EVALUATED
+      verified_implementation_commit: null
+      evidence: []
+      architect_review:
+        contract_review: NOT_EVALUATED
+        architecture_review: NOT_EVALUATED
+        security_review: NOT_EVALUATED
+        quality_review: NOT_EVALUATED
+        risk_controls: NOT_EVALUATED
+        regression_impact: NOT_EVALUATED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the smallest provider-independent authoritative composition layer that executes VERIFIED T-022 timed client gameplay and, only after a successful continuing gameplay commit, reconciles the resulting Match using VERIFIED T-025 zero-Living Pause semantics. Establish exact client retry/revision contract when a successful client gameplay action is immediately followed by a separate ACTIVE → PAUSED lifecycle transition.
+    dependencies:
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+      - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+    acceptance_criteria:
+      - AC-01: Dedicated provider-independent client gameplay/presence composition module exists.
+      - AC-02: API exported from room-runtime.
+      - AC-03: T-022 called exactly once per execution.
+      - AC-04: No duplicated authorization logic.
+      - AC-05: No duplicated admission logic.
+      - AC-06: No duplicated deadline logic.
+      - AC-07: No duplicated Core gameplay dispatch.
+      - AC-08: No duplicated Living-count logic.
+      - AC-09: No manual Pause implementation.
+      - AC-10: REJECT passes through exact reason.
+      - AC-11: DUPLICATE passes through priorResultingRevision.
+      - AC-12: DEADLINE_DUE passes through.
+      - AC-13: Non-COMMITTED outcomes do not invoke Pause.
+      - AC-14: Non-COMMITTED outcomes add zero revision.
+      - AC-15: Non-COMMITTED outcomes add zero RNG.
+      - AC-16: Non-COMMITTED outcomes do not mutate registry.
+      - AC-17: T-022 COMMITTED MATCH_FINISHED has absolute precedence.
+      - AC-18: FINISHED does not invoke Pause.
+      - AC-19: FINISHED remains MATCH_FINISHED.
+      - AC-20: FINISHED winner preserved.
+      - AC-21: FINISHED currentTurnId null.
+      - AC-22: FINISHED deadline null.
+      - AC-23: FINISHED alarm null.
+      - AC-24: FINISHED actionResultingRevision = N+1.
+      - AC-25: FINISHED finalResultingRevision = N+1.
+      - AC-26: FINISHED processed record resultingRevision = N+1.
+      - AC-27: Continuing T-022 COMMITTED delegates to T-025.
+      - AC-28: T-025 NO_CHANGE maps COMMITTED_ACTIVE.
+      - AC-29: ACTIVE actionResultingRevision = N+1.
+      - AC-30: ACTIVE finalResultingRevision = N+1.
+      - AC-31: ACTIVE Room revision = N+1.
+      - AC-32: ACTIVE processed record resultingRevision = N+1.
+      - AC-33: ACTIVE next turnId preserved.
+      - AC-34: ACTIVE +30000 deadline preserved.
+      - AC-35: ACTIVE alarm generation = N+1.
+      - AC-36: ACTIVE adds zero lifecycle revision.
+      - AC-37: T-025 PAUSED maps COMMITTED_PAUSED.
+      - AC-38: PAUSED actionResultingRevision = N+1.
+      - AC-39: PAUSED finalResultingRevision = N+2.
+      - AC-40: PAUSED Room revision = N+2.
+      - AC-41: Total initial→paused delta exactly 2.
+      - AC-42: No third revision.
+      - AC-43: First revision is client gameplay/Core transition.
+      - AC-44: Second revision is ACTIVE→PAUSED lifecycle transition.
+      - AC-45: PAUSED lifecycle correct.
+      - AC-46: PAUSED Match equals T-022 resulting Match.
+      - AC-47: PAUSED next turnId preserved.
+      - AC-48: PAUSED deadline null.
+      - AC-49: PAUSED activeAlarm null.
+      - AC-50: Intermediate T-022 alarm does not survive Pause.
+      - AC-51: Intermediate T-022 alarm is not provider-scheduled.
+      - AC-52: Processed registry returned by T-022 is reused unchanged.
+      - AC-53: No second recordSuccessfulGameplayAction call.
+      - AC-54: No registry reconstruction after Pause.
+      - AC-55: PAUSED processed record.resultingRevision remains N+1.
+      - AC-56: PAUSED processed record.resultingRevision differs from final N+2.
+      - AC-57: recordSuccessfulGameplayAction invariant expectedRevision+1 remains unchanged.
+      - AC-58: Exact retry after PAUSED returns DUPLICATE.
+      - AC-59: Exact retry after PAUSED priorResultingRevision = N+1.
+      - AC-60: Exact retry after PAUSED does not report N+2 as priorResultingRevision.
+      - AC-61: Duplicate retry after PAUSE executes zero Core.
+      - AC-62: Duplicate retry after PAUSE consumes zero RNG.
+      - AC-63: Duplicate retry after PAUSE causes zero Room revision.
+      - AC-64: Duplicate retry after PAUSE causes zero Pause transition.
+      - AC-65: Duplicate retry after PAUSE does not reset deadline/alarm.
+      - AC-66: Duplicate retry after later Resume remains DUPLICATE.
+      - AC-67: Duplicate retry after Resume still priorResultingRevision = N+1.
+      - AC-68: Duplicate retry after Resume causes zero mutation.
+      - AC-69: Same actionId modified request after PAUSE is ACTION_ID_CONFLICT.
+      - AC-70: ACTION_ID_CONFLICT precedes stale revision.
+      - AC-71: ACTION_ID_CONFLICT precedes paused lifecycle rejection.
+      - AC-72: New actionId expectedRevision=N+1 against final N+2 PAUSED → STALE_REVISION.
+      - AC-73: New actionId expectedRevision=N+2 against PAUSED → MATCH_NOT_ACTIVE.
+      - AC-74: Final Room revision remains authoritative independently from historical duplicate revision.
+      - AC-75: Evidence explains priorResultingRevision historical semantics.
+      - AC-76: Evidence explains current Room revision must come from authoritative Room state/resync.
+      - AC-77: No client resync transport implemented.
+      - AC-78: Post-action Core lifeStatus change can alter connectedLivingPlayers with unchanged registry.
+      - AC-79: Canonical deterministic client action ALIVE→ELIMINATED continuing-Match case covered.
+      - AC-80: Only connected Living player eliminated case reaches COMMITTED_PAUSED.
+      - AC-81: Other Living Players remain alive but disconnected.
+      - AC-82: Presence registry unchanged across gameplay.
+      - AC-83: Processed action record created exactly once in elimination case.
+      - AC-84: Eliminated actor/action record remains valid historical record.
+      - AC-85: Match-finished precedence tested with zero Living connections.
+      - AC-86: Winner never becomes PAUSED.
+      - AC-87: Current/acting Player disconnected/eliminated but another Living connected → COMMITTED_ACTIVE.
+      - AC-88: Pause uses global unique Living semantics.
+      - AC-89: Exact deadline unseen valid action → DEADLINE_DUE.
+      - AC-90: After-deadline unseen valid action → DEADLINE_DUE.
+      - AC-91: DEADLINE_DUE creates no processed record.
+      - AC-92: DEADLINE_DUE does not invoke Pause.
+      - AC-93: Duplicate precedence remains before deadline arbitration.
+      - AC-94: Duplicate after deadline remains DUPLICATE.
+      - AC-95: Resume composed PAUSED result exact 0→1 succeeds.
+      - AC-96: Resume revision = N+3 after N+2 Pause.
+      - AC-97: Resume same prepared turnId preserved.
+      - AC-98: Resume fresh deadline = resumeTime+30000.
+      - AC-99: Resume alarm generation = N+3.
+      - AC-100: Processed action record remains N+1 after Resume.
+      - AC-101: No ProcessedGameplayActionRecord shape change.
+      - AC-102: No ProcessedGameplayActionRegistry semantic change.
+      - AC-103: No priorResultingRevision semantic mutation in T-018/T-022.
+      - AC-104: No actionId synthesis.
+      - AC-105: No GameplayActionEnvelope change.
+      - AC-106: No RoomAuthorityState shape change.
+      - AC-107: No T-018 source modification.
+      - AC-108: No T-019 source modification.
+      - AC-109: No T-020 source modification.
+      - AC-110: No T-021 source modification.
+      - AC-111: No T-022 source modification.
+      - AC-112: No T-024 source modification.
+      - AC-113: No T-025 source modification.
+      - AC-114: No T-026 source modification.
+      - AC-115: No game-core source change.
+      - AC-116: No game-core test change.
+      - AC-117: Input Room immutable.
+      - AC-118: Input Match immutable.
+      - AC-119: Input Hands immutable.
+      - AC-120: Envelope immutable.
+      - AC-121: Input processedRegistry immutable.
+      - AC-122: Actor input immutable.
+      - AC-123: preparedNextTurn immutable.
+      - AC-124: presenceRegistry immutable.
+      - AC-125: No new RandomSource.
+      - AC-126: No Date.now.
+      - AC-127: No performance.now.
+      - AC-128: No Math.random.
+      - AC-129: No crypto entropy.
+      - AC-130: No WebSocket implementation.
+      - AC-131: No Durable Object implementation.
+      - AC-132: No provider alarm API.
+      - AC-133: No SQLite/persistence.
+      - AC-134: No actual concurrency implementation.
+      - AC-135: No recipient projection.
+      - AC-136: T27 remains deferred.
+      - AC-137: No package changes.
+      - AC-138: No package-lock changes.
+      - AC-139: No external dependency.
+      - AC-140: npm ci PASS.
+      - AC-141: npm run typecheck PASS.
+      - AC-142: npm test PASS.
+      - AC-143: room-runtime direct typecheck PASS.
+      - AC-144: room-runtime direct tests PASS.
+      - AC-145: game-core direct typecheck/tests PASS unchanged.
+      - AC-146: T-018 regression remains PASS.
+      - AC-147: T-019 regression remains PASS.
+      - AC-148: T-020 regression remains PASS.
+      - AC-149: T-021 regression remains PASS.
+      - AC-150: T-022 regression remains PASS.
+      - AC-151: T-024 regression remains PASS.
+      - AC-152: T-025 regression remains PASS.
+      - AC-153: T-026 regression remains PASS.
+      - AC-154: Evidence maps AC-01 through AC-153.
+      - AC-155: Evidence records ACTIVE one-revision case.
+      - AC-156: Evidence records PAUSED two-revision case.
+      - AC-157: Evidence records processed record N+1 vs final Room N+2 distinction.
+      - AC-158: Evidence records exact duplicate after PAUSE returning N+1.
+      - AC-159: Evidence records exact duplicate after Resume returning N+1.
+      - AC-160: Evidence records ACTION_ID_CONFLICT precedence after Pause.
+      - AC-161: Evidence records new-action stale-vs-paused ordering.
+      - AC-162: Evidence records post-action elimination with unchanged registry.
+      - AC-163: Evidence records Finished precedence.
+      - AC-164: Evidence records deadline pass-through.
+      - AC-165: Evidence explicitly defers provider/persistence/concurrency.
+      - AC-166: Task ends IMPLEMENTED only, never VERIFIED.
     risk_gate:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
