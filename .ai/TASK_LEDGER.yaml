@@ -2666,12 +2666,13 @@ tasks:
   T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION:
     title: System Timeout Presence Lifecycle Composition
     stage: STAGE-04
-    status: IN_PROGRESS
-    implementation_commit: null
+    status: IMPLEMENTED
+    implementation_commit: 096cef0e15eb2a754c07943d1452aac5268d6496
     verification:
       decision: NOT_EVALUATED
       verified_implementation_commit: null
-      evidence: []
+      evidence:
+        - .ai/evidence/T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION.md
       architect_review:
         contract_review: NOT_EVALUATED
         architecture_review: NOT_EVALUATED
