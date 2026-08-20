@@ -2756,17 +2756,39 @@ T27 remains mandatory STAGE-04 security work.
 - All 13 STAGE-04 required tasks (T-017 through T-029) are durably VERIFIED.
 - All Stage-04 Exit Gate criteria (action dedupe, stale revision, turn validation, deadline races, presence accounting, pause/resume lifecycle, alarm sync, recipient projections, T27 / I29) are fully satisfied and evidenced.
 
-**Explicitly NOT IMPLEMENTED BY STAGE-04 (Belongs to STAGE-05+):**
-- Cloudflare Worker scaffold / wrangler configuration
-- Concrete Telegram initData HMAC validation
+- T-030 Telegram InitData HMAC Cryptographic Validation Boundary IMPLEMENTED (Awaiting Architect Verification).
+- Workflow: STRICT
+- Risk: HIGH
+- Implementation & Security:
+  - validateTelegramInitData(rawInitData, botToken, maxAgeSeconds, currentTimeSec) exported from room-runtime
+  - Server-authoritative HMAC-SHA256 hash validation
+  - Alphabetically-sorted key-value pair data_check_string construction
+  - Secret key computation: HMAC-SHA256("WebAppData", botToken)
+  - Constant-time timingSafeEqual comparison prevents timing side-channel attacks
+  - Freshness validation against configurable maxAgeSeconds (default 86400s / 24h)
+  - Fail-closed error codes: MALFORMED_INIT_DATA, INVALID_HASH, EXPIRED_AUTH_DATE, MISSING_USER
+  - Full ValidatedTelegramUser parsing (id, first_name, last_name, username, language_code, is_premium, allows_write_to_pm)
+  - Deterministic unit testing support with currentTimeSec
+  - Zero external network dependencies
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 585 tests / 31 files (251 game-core / 334 room-runtime)
+- Git metadata:
+  - task-start: e0b001614749f7e77a28892784534431e33c66f9
+  - implementation: 54de4f8a526d968964aa574b3745fd14858bbdb9
+
+**Explicitly NOT IMPLEMENTED BY T-030:**
+- Cloudflare Worker scaffold / routing / wrangler config
 - Mini App bootstrap / Lobby / Host migration
 - SQLite Durable Object persistence layer
 - WebSocket wire transport
 
 **Known Risks:**
-* Telegram identity validation & bot token secret protection
-* WebSocket transport reconnect / hibernate lifecycle
-* Free-tier operational boundaries
+* Telegram Bot Token secrecy & storage in Cloudflare Worker env secrets
+* Mini App bootstrap lifecycle & session token handoff
+* Realtime WebSocket reconnect / hibernate lifecycle
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2787,5 +2809,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-STAGE-05 — Telegram Integration. First task to be approved and executed: `T-030-TELEGRAM-AUTH-INITDATA-VALIDATION` (Server-authoritative Telegram `initData` cryptographic HMAC-SHA256 validation boundary).
+Project Architect must verify `T-030-TELEGRAM-AUTH-INITDATA-VALIDATION`. Upon verification and State Sync, determine the next bounded Stage-05 task (e.g. Worker scaffold / room routing / lobby bootstrap).
+
 
