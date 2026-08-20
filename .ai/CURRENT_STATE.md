@@ -7,7 +7,7 @@ STAGE-05 — Telegram Integration
 T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
 
 **Current Active Task:**
-None
+T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation

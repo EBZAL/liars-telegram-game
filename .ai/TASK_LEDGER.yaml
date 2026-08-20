@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-05
 last_verified_task: T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
-active_task: null
+active_task: T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -160,8 +160,9 @@ stages:
 
   STAGE-05:
     title: Telegram Integration
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3488,6 +3489,38 @@ tasks:
       Risk Level: HIGH
       Workflow Profile: STRICT
       Decision: APPROVED_WITH_CONTROLS
+
+  T-030-TELEGRAM-AUTH-INITDATA-VALIDATION:
+    title: Telegram InitData HMAC Cryptographic Validation Boundary
+    stage: STAGE-05
+    status: IN_PROGRESS
+    workflow_profile: STRICT
+    risk_level: HIGH
+    objective: Establish the server-authoritative cryptographic validation module for Telegram Mini App initData using HMAC-SHA256 hash verification against the Bot Token, parsing user identity, validating auth date freshness / expiration, and failing closed against untrusted client payloads.
+    dependencies:
+      - T-019-SERVER-ACTOR-AUTHORIZATION-BINDING
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+    acceptance_criteria:
+      - AC-01: Pure fail-closed validateTelegramInitData exported from room-runtime.
+      - AC-02: ValidatedTelegramUser and TelegramAuthResult interfaces defined and exported.
+      - AC-03: Rejects missing or empty rawInitData with MALFORMED_INIT_DATA.
+      - AC-04: Rejects missing hash parameter with INVALID_HASH.
+      - AC-05: Builds data-check-string with alphabetical sorting of key-value pairs joined by newline, excluding hash.
+      - AC-06: Computes secret key via HMAC-SHA256("WebAppData", botToken).
+      - AC-07: Computes expected signature via HMAC-SHA256(secretKey, dataCheckString) hex-encoded.
+      - AC-08: Uses crypto.timingSafeEqual for constant-time comparison against received hash.
+      - AC-09: Rejects mismatched hash with INVALID_HASH.
+      - AC-10: Validates auth_date and rejects expired payloads older than maxAgeSeconds with EXPIRED_AUTH_DATE.
+      - AC-11: Validates and parses user JSON payload, extracting id, first_name, and optional fields.
+      - AC-12: Rejects missing user or malformed user JSON with MISSING_USER or MALFORMED_INIT_DATA.
+      - AC-13: Supports optional deterministic currentTimeSec for deterministic unit testing.
+      - AC-14: Zero external network or runtime dependencies introduced.
+      - AC-15: Full test suite passes across all workspaces.
+    risk_gate:
+      Risk Level: HIGH
+      Workflow Profile: STRICT
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
