@@ -326,9 +326,28 @@
 - Formal STAGE-03 Exit Gate: PASS
 
 ## STAGE-04 — Authoritative Multiplayer
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 **Goals**: Durable Object Room Coordinator, WebSocket, revision/dedupe, persistence, timeout, Pause/Resume, hidden projections, T27 dead-spectator hidden-Hand protection (Eliminated spectators receive Public State only and cannot read Living Players' hidden Hand values)
-**Exit Gate**: action dedupe; stale revision; turn validation; concurrent action safety; deadline races; unique Living presence accounting; zero-Living-connected Pause; Living-only Resume; life-status-triggered Pause evaluation; fresh 30-second Resume deadline; single activeAlarm invariant; stale/idempotent alarm behavior; persistence reload; reconnect; recipient-specific hidden-information projections, including T27 dead-spectator Hand isolation.
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-017 through T-029 all VERIFIED
+- provider-independent room-runtime workspace established
+- revision & actionId dedupe protocol operational
+- server-derived actor authorization binding operational
+- authoritative gameplay commit primitive operational
+- turn deadline authority (30s duration) operational
+- timed client gameplay arbitration operational
+- system timeout deadline transaction operational
+- unique living presence tracking & accounting operational
+- living presence pause/resume lifecycle operational
+- composed system timeout & presence lifecycle operational
+- composed client gameplay & presence lifecycle operational
+- final-state provider alarm synchronization planning operational
+- recipient-specific hidden-information projection operational
+- GAME_RULES T27 dead-spectator Hand protection verified and closed
+- GAME_RULES §24 invariant I29 verified and closed
+- full regression suite PASS (567 tests / 30 files: 251 game-core / 316 room-runtime)
+- STAGE-04 Exit Gate: PASS
 **Progress**:
 - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION VERIFIED
 - provider-independent room-runtime workspace established
@@ -665,6 +684,18 @@
 - latest regression 537 tests / 29 files PASS
 - room-runtime 286 tests / 13 files PASS
 - game-core 251 tests / 16 files unchanged
+- T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION VERIFIED
+- provider-independent recipient projection module established
+- ServerResolvedRecipient validation with fail-closed security PASS
+- GAME_RULES T27 direct test passes (dead spectator cannot read living players' hidden card values)
+- GAME_RULES §24 invariant I29 direct test passes (eliminated spectator receives Public State only, privateState === null)
+- explicit whitelist DTO projection (no raw Room, Match, Player, Round, Play, Revolver, or Card leaks) PASS
+- living recipient receives own Hand only; never receives other players' hands, undealt cards, central pile, face-down played card IDs, or revolver future sequence PASS
+- authoritative nullable hostPlayerId preserved PASS
+- prototype safety and hostile identifier protections verified PASS
+- immutable / pure projection verified PASS
+- latest full regression 567 tests / 30 files PASS (251 game-core / 316 room-runtime)
+- STAGE-04 COMPLETE / ALL 13 REQUIRED TASKS VERIFIED
 
 
 

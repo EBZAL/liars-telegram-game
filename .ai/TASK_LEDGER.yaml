@@ -2,9 +2,9 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-04
-last_verified_task: T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
-active_task: T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
+current_stage: STAGE-05
+last_verified_task: T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -121,7 +121,7 @@ stages:
 
   STAGE-04:
     title: Authoritative Multiplayer
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION
       - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
@@ -137,8 +137,26 @@ stages:
       - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
       - T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-017 through T-029 VERIFIED
+        - GAME_RULES T27 dead-spectator Hand protection and §24 invariant I29 verified and closed
+        - .ai/evidence/T-017-ROOM-AUTHORITY-PROTOCOL-FOUNDATION.md
+        - .ai/evidence/T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION.md
+        - .ai/evidence/T-019-SERVER-ACTOR-AUTHORIZATION-BINDING.md
+        - .ai/evidence/T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE.md
+        - .ai/evidence/T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION.md
+        - .ai/evidence/T-022-TIMED-CLIENT-GAMEPLAY-ARBITRATION.md
+        - .ai/evidence/T-023-SYSTEM-TIMEOUT-DEADLINE-TRANSACTION.md
+        - .ai/evidence/T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION.md
+        - .ai/evidence/T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE.md
+        - .ai/evidence/T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION.md
+        - .ai/evidence/T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION.md
+        - .ai/evidence/T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN.md
+        - .ai/evidence/T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION.md
+        - npm ci PASS
+        - npm run typecheck PASS
+        - npm test PASS (567 tests / 30 files: 251 game-core / 316 room-runtime)
 
   STAGE-05:
     title: Telegram Integration
@@ -3204,8 +3222,18 @@ tasks:
   T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION:
     title: Recipient-Specific Hidden-Information Projection
     stage: STAGE-04
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58
+      evidence:
+        - .ai/evidence/T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Implement the smallest provider-independent recipient-specific authoritative Room snapshot projection boundary that closes GAME_RULES T27 and GAME_RULES §24 invariant I29.

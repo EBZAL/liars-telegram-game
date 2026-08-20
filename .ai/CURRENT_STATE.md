@@ -1,10 +1,10 @@
 # Current State
 
 **Current Stage:**
-STAGE-04 — Authoritative Multiplayer
+STAGE-05 — Telegram Integration
 
 **Last Verified Task:**
-T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
+T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
 
 **Current Active Task:**
 None
@@ -2717,35 +2717,56 @@ T27 remains mandatory STAGE-04 security work.
   - implementation: 2f1d7dd20c8efc1f39efaa8f5c55751b5c3a0154
   - evidence/state: b8ca279880f4ab4546fb90b2b6af1b0a4f0214c2
 
-**Explicitly NOT IMPLEMENTED BY T-028:**
-- Cloudflare Worker scaffold
-- wrangler configuration
-- concrete provider alarm adapter
-- storage.setAlarm/getAlarm/deleteAlarm execution
-- alarm() handler
-- Durable Object
-- SQLite persistence/reload
-- persist-vs-alarm crash ordering
-- actual concurrency serialization
-- WebSocket/reconnect
-- HOST_GRACE producer
-- Host migration
-- ROOM_RETENTION producer
-- 24-hour retention calculation
-- Telegram auth/session
-- recipient-specific projections
-- GAME_RULES T27
+- T-029 Recipient-Specific Hidden-Information Projection VERIFIED.
+- Workflow: STRICT
+- Risk: HIGH
+- Architecture & Security:
+  - provider-independent pure recipient projection boundary
+  - deriveRecipientRoomProjection(roomState, recipient) exported from room-runtime
+  - ServerResolvedRecipient context contains only server-resolved Player ID
+  - fail-closed validation for invalid recipient, non-member, or missing Match
+  - explicit whitelist DTO projection (no raw Room, Match, Player, Round, Play, Revolver, or Card leaks)
+  - PublicRoomProjection: roomId, lifecycle, revision, memberPlayerIds (deterministic sort), hostPlayerId (authoritative nullable preserved), currentTurnId, currentTurnDeadline
+  - PublicMatchProjection: status, seatOrder, players (PublicPlayerProjection array), round (PublicRoundProjection), winnerId
+  - PublicPlayerProjection: playerId, lifeStatus, handCount (hand.length), shotsUsed (revolver.nextShotIndex)
+  - PublicRoundProjection: roundNumber, tableRank, currentPlayerId, previousPlay summary (playerId, count, claimedRank)
+  - Private recipient projection (privateState):
+    - Living recipient: own Hand only (cloned Card DTOs with id + rank)
+    - Eliminated spectator: privateState is null (Public State only)
+  - GAME_RULES T27 verified: dead spectator cannot read living players' hidden card values
+  - GAME_RULES §24 invariant I29 closed: eliminated spectator receives Public State only, privateState === null
+  - Whitelist canary testing proves future added secret keys do not leak
+  - Prototype safety: __proto__, constructor, toString Player IDs handled safely
+  - Detached snapshot output: mutating projection does not mutate authoritative Room/Match/Hand
+  - Purity: zero Room revision, zero lifecycle mutation, no RandomSource, no clock/entropy
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 567 tests / 30 files
+  - room-runtime: 316 tests / 14 files
+  - game-core: 251 tests / 16 files unchanged
+- Git metadata:
+  - task-start: 5d299950342e67658ad5e14549c086207d733e5b
+  - original implementation: f8b1ec9987610af44f1d600553cc8161f08e8be5
+  - correction implementation: 3580a9c60a1aa866cb2c6ac3bb2c8b7f405b8a58
+  - correction metadata record: 3eba43daa6dc3b299bbb0f56272eb876279dd266
 
-T27 remains mandatory STAGE-04 security work.
+**STAGE-04 Exit Gate Status: COMPLETE / PASS**
+- All 13 STAGE-04 required tasks (T-017 through T-029) are durably VERIFIED.
+- All Stage-04 Exit Gate criteria (action dedupe, stale revision, turn validation, deadline races, presence accounting, pause/resume lifecycle, alarm sync, recipient projections, T27 / I29) are fully satisfied and evidenced.
+
+**Explicitly NOT IMPLEMENTED BY STAGE-04 (Belongs to STAGE-05+):**
+- Cloudflare Worker scaffold / wrangler configuration
+- Concrete Telegram initData HMAC validation
+- Mini App bootstrap / Lobby / Host migration
+- SQLite Durable Object persistence layer
+- WebSocket wire transport
 
 **Known Risks:**
-* realtime concurrency
-* deadline/reconnect races
-* Telegram identity/trust boundary
-* hidden information leakage
-* free-tier operational constraints
-
-These known risks belong to later stages and do not block Stage-03 completion or T-028 verification.
+* Telegram identity validation & bot token secret protection
+* WebSocket transport reconnect / hibernate lifecycle
+* Free-tier operational boundaries
 
 **Active Architectural Constraints:**
 * GAME_RULES v3 authority
@@ -2766,5 +2787,5 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must re-read this T-028 verification State Sync. No T-029 or future implementation task is pre-authorized. Only after successful re-read may Architect inspect remaining Stage-04 goals, Architecture, Security, relevant ADRs, Ledger, Current State, Roadmap and actual Git state; derive the smallest bounded next task; run Risk Gate and Consistency Gate; then issue exactly one Executor prompt.
+STAGE-05 — Telegram Integration. First task to be approved and executed: `T-030-TELEGRAM-AUTH-INITDATA-VALIDATION` (Server-authoritative Telegram `initData` cryptographic HMAC-SHA256 validation boundary).
 
