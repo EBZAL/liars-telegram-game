@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-05
 last_verified_task: T-033-ROOM-SQLITE-PERSISTENCE-LAYER
-active_task: null
+active_task: T-034-ROOM-COORDINATOR-INTEGRATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -166,6 +166,7 @@ stages:
       - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
       - T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
       - T-033-ROOM-SQLITE-PERSISTENCE-LAYER
+      - T-034-ROOM-COORDINATOR-INTEGRATION
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3679,6 +3680,43 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-034-ROOM-COORDINATOR-INTEGRATION:
+    title: Room Coordinator Integration
+    stage: STAGE-05
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement the unified RoomCoordinator controller in packages/room-runtime coordinating connections, client commands, provider alarms, SQLite persistence, and recipient-specific projection broadcasts.
+    dependencies:
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+      - T-025-LIVING-PRESENCE-PAUSE-RESUME-LIFECYCLE
+      - T-026-SYSTEM-TIMEOUT-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-027-CLIENT-GAMEPLAY-PRESENCE-LIFECYCLE-COMPOSITION
+      - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
+      - T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
+      - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+      - T-033-ROOM-SQLITE-PERSISTENCE-LAYER
+    acceptance_criteria:
+      - AC-01: RoomCoordinator class/module exported from room-runtime.
+      - AC-02: RoomCoordinator loads from SQLite on initialization or defaults to fresh LOBBY state.
+      - AC-03: onPlayerConnect registers connection, updates presence, arms/disarms lobby host grace, and returns recipient projection.
+      - AC-04: onPlayerDisconnect unregisters connection, updates presence, arms lobby host grace (in LOBBY) or triggers pause (in MATCH_ACTIVE), persists to SQLite, and updates alarm.
+      - AC-05: handleClientCommand handles JOIN, LEAVE, START_MATCH, and GAMEPLAY_ACTION commands.
+      - AC-06: handleClientCommand rejects unauthorized or invalid actions and returns error decision.
+      - AC-07: handleClientCommand executes valid commands, persists state, and returns recipient-specific projections for all connected members.
+      - AC-08: onAlarm handles HOST_GRACE timeout, migrates host, and persists state.
+      - AC-09: onAlarm handles TURN_DEADLINE timeout, executes system timeout transaction, pauses if needed, updates alarm, and persists state.
+      - AC-10: onAlarm handles ROOM_RETENTION expiration and cleans up room state.
+      - AC-11: Full end-to-end multi-player room lifecycle test passes.
+      - AC-12: Full test suite passes across all workspaces with zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
