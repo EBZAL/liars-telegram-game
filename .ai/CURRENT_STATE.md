@@ -4,7 +4,7 @@
 STAGE-07 — Multiplayer & Failure Hardening
 
 **Last Verified Task:**
-T-041-PRESENCE-PAUSE-RESUME-HARDENING
+T-042-ALARM-CONCURRENCY-RACE-HARDENING
 
 **Current Active Task:**
 None (Awaiting next Stage-07 task approval)
@@ -2984,7 +2984,24 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: df52ddc
   - implementation: 20fbe9c
 
+- T-042 Alarm and Concurrency Race Hardening VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - Stale and premature alarm triggers safely dropped without state or revision mutation (premature returns NOT_DUE; stale generation returns STALE_ALARM; paused room returns NO_ALARM).
+  - Duplicate alarm deliveries idempotent: first delivery commits timeout auto-play and schedules next deadline; second delivery returns NOT_DUE with zero revision bump.
+  - Action arriving at/past deadline rejected as DEADLINE_DUE; timeout alarm commits cleanly; subsequent retries rejected as STALE_REVISION.
+  - Action idempotency verified: identical duplicate returns success without state advance; conflicting payload returns ACTION_ID_CONFLICT; stale revision returns STALE_REVISION.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 693 tests / 44 files (251 game-core / 406 room-runtime / 36 client)
+- Git metadata:
+  - task-start: a148a85
+  - implementation: 51ad043
+
 **Next Approved Action:**
-Define and execute T-042-ALARM-CONCURRENCY-RACE-HARDENING.
+Define and execute T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY.
 
 
