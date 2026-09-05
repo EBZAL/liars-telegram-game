@@ -15,4 +15,5 @@ export * from './recipient-projection.js';
 export * from './telegram-auth.js';
 export * from './lobby-lifecycle.js';
 export * from './telegram-routing.js';
+export * from './sqlite-persistence.js';
 
