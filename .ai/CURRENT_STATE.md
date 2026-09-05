@@ -4,10 +4,10 @@
 STAGE-07 — Multiplayer & Failure Hardening
 
 **Last Verified Task:**
-T-039-LOBBY-VIEW-AND-INVITE-FLOW
+T-040-MULTI-CLIENT-E2E-MATCH-FLOW
 
 **Current Active Task:**
-None (STAGE-06 complete; entering STAGE-07)
+None (Awaiting next Stage-07 task approval)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -2948,7 +2948,25 @@ T27 remains mandatory STAGE-04 security work.
 - All 5 required tasks (T-035 through T-039) VERIFIED.
 - Complete match playable via client UI; presentation layer never owns or mutates authoritative state (ADR-015).
 
+- T-040 Multi-Client E2E Match Flow VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - Multi-client simulation test harness (`SimulatedClient`, `syncAll`) executing full 2, 3, and 4 player matches via `RoomCoordinator`.
+  - Verified 2-player flow: lobby admission, start match, sequential plays, challenges, revolver firing, elimination, and 24h retention alarm.
+  - Verified 3-player flow: cyclic turn progression, intermediate bluffs/challenges, eliminated player transition to spectator (`lifeStatus === 'ELIMINATED'`, `privateState === null`), and continued match to victory.
+  - Verified 4-player flow: 4-player max capacity enforcement (5th player rejected), mutually exclusive hands (20 cards unique), and per-turn projection isolation.
+  - Verified multi-client session handling of system turn deadline timeout auto-play and broadcast sync.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 684 tests / 42 files (251 game-core / 397 room-runtime / 36 client)
+- Git metadata:
+  - task-start: b40d933
+  - implementation: 427e0e4
+
 **Next Approved Action:**
-Define and execute STAGE-07 (Multiplayer & Failure Hardening) foundation task.
+Define and execute T-041-PRESENCE-PAUSE-RESUME-HARDENING.
 
 

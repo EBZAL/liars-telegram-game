@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-07
-last_verified_task: T-039-LOBBY-VIEW-AND-INVITE-FLOW
-active_task: T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+last_verified_task: T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3871,7 +3871,18 @@ tasks:
   T-040-MULTI-CLIENT-E2E-MATCH-FLOW:
     title: Multi-Client E2E Match Flow
     stage: STAGE-07
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: 427e0e470bc5ddb7e2c9431cb73fe66efbceb366
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 427e0e470bc5ddb7e2c9431cb73fe66efbceb366
+      evidence:
+        - .ai/evidence/T-040-MULTI-CLIENT-E2E-MATCH-FLOW.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement comprehensive end-to-end multi-client simulation test suite covering complete 2, 3, and 4 player matches via RoomCoordinator, from lobby creation, invite link sharing, player admission, match start, turns of play, challenges, roulette progression, eliminations, and match finish.
