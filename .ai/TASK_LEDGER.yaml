@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-06
 last_verified_task: T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
-active_task: null
+active_task: T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3779,12 +3779,22 @@ tasks:
   T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS:
     title: Gameplay Table and Player Layouts
     stage: STAGE-06
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement mobile-first card-room table view, 2/3/4-player responsive seating, table rank display, 30s countdown bar, and central claim presentation.
     dependencies:
       - T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+    acceptance_criteria:
+      - AC-01: TableView renders all required gameplay elements per DESIGN_SYSTEM.md: Table Rank, Turn Timer, Central Claim, Opponents, Hand, and Action controls.
+      - AC-02: Responsive 2, 3, and 4 player arrangements correctly distribute opponent seats across top/left/right of table.
+      - AC-03: PlayerHand allows toggling card selection, and ActionControls accurately reflect play and challenge eligibility.
+      - AC-04: Unit and component tests in packages/client/tests/table-view.test.tsx verify rendering, 2/3/4 player layouts, card selection integration, and button click dispatches.
+      - AC-05: Typecheck and full regression pass with zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
 
   T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION:
     title: Roulette and Challenge Reveal Presentation
