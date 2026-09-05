@@ -15,6 +15,7 @@ export interface TelegramAuthResult {
   error?: 'INVALID_HASH' | 'EXPIRED_AUTH_DATE' | 'MISSING_USER' | 'MALFORMED_INIT_DATA';
   user?: ValidatedTelegramUser;
   authDate?: number;
+  startParam?: string;
 }
 
 /**
@@ -156,9 +157,16 @@ export function validateTelegramInitData(
     validatedUser.allows_write_to_pm = userObj.allows_write_to_pm;
   }
 
+  const startParamRaw = params.get('start_param');
+  const startParam =
+    typeof startParamRaw === 'string' && startParamRaw.trim().length > 0
+      ? startParamRaw.trim()
+      : undefined;
+
   return {
     success: true,
     user: validatedUser,
     authDate,
+    ...(startParam !== undefined ? { startParam } : {}),
   };
 }
