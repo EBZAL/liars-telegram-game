@@ -12,4 +12,5 @@ export * from './components/ChallengeRevealOverlay.js';
 export * from './components/MatchPausedBanner.js';
 export * from './components/MatchWinnerOverlay.js';
 export * from './components/TableView.js';
+export * from './components/LobbyView.js';
 export * from './App.js';
