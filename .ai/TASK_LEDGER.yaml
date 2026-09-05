@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-05
-last_verified_task: T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
-active_task: T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+last_verified_task: T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3493,8 +3493,19 @@ tasks:
   T-030-TELEGRAM-AUTH-INITDATA-VALIDATION:
     title: Telegram InitData HMAC Cryptographic Validation Boundary
     stage: STAGE-05
-    status: IMPLEMENTED
+    status: VERIFIED
     implementation_commit: 54de4f8a526d968964aa574b3745fd14858bbdb9
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 54de4f8a526d968964aa574b3745fd14858bbdb9
+      evidence:
+        - .ai/evidence/T-030-TELEGRAM-AUTH-INITDATA-VALIDATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        security_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Establish the server-authoritative cryptographic validation module for Telegram Mini App initData using HMAC-SHA256 hash verification against the Bot Token, parsing user identity, validating auth date freshness / expiration, and failing closed against untrusted client payloads.

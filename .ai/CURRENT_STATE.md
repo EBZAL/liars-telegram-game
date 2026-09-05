@@ -4,10 +4,10 @@
 STAGE-05 — Telegram Integration
 
 **Last Verified Task:**
-T-029-RECIPIENT-SPECIFIC-HIDDEN-INFORMATION-PROJECTION
+T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
 
 **Current Active Task:**
-T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+None (Awaiting next Stage-05 task approval)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -2756,7 +2756,7 @@ T27 remains mandatory STAGE-04 security work.
 - All 13 STAGE-04 required tasks (T-017 through T-029) are durably VERIFIED.
 - All Stage-04 Exit Gate criteria (action dedupe, stale revision, turn validation, deadline races, presence accounting, pause/resume lifecycle, alarm sync, recipient projections, T27 / I29) are fully satisfied and evidenced.
 
-- T-030 Telegram InitData HMAC Cryptographic Validation Boundary IMPLEMENTED (Awaiting Architect Verification).
+- T-030 Telegram InitData HMAC Cryptographic Validation Boundary VERIFIED.
 - Workflow: STRICT
 - Risk: HIGH
 - Implementation & Security:
@@ -2809,6 +2809,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Project Architect must verify `T-030-TELEGRAM-AUTH-INITDATA-VALIDATION`. Upon verification and State Sync, determine the next bounded Stage-05 task (e.g. Worker scaffold / room routing / lobby bootstrap).
+Define and execute next bounded Stage-05 task.
 
 
