@@ -4,16 +4,18 @@
 STAGE-08 — Friend MVP Release
 
 **Last Verified Task:**
-T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
+T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
 
 **Current Active Task:**
-None (T-045 verified; ready for T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION)
+None (T-046 verified; ready for T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS)
 
 **Verified Product Capabilities:**
+- Client WebSocket transport hook (useRoomSocket) with Telegram initData auth, connection states, and auto-reconnection
+- Optimized production Vite build packaging producing static assets in packages/client/dist
 - Cloudflare Worker and RoomDurableObject integration with SQLite persistence and WebSocket upgrades
 - Telegram HMAC initData validation and webhook /start deep link routing
 - Single active provider alarm synchronization between RoomCoordinator and DO storage
-- Monorepo test suite passing 714 tests across 47 test files (251 game-core, 415 room-runtime, 36 client, 12 worker)
+- Monorepo test suite passing 726 tests across 48 test files (251 game-core, 415 room-runtime, 48 client, 12 worker)
 - npm/TypeScript workspace foundation
 - isolated packages/game-core
 - canonical CardRank/Card primitives

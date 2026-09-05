@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-08
-last_verified_task: T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
-active_task: T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
+last_verified_task: T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -4077,7 +4077,18 @@ tasks:
   T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION:
     title: Client Network Transport and Environment Integration
     stage: STAGE-08
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: e95c7b35b42ae2432316ac426360ae517144bf2a
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: e95c7b35b42ae2432316ac426360ae517144bf2a
+      evidence:
+        - .ai/evidence/T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement WebSocket client transport layer in @liars-telegram-game/client, connecting UI to Cloudflare Worker with Telegram initData authentication, connection state tracking, automatic reconnection with backoff, and production build packaging.
