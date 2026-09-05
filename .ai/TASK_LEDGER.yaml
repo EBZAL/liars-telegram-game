@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-05
 last_verified_task: T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
-active_task: null
+active_task: T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -163,6 +163,7 @@ stages:
     status: IN_PROGRESS
     required_tasks:
       - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+      - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3532,6 +3533,55 @@ tasks:
       Risk Level: HIGH
       Workflow Profile: STRICT
       Decision: APPROVED_WITH_CONTROLS
+
+  T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE:
+    title: Lobby Membership and Host Lifecycle
+    stage: STAGE-05
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Establish the pure server-authoritative Lobby membership and Host management boundary in packages/room-runtime, implementing joinLobbyRoom, leaveLobbyRoom, handleLobbyHostPresenceChange (60s HOST_GRACE alarm), applyHostGraceTimeout, and startMatchFromLobby.
+    dependencies:
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-024-UNIQUE-LIVING-PRESENCE-FOUNDATION
+      - T-028-FINAL-STATE-PROVIDER-ALARM-SYNC-PLAN
+      - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+    acceptance_criteria:
+      - AC-01: Pure joinLobbyRoom exported from room-runtime.
+      - AC-02: joinLobbyRoom rejects join when lifecycle is not LOBBY with NOT_IN_LOBBY.
+      - AC-03: joinLobbyRoom rejects empty or invalid playerId with INVALID_PLAYER_ID.
+      - AC-04: joinLobbyRoom enforces maximum 4 members and rejects 5th player with LOBBY_FULL.
+      - AC-05: joinLobbyRoom is idempotent for existing member (returns unchanged room state, no duplicate, no revision bump).
+      - AC-06: joinLobbyRoom assigns earliest joiner as hostPlayerId when host is null.
+      - AC-07: joinLobbyRoom assigns monotonic joinOrder.
+      - AC-08: joinLobbyRoom increments revision by 1 on new member join.
+      - AC-09: Pure leaveLobbyRoom exported from room-runtime.
+      - AC-10: leaveLobbyRoom rejects leave when lifecycle is not LOBBY with NOT_IN_LOBBY.
+      - AC-11: leaveLobbyRoom rejects non-member playerId with NOT_A_MEMBER.
+      - AC-12: leaveLobbyRoom removes player from members array and increments revision by 1.
+      - AC-13: leaveLobbyRoom on host departure migrates hostPlayerId to earliest joined remaining member (min joinOrder).
+      - AC-14: leaveLobbyRoom on last member departure sets hostPlayerId to null.
+      - AC-15: leaveLobbyRoom clears any active HOST_GRACE alarm if the departing player was host.
+      - AC-16: Pure handleLobbyHostPresenceChange exported from room-runtime.
+      - AC-17: When host disconnects in LOBBY, arms single activeAlarm with kind HOST_GRACE, dueAt = authoritativeNowMs + 60000, generation = roomState.revision.
+      - AC-18: When host reconnects in LOBBY before grace expires, clears HOST_GRACE alarm.
+      - AC-19: Non-host disconnect/reconnect in LOBBY does not arm or clear HOST_GRACE.
+      - AC-20: Pure applyHostGraceTimeout exported from room-runtime.
+      - AC-21: applyHostGraceTimeout rejects stale or mismatched alarm generation/kind.
+      - AC-22: applyHostGraceTimeout migrates host to earliest joined connected member per presence registry.
+      - AC-23: applyHostGraceTimeout sets hostPlayerId to null if no members are connected.
+      - AC-24: applyHostGraceTimeout clears activeAlarm and increments revision by 1 upon migration.
+      - AC-25: Pure startMatchFromLobby exported from room-runtime.
+      - AC-26: startMatchFromLobby requires caller to be current hostPlayerId, failing closed with NOT_HOST.
+      - AC-27: startMatchFromLobby requires lifecycle LOBBY, failing closed with NOT_IN_LOBBY.
+      - AC-28: startMatchFromLobby requires 2 to 4 members, failing closed with INVALID_PLAYER_COUNT.
+      - AC-29: startMatchFromLobby calls initializeMatch, transitions to MATCH_ACTIVE, sets currentTurnId, arms TURN_DEADLINE for 30s, and increments revision.
+      - AC-30: All functions are pure, non-mutating, prototype-safe, and pass full typecheck and test suite.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
