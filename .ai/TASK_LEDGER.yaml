@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-06
-last_verified_task: T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
-active_task: T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+last_verified_task: T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3779,7 +3779,7 @@ tasks:
   T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS:
     title: Gameplay Table and Player Layouts
     stage: STAGE-06
-    status: IN_PROGRESS
+    status: VERIFIED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement mobile-first card-room table view, 2/3/4-player responsive seating, table rank display, 30s countdown bar, and central claim presentation.

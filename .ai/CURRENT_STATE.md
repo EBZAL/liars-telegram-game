@@ -4,7 +4,7 @@
 STAGE-06 — Gameplay UI/UX
 
 **Last Verified Task:**
-T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
 
 **Current Active Task:**
 None (Awaiting next Stage-06 task approval)
@@ -2893,7 +2893,24 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 5adcb45
   - implementation: 996eb9c
 
+- T-037 Gameplay Table and Player Layouts VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - TableView component combines TableRankBanner, TurnTimerBar, CentralClaimBanner, OpponentSeat, PlayerHand, and ActionControls into a responsive card-room view per DESIGN_SYSTEM.md.
+  - Dynamically distributes 2, 3, and 4 players across top, left, and right opponent seats relative to ownPlayerId.
+  - PlayerHand displays private cards with elevation and checkmarks upon local selection.
+  - ActionControls enables "PLAY (N)" when 1-3 cards selected and "CALL LIAR" when challenge is legal, highlighting mandatory challenge conditions.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 664 tests / 39 files (251 game-core / 393 room-runtime / 20 client)
+- Git metadata:
+  - task-start: 749994d
+  - implementation: 0479d53
+
 **Next Approved Action:**
-Define and execute T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS.
+Define and execute T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION.
 
 
