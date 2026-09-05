@@ -65,6 +65,11 @@ export class RoomDurableObject {
     return null;
   }
 
+  public getRoomState() {
+    const coord = this.getOrRehydrateCoordinator();
+    return coord ? coord.getRoomState() : null;
+  }
+
   public async syncAlarm(): Promise<void> {
     if (!this.coordinator) return;
     const currentAlarm = await this.state.storage.getAlarm();
