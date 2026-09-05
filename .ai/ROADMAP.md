@@ -728,15 +728,18 @@
 - STAGE-06 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-07 — Multiplayer & Failure Hardening
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 **Goals**: multi-client E2E; reconnect/fault/race/security testing.
-**Exit Gate**: 2/3/4-player E2E; all Living disconnect; eliminated spectator remains while paused; Eliminated reconnect does not Resume; Living reconnect resumes; multi-tab identity; stale alarms; duplicate alarms; action/deadline races; hibernation/reload; hidden-info leakage tests; regression suite PASS.
-**Progress**:
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-040 through T-044 all VERIFIED
 - T-040-MULTI-CLIENT-E2E-MATCH-FLOW VERIFIED: Simulated multi-client harness covering complete 2, 3, and 4 player matches via RoomCoordinator; verified lobby admission, invite links, match start, play/challenge turns, revolver mechanics, spectator transitions on elimination, winner conclusion, recipient projection isolation, and system turn deadline timeout auto-play handling.
 - T-041-PRESENCE-PAUSE-RESUME-HARDENING VERIFIED: Multi-client presence stress suite; verified all-living disconnect zero-living pause, active alarm cancellation, eliminated spectator non-interference with pause and non-resumption on reconnect, first living reconnect fresh 30s deadline (subsequent connects do not reset), multi-tab identity deduplication, and repeated pause-resume invariant conservation.
 - T-042-ALARM-CONCURRENCY-RACE-HARDENING VERIFIED: Hardening suite for alarm and action concurrency races; verified stale and premature alarm dropping (NOT_DUE, STALE_ALARM, NO_ALARM), duplicate alarm delivery idempotency, action arrival vs deadline race arbitration (DEADLINE_DUE, STALE_REVISION), and revision idempotency across retried and conflicting action envelopes.
 - T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY VERIFIED: Durable Object lifecycle simulation; verified seamless SQLite rehydration of RoomCoordinator state, action dedupe survival and replay rejection across restarts, active alarm hibernation survival and accurate timer execution, and 24-hour retention database eviction.
-- latest full regression 697 tests / 45 files PASS (251 game-core / 410 room-runtime / 36 client)
+- T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT VERIFIED: Comprehensive automated security audit verifying zero hidden-information leakage across all recipient projections, spectator states, WebSocket broadcasts, error responses, and action payloads; verified fail-closed recipient authorization and prototype pollution immunity.
+- latest full regression 702 tests / 46 files PASS (251 game-core / 415 room-runtime / 36 client)
+- STAGE-07 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-08 — Friend MVP Release
 **Status**: NOT_STARTED

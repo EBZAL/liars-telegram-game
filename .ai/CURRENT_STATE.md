@@ -1,13 +1,13 @@
 # Current State
 
 **Current Stage:**
-STAGE-07 — Multiplayer & Failure Hardening
+STAGE-08 — Friend MVP Release
 
 **Last Verified Task:**
-T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
+T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
 
 **Current Active Task:**
-None (Awaiting next Stage-07 task approval)
+None (STAGE-07 complete; entering STAGE-08)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -3018,7 +3018,29 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: f27dfe0
   - implementation: 1fb8353
 
+- T-044 Hidden Info Leakage and Security Audit VERIFIED.
+- Workflow: STRICT
+- Risk: HIGH
+- Implementation & Architecture:
+  - Exhaustive deep JSON inspection across 4-player match projections verifies zero opponent card IDs leak to any player; public player projections expose only whitelisted public fields.
+  - In 2-player match with 10 undealt cards, zero undealt card IDs are leaked; face-down played cards remain confidential; revolver sequence arrays and future chambers are withheld.
+  - Eliminated spectators receive strictly public state projections (privateState === null) per GAME_RULES T27 and §24 invariant I29.
+  - Recipient projection derivation enforces fail-closed authorization for non-members and immune to prototype pollution injection.
+  - Error responses on illegal action attempts are sanitized without leaking secret ranks or internal state.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 702 tests / 46 files (251 game-core / 415 room-runtime / 36 client)
+- Git metadata:
+  - task-start: 1cde541
+  - implementation: 064a086
+
+**STAGE-07 Exit Gate: PASS / COMPLETE**
+- All 5 required tasks (T-040 through T-044) VERIFIED.
+- Full multiplayer failure hardening verified across multi-client E2E, presence pause/resume, concurrency & races, DO persistence/hibernation, and hidden info security audit.
+
 **Next Approved Action:**
-Define and execute T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT.
+Define and execute STAGE-08 (Friend MVP Release) deployment packaging and readiness tasks.
 
 

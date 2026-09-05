@@ -2,9 +2,9 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-07
-last_verified_task: T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
-active_task: T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
+current_stage: STAGE-08
+last_verified_task: T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -212,7 +212,7 @@ stages:
 
   STAGE-07:
     title: Multiplayer & Failure Hardening
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
       - T-041-PRESENCE-PAUSE-RESUME-HARDENING
@@ -220,8 +220,21 @@ stages:
       - T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
       - T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-040 through T-044 VERIFIED
+        - End-to-end 2, 3, and 4 player matches simulated through RoomCoordinator with full lifecycle verification
+        - Zero-living presence pause, active alarm cancellation, spectator non-interference, and fresh 30s living resume deadline
+        - Stale and premature alarm dropping, duplicate alarm delivery idempotency, action arrival vs deadline race arbitration, and revision idempotency
+        - Durable Object hibernation and SQLite persistence recovery, action dedupe survival across restarts, and 24h retention cleanup
+        - Comprehensive security audit confirming zero hidden-information leakage (opponent cards, undealt cards, face-down cards, revolver sequence) and fail-closed authorization
+        - .ai/evidence/T-040-MULTI-CLIENT-E2E-MATCH-FLOW.md
+        - .ai/evidence/T-041-PRESENCE-PAUSE-RESUME-HARDENING.md
+        - .ai/evidence/T-042-ALARM-CONCURRENCY-RACE-HARDENING.md
+        - .ai/evidence/T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY.md
+        - .ai/evidence/T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT.md
+        - npm run typecheck PASS
+        - npm test PASS (702 tests / 46 files across game-core, room-runtime, client)
 
   STAGE-08:
     title: Friend MVP Release
@@ -3996,7 +4009,18 @@ tasks:
   T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT:
     title: Hidden Info Leakage and Security Audit
     stage: STAGE-07
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: 064a08620257ebc4c810b42f61a8efbc1fbf295f
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 064a08620257ebc4c810b42f61a8efbc1fbf295f
+      evidence:
+        - .ai/evidence/T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Exhaustive automated security audit verifying zero hidden-information leakage across all recipient projections, spectator states, WebSocket broadcasts, error responses, and action payloads.
