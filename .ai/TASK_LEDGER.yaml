@@ -2,9 +2,9 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-06
-last_verified_task: T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
-active_task: T-039-LOBBY-VIEW-AND-INVITE-FLOW
+current_stage: STAGE-07
+last_verified_task: T-039-LOBBY-VIEW-AND-INVITE-FLOW
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -186,7 +186,7 @@ stages:
 
   STAGE-06:
     title: Gameplay UI/UX
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-035-CLIENT-APP-FOUNDATION-AND-THEME
       - T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
@@ -194,8 +194,21 @@ stages:
       - T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
       - T-039-LOBBY-VIEW-AND-INVITE-FLOW
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-035 through T-039 VERIFIED
+        - Client application package initialized with React 18, Vite, Telegram Mini App adapter, and theatrical dark theme tokens
+        - Local card selection primitives (ADR-008, ADR-015) and action envelope builders with turn legality guards
+        - Responsive 2, 3, and 4 player poker table layouts, table rank banner, 30s countdown bar, and central claim banner
+        - Russian Roulette 6-cylinder indicator, challenge truth/lie reveal animations, match paused banner, and match winner overlay
+        - Lobby member slots, host crown indicator, canonical invite link copy/share, and host start-match button
+        - .ai/evidence/T-035-CLIENT-APP-FOUNDATION-AND-THEME.md
+        - .ai/evidence/T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES.md
+        - .ai/evidence/T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS.md
+        - .ai/evidence/T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION.md
+        - .ai/evidence/T-039-LOBBY-VIEW-AND-INVITE-FLOW.md
+        - npm run typecheck PASS
+        - npm test PASS (680 tests / 41 files across game-core, room-runtime, client)
 
   STAGE-07:
     title: Multiplayer & Failure Hardening
@@ -3820,7 +3833,18 @@ tasks:
   T-039-LOBBY-VIEW-AND-INVITE-FLOW:
     title: Lobby View and Invite Flow
     stage: STAGE-06
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: 9560a9ecd79d77ad6c87472f527648b28f8de455
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 9560a9ecd79d77ad6c87472f527648b28f8de455
+      evidence:
+        - .ai/evidence/T-039-LOBBY-VIEW-AND-INVITE-FLOW.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement Lobby screen with member list, host crown badge, invite link sharing, and host start-match button.

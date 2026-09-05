@@ -714,15 +714,18 @@
 - STAGE-05 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-06 — Gameplay UI/UX
-**Status**: IN_PROGRESS
+**Status**: COMPLETE
 **Goals**: mobile-first gameplay UI; responsive 2/3/4-player layouts; LIAR/turn/table/roulette clarity; winner/play-again UX.
-**Exit Gate**: complete match playable via UI; required gameplay state understandable; Telegram viewport/safe-area supported; presentation never owns authority.
-**Progress**:
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-035 through T-039 all VERIFIED
 - T-035-CLIENT-APP-FOUNDATION-AND-THEME VERIFIED: React 18, Vite, TypeScript workspace setup in packages/client; Telegram Mini App viewport adapter (getTelegramAdapter) with ready, expand, closing confirmation, safe-area insets, and browser fallback; theatrical dark-theme styling (theme.css) per DESIGN_SYSTEM.md; RoomProvider and useRoomProjection hook for reactive server projections.
 - T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES VERIFIED: useCardSelection hook for local-only pre-confirm card selection (ADR-008, ADR-015) with 1-3 limit, toggle, clear, and turn boundary reset; turn legality evaluation (canPlayCards, canCallLiar, isMandatoryCall, isOwnTurn); action envelope builders (buildPlayCardsEnvelope, buildCallLiarEnvelope).
 - T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS VERIFIED: TableView component integrating TableRankBanner, TurnTimerBar, CentralClaimBanner, OpponentSeat, PlayerHand, and ActionControls; responsive seating for 2, 3, and 4 players; interactive card elevation and checkmarks.
 - T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION VERIFIED: RouletteChamber 6-cylinder revolver component with spent/active indicators; ChallengeRevealOverlay showing caller/accused, revealed cards, truth/lie verdict, and gunshot outcome; MatchPausedBanner for zero-living pause; MatchWinnerOverlay for match conclusion.
-- latest full regression 672 tests / 40 files PASS (251 game-core / 393 room-runtime / 28 client)
+- T-039-LOBBY-VIEW-AND-INVITE-FLOW VERIFIED: LobbyView component with 2-4 player member slots, host crown badge, ready indicators, canonical Telegram invite link generation with copy/share buttons, host START MATCH button (guarded by min 2 players), non-host waiting indicator, and App.tsx lifecycle routing across LOBBY, MATCH_ACTIVE, MATCH_PAUSED, and MATCH_FINISHED.
+- latest full regression 680 tests / 41 files PASS (251 game-core / 393 room-runtime / 36 client)
+- STAGE-06 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-07 — Multiplayer & Failure Hardening
 **Status**: NOT_STARTED

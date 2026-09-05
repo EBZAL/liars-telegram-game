@@ -1,13 +1,13 @@
 # Current State
 
 **Current Stage:**
-STAGE-06 — Gameplay UI/UX
+STAGE-07 — Multiplayer & Failure Hardening
 
 **Last Verified Task:**
-T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
+T-039-LOBBY-VIEW-AND-INVITE-FLOW
 
 **Current Active Task:**
-None (Awaiting next Stage-06 task approval)
+None (STAGE-06 complete; entering STAGE-07)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -2927,7 +2927,28 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 8391518
   - implementation: c5aaa94
 
+- T-039 Lobby View and Invite Flow VERIFIED.
+- Workflow: STANDARD
+- Risk: LOW
+- Implementation & Architecture:
+  - LobbyView component renders Room ID badge, 2–4 member slots with host crown indicator, ready badges, and placeholder slots.
+  - Share / Copy Invite Link generates canonical Mini App startapp URL (https://t.me/<bot>/app?startapp=<roomId>) via formatTelegramInviteLink.
+  - Host START MATCH button enabled only when >= 2 players present; non-host members see informative waiting status.
+  - App.tsx routes deterministically between LobbyView, TableView, and MatchWinnerOverlay based on server projection lifecycle.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 680 tests / 41 files (251 game-core / 393 room-runtime / 36 client)
+- Git metadata:
+  - task-start: 2fe8303
+  - implementation: 9560a9e
+
+**STAGE-06 Exit Gate: PASS / COMPLETE**
+- All 5 required tasks (T-035 through T-039) VERIFIED.
+- Complete match playable via client UI; presentation layer never owns or mutates authoritative state (ADR-015).
+
 **Next Approved Action:**
-Define and execute T-039-LOBBY-VIEW-AND-INVITE-FLOW.
+Define and execute STAGE-07 (Multiplayer & Failure Hardening) foundation task.
 
 
