@@ -1,0 +1,22 @@
+{
+  "name": "@liars-telegram-game/worker",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "npm run build --workspace=@liars-telegram-game/room-runtime && tsc --noEmit",
+    "test": "npm run build --workspace=@liars-telegram-game/room-runtime && vitest run",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@liars-telegram-game/game-core": "*",
+    "@liars-telegram-game/room-runtime": "*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260905.1",
+    "@types/node": "^26.2.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0",
+    "wrangler": "^3.78.0"
+  }
+}

@@ -290,7 +290,18 @@ export function createInMemorySqlStorage(): SqlStorage {
         return createCursor([]);
       }
 
-      if (normalized.startsWith('SELECT * FROM room_state WHERE room_id = ?')) {
+      if (
+        normalized.startsWith('SELECT room_id FROM room_state LIMIT 1') ||
+        normalized.startsWith('SELECT * FROM room_state LIMIT 1')
+      ) {
+        const first = Array.from(roomStateTable.values())[0];
+        return createCursor(first ? [(first as unknown) as T] : []);
+      }
+
+      if (
+        normalized.startsWith('SELECT * FROM room_state WHERE room_id = ?') ||
+        normalized.startsWith('SELECT room_id FROM room_state WHERE room_id = ?')
+      ) {
         const roomId = String(bindings[0]);
         const row = roomStateTable.get(roomId);
         return createCursor(row ? [(row as unknown) as T] : []);
@@ -322,6 +333,23 @@ export function createInMemorySqlStorage(): SqlStorage {
       if (normalized.startsWith('DELETE FROM room_state WHERE room_id = ?')) {
         const roomId = String(bindings[0]);
         roomStateTable.delete(roomId);
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('UPDATE room_state SET')) {
+        const roomId = String(bindings[bindings.length - 1]);
+        const existing = roomStateTable.get(roomId);
+        if (existing) {
+          if (normalized.includes("lifecycle = 'MATCH_FINISHED'")) {
+            existing.lifecycle = 'MATCH_FINISHED';
+          }
+          if (normalized.includes("active_alarm_kind = 'ROOM_RETENTION'")) {
+            existing.active_alarm_kind = 'ROOM_RETENTION';
+            existing.active_alarm_generation = 1;
+          }
+          existing.active_alarm_due_at = bindings[0];
+          existing.updated_at = bindings[1];
+        }
         return createCursor([]);
       }
 
