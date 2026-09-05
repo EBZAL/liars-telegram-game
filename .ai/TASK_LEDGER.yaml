@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-05
 last_verified_task: T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
-active_task: null
+active_task: T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -164,6 +164,7 @@ stages:
     required_tasks:
       - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
       - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+      - T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3592,6 +3593,38 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING:
+    title: Telegram Deep Link Invite and Routing Primitives
+    stage: STAGE-05
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement pure server/runtime utilities for Telegram deep links, startapp parameter routing, Room ID generation/validation, invite link formatting, and Telegram Bot webhook command message/keyboard generation.
+    dependencies:
+      - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+      - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+    acceptance_criteria:
+      - AC-01: validateTelegramInitData extracts optional start_param as startParam on TelegramAuthResult.
+      - AC-02: Pure generateRoomId exported from room-runtime.
+      - AC-03: generateRoomId creates URL-safe alphanumeric ID with default prefix 'r_'.
+      - AC-04: Pure isValidRoomId exported from room-runtime.
+      - AC-05: isValidRoomId strictly validates non-empty, URL-safe alphanumeric strings (6-32 chars) and rejects invalid or malicious characters.
+      - AC-06: Pure formatTelegramInviteLink exported from room-runtime.
+      - AC-07: formatTelegramInviteLink formats standard t.me deep link with startapp parameter.
+      - AC-08: formatTelegramInviteLink supports optional appName.
+      - AC-09: Pure parseTelegramStartParam exported from room-runtime.
+      - AC-10: parseTelegramStartParam extracts and sanitizes valid roomId from start_param or query string.
+      - AC-11: Pure formatTelegramBotWebhookResponse exported from room-runtime.
+      - AC-12: formatTelegramBotWebhookResponse formats /start without params as welcome message with Mini App WebApp button.
+      - AC-13: formatTelegramBotWebhookResponse formats /start <roomId> as invite message with join Mini App WebApp button containing startapp parameter.
+      - AC-14: formatTelegramBotWebhookResponse returns null for unhandled commands.
+      - AC-15: Full test suite passes across all workspaces with zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
