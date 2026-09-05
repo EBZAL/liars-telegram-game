@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-06
 last_verified_task: T-035-CLIENT-APP-FOUNDATION-AND-THEME
-active_task: null
+active_task: T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3759,12 +3759,22 @@ tasks:
   T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES:
     title: Local Selection and Action Dispatch Primitives
     stage: STAGE-06
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement local-only pre-confirm card selection state (ADR-008, ADR-015) and client action envelope dispatch helpers with turn legality validation.
     dependencies:
       - T-035-CLIENT-APP-FOUNDATION-AND-THEME
+    acceptance_criteria:
+      - AC-01: useCardSelection hook maintains local-only selection array (max 3 cards, toggle, clear, reset on turnId change).
+      - AC-02: canPlayCards and canCallLiar client helpers accurately reflect turn legality based on server recipient projection.
+      - AC-03: buildPlayCardsEnvelope and buildCallLiarEnvelope construct valid GameplayActionEnvelope with expectedRevision and turnId matching server projection.
+      - AC-04: Full unit tests in packages/client/tests/selection-and-actions.test.ts covering selection limits, toggle, auto-reset, turn legality, and envelope construction.
+      - AC-05: Typecheck and full test regression pass with zero regressions.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
 
   T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS:
     title: Gameplay Table and Player Layouts
