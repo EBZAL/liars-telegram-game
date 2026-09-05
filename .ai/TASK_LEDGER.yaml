@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-05
-last_verified_task: T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
-active_task: T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+last_verified_task: T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3537,7 +3537,18 @@ tasks:
   T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE:
     title: Lobby Membership and Host Lifecycle
     stage: STAGE-05
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: ff863a7
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: ff863a7
+      evidence:
+        - .ai/evidence/T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Establish the pure server-authoritative Lobby membership and Host management boundary in packages/room-runtime, implementing joinLobbyRoom, leaveLobbyRoom, handleLobbyHostPresenceChange (60s HOST_GRACE alarm), applyHostGraceTimeout, and startMatchFromLobby.

@@ -4,7 +4,7 @@
 STAGE-05 — Telegram Integration
 
 **Last Verified Task:**
-T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
+T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
 
 **Current Active Task:**
 None (Awaiting next Stage-05 task approval)
@@ -2779,9 +2779,27 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: e0b001614749f7e77a28892784534431e33c66f9
   - implementation: 54de4f8a526d968964aa574b3745fd14858bbdb9
 
-**Explicitly NOT IMPLEMENTED BY T-030:**
+- T-031 Lobby Membership and Host Lifecycle VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - joinLobbyRoom(roomState, playerId): joins member in LOBBY, rejects non-LOBBY, enforces 4-player capacity, idempotent re-join, first joiner assigned as hostPlayerId, monotonic joinOrder, increments revision by 1.
+  - leaveLobbyRoom(roomState, playerId): removes member in LOBBY, migrates host to earliest joined remaining member (minimum joinOrder), sets hostPlayerId to null if empty, clears active HOST_GRACE alarm if host departs, increments revision by 1.
+  - handleLobbyHostPresenceChange(roomState, presenceRegistry, now): arms 60s HOST_GRACE alarm when host disconnects in LOBBY, clears HOST_GRACE alarm when host reconnects, recomputes host if previously unset.
+  - applyHostGraceTimeout(roomState, presenceRegistry, now): authoritative alarm expiration handler, migrates host to earliest joined connected member, sets host to null if 0 connected, clears alarm, increments revision by 1.
+  - startMatchFromLobby(roomState, actorPlayerId, random, now, initialTurnId): host-only action, validates 2..4 members in LOBBY, calls initializeMatch, transitions to MATCH_ACTIVE, establishes initial currentTurnId, arms 30s TURN_DEADLINE, increments revision by 1.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 610 tests / 32 files (251 game-core / 359 room-runtime)
+- Git metadata:
+  - task-start: abb98f1
+  - implementation: ff863a7
+
+**Explicitly NOT IMPLEMENTED BY T-031:**
 - Cloudflare Worker scaffold / routing / wrangler config
-- Mini App bootstrap / Lobby / Host migration
+- Mini App client UI / Telegram WebApp SDK integration
 - SQLite Durable Object persistence layer
 - WebSocket wire transport
 
@@ -2809,6 +2827,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Define and execute next bounded Stage-05 task.
+Define and execute next bounded Stage-05 task (e.g. Cloudflare Worker scaffold / room routing).
 
 
