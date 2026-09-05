@@ -4,7 +4,7 @@
 STAGE-05 — Telegram Integration
 
 **Last Verified Task:**
-T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
 
 **Current Active Task:**
 None (Awaiting next Stage-05 task approval)
@@ -2797,7 +2797,26 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: abb98f1
   - implementation: ff863a7
 
-**Explicitly NOT IMPLEMENTED BY T-031:**
+- T-032 Telegram Deep Link Invite and Routing Primitives VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - validateTelegramInitData startParam extraction: safely extracts start_param into TelegramAuthResult.startParam while maintaining HMAC integrity.
+  - generateRoomId(prefix = 'r_'): generates cryptographically random, URL-safe alphanumeric Room IDs.
+  - isValidRoomId(roomId): validates URL-safe alphanumeric Room IDs (4-32 chars), rejecting path traversal and injection.
+  - formatTelegramInviteLink(options): constructs canonical t.me deep link with startapp parameter for bot and Mini App endpoints.
+  - parseTelegramStartParam(rawParam): extracts and sanitizes valid roomId from start_param or query string.
+  - formatTelegramBotWebhookResponse(update, appUrl, botUsername, appName?): generates schema-compliant Telegram Bot API sendMessage payloads with inline WebApp launch buttons for /start (welcome) and /start <roomId> (room join).
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 626 tests / 33 files (251 game-core / 375 room-runtime)
+- Git metadata:
+  - task-start: 224fca8
+  - implementation: 0cda05b
+
+**Explicitly NOT IMPLEMENTED BY T-032:**
 - Cloudflare Worker scaffold / routing / wrangler config
 - Mini App client UI / Telegram WebApp SDK integration
 - SQLite Durable Object persistence layer
@@ -2827,6 +2846,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Define and execute next bounded Stage-05 task (e.g. Cloudflare Worker scaffold / room routing).
+Define and execute next bounded Stage-05 task (e.g. SQLite Durable Object persistence schema / serialization).
 
 

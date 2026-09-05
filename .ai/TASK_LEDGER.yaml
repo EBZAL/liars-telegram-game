@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-05
-last_verified_task: T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
-active_task: T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
+last_verified_task: T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3597,7 +3597,18 @@ tasks:
   T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING:
     title: Telegram Deep Link Invite and Routing Primitives
     stage: STAGE-05
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: 0cda05b
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 0cda05b
+      evidence:
+        - .ai/evidence/T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: COVERED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement pure server/runtime utilities for Telegram deep links, startapp parameter routing, Room ID generation/validation, invite link formatting, and Telegram Bot webhook command message/keyboard generation.
