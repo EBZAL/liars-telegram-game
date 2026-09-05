@@ -742,6 +742,8 @@
 - STAGE-07 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-08 — Friend MVP Release
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Goals**: free-tier deployment; Telegram release smoke; operational readiness; rollback readiness.
 **Exit Gate**: real friend match successfully completed; free-tier deployment operational; no release blocker; rollback/recovery procedure documented.
+**Progress**:
+- T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION VERIFIED: Cloudflare Worker package initialized with TypeScript, Cloudflare types, and wrangler.jsonc; SQLite-backed RoomDurableObject implemented with WebSocket upgrade handling, presence registration on connect and on JOIN, and provider alarm synchronization; Worker router serving /api/health, /api/room, /api/telegram-webhook, and /room/:roomId/ws with Telegram HMAC auth; 12 unit/integration tests passing; full monorepo regression passing 714 tests across 47 test files.
