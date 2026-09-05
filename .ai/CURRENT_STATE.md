@@ -1,13 +1,13 @@
 # Current State
 
 **Current Stage:**
-STAGE-05 — Telegram Integration (COMPLETE) / STAGE-06 — Gameplay UI/UX
+STAGE-06 — Gameplay UI/UX
 
 **Last Verified Task:**
-T-034-ROOM-COORDINATOR-INTEGRATION
+T-035-CLIENT-APP-FOUNDATION-AND-THEME
 
 **Current Active Task:**
-None (STAGE-05 Complete)
+None (Awaiting next Stage-06 task approval)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -2860,7 +2860,24 @@ T27 remains mandatory STAGE-04 security work.
 - All 5 required tasks (T-030 through T-034) VERIFIED.
 - Cryptographic initData validation, Lobby/Host lifecycle, invite deep-linking, SQLite DO persistence, and RoomCoordinator integrated.
 
+- T-035 Client App Foundation and Theatrical Dark Theme VERIFIED.
+- Workflow: STANDARD
+- Risk: LOW
+- Implementation & Architecture:
+  - packages/client workspace established with React 18, Vite, TypeScript, and testing setup.
+  - Telegram Mini App viewport adapter (getTelegramAdapter) handling safe areas, theme variables, ready/expand/closing confirmation, and standalone browser fallback.
+  - Theatrical dark theme (theme.css) providing card-room velvet atmosphere, gold/crimson accents, and high-contrast typography per DESIGN_SYSTEM.md.
+  - RoomProvider and useRoomProjection hook for consuming server recipient projections.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 649 tests / 37 files (251 game-core / 393 room-runtime / 5 client)
+- Git metadata:
+  - task-start: 0a1e65f
+  - implementation: 70d5295
+
 **Next Approved Action:**
-Define and approve STAGE-06 (Gameplay UI/UX) tasks in TASK_LEDGER.yaml.
+Define and execute T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES.
 
 

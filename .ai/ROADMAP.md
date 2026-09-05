@@ -714,9 +714,12 @@
 - STAGE-05 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-06 — Gameplay UI/UX
-**Status**: NOT_STARTED
+**Status**: IN_PROGRESS
 **Goals**: mobile-first gameplay UI; responsive 2/3/4-player layouts; LIAR/turn/table/roulette clarity; winner/play-again UX.
 **Exit Gate**: complete match playable via UI; required gameplay state understandable; Telegram viewport/safe-area supported; presentation never owns authority.
+**Progress**:
+- T-035-CLIENT-APP-FOUNDATION-AND-THEME VERIFIED: React 18, Vite, TypeScript workspace setup in packages/client; Telegram Mini App viewport adapter (getTelegramAdapter) with ready, expand, closing confirmation, safe-area insets, and browser fallback; theatrical dark-theme styling (theme.css) per DESIGN_SYSTEM.md; RoomProvider and useRoomProjection hook for reactive server projections.
+- latest full regression 649 tests / 37 files PASS (251 game-core / 393 room-runtime / 5 client)
 
 ## STAGE-07 — Multiplayer & Failure Hardening
 **Status**: NOT_STARTED
