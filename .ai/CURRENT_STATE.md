@@ -4,7 +4,7 @@
 STAGE-06 — Gameplay UI/UX
 
 **Last Verified Task:**
-T-035-CLIENT-APP-FOUNDATION-AND-THEME
+T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
 
 **Current Active Task:**
 None (Awaiting next Stage-06 task approval)
@@ -2877,7 +2877,23 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 0a1e65f
   - implementation: 70d5295
 
+- T-036 Local Selection and Action Dispatch Primitives VERIFIED.
+- Workflow: STANDARD
+- Risk: LOW
+- Implementation & Architecture:
+  - useCardSelection hook provides strictly local card selection (ADR-008, ADR-015) with 1-3 card ceiling, toggle, clear, and automatic reset on turnId changes.
+  - Turn legality helpers (canPlayCards, canCallLiar, isMandatoryCall, isOwnTurn) ensure client actions accurately reflect authoritative server projections.
+  - Action envelope builders (buildPlayCardsEnvelope, buildCallLiarEnvelope) construct valid GameplayActionEnvelope objects with correct expectedRevision and turnId.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 659 tests / 38 files (251 game-core / 393 room-runtime / 15 client)
+- Git metadata:
+  - task-start: 5adcb45
+  - implementation: 996eb9c
+
 **Next Approved Action:**
-Define and execute T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES.
+Define and execute T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS.
 
 

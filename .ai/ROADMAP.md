@@ -719,7 +719,8 @@
 **Exit Gate**: complete match playable via UI; required gameplay state understandable; Telegram viewport/safe-area supported; presentation never owns authority.
 **Progress**:
 - T-035-CLIENT-APP-FOUNDATION-AND-THEME VERIFIED: React 18, Vite, TypeScript workspace setup in packages/client; Telegram Mini App viewport adapter (getTelegramAdapter) with ready, expand, closing confirmation, safe-area insets, and browser fallback; theatrical dark-theme styling (theme.css) per DESIGN_SYSTEM.md; RoomProvider and useRoomProjection hook for reactive server projections.
-- latest full regression 649 tests / 37 files PASS (251 game-core / 393 room-runtime / 5 client)
+- T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES VERIFIED: useCardSelection hook for local-only pre-confirm card selection (ADR-008, ADR-015) with 1-3 limit, toggle, clear, and turn boundary reset; turn legality evaluation (canPlayCards, canCallLiar, isMandatoryCall, isOwnTurn); action envelope builders (buildPlayCardsEnvelope, buildCallLiarEnvelope).
+- latest full regression 659 tests / 38 files PASS (251 game-core / 393 room-runtime / 15 client)
 
 ## STAGE-07 — Multiplayer & Failure Hardening
 **Status**: NOT_STARTED

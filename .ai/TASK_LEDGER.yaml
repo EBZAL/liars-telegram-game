@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-06
-last_verified_task: T-035-CLIENT-APP-FOUNDATION-AND-THEME
-active_task: T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+last_verified_task: T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3759,7 +3759,7 @@ tasks:
   T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES:
     title: Local Selection and Action Dispatch Primitives
     stage: STAGE-06
-    status: IN_PROGRESS
+    status: VERIFIED
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement local-only pre-confirm card selection state (ADR-008, ADR-015) and client action envelope dispatch helpers with turn legality validation.
