@@ -4,7 +4,7 @@
 STAGE-05 — Telegram Integration
 
 **Last Verified Task:**
-T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
+T-033-ROOM-SQLITE-PERSISTENCE-LAYER
 
 **Current Active Task:**
 None (Awaiting next Stage-05 task approval)
@@ -2816,10 +2816,31 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 224fca8
   - implementation: 0cda05b
 
-**Explicitly NOT IMPLEMENTED BY T-032:**
+- T-033 SQLite Durable Object Persistence Layer VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - SqlStorage & SqlStorageCursor: Cloudflare-compatible DO SQLite interfaces.
+  - initRoomSqliteSchema(sql): creates room_state and processed_actions tables.
+  - saveRoomStateSqlite(sql, roomState, now?): serializes and upserts RoomAuthorityState snapshot.
+  - loadRoomStateSqlite(sql, roomId): faithfully loads and deserializes RoomAuthorityState (LOBBY, MATCH_ACTIVE, MATCH_PAUSED_NO_LIVING_CONNECTIONS, MATCH_FINISHED, ABANDONED).
+  - saveProcessedActionSqlite & loadProcessedActionsSqlite: preserves ProcessedGameplayActionRegistry with actionId, actor, expectedRevision, turnId, payload, and resultingRevision for idempotency protection across wake/sleep.
+  - isRoomEligibleForRetentionDeletion(roomState, now): pure check implementing 24-hour inactivity retention policy for finished/abandoned rooms (ADR-014).
+  - armRoomRetentionAlarm(roomState, now): arms 24-hour ROOM_RETENTION alarm.
+  - deleteRoomSqlite(sql, roomId): cleans up room state and processed actions upon expiration.
+  - createInMemorySqlStorage(): in-memory test utility implementing SqlStorage.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 637 tests / 34 files (251 game-core / 386 room-runtime)
+- Git metadata:
+  - task-start: 6d63f83
+  - implementation: dbd9d44
+
+**Explicitly NOT IMPLEMENTED BY T-033:**
 - Cloudflare Worker scaffold / routing / wrangler config
 - Mini App client UI / Telegram WebApp SDK integration
-- SQLite Durable Object persistence layer
 - WebSocket wire transport
 
 **Known Risks:**
@@ -2846,6 +2867,6 @@ None
 None currently evidenced.
 
 **Next Approved Action:**
-Define and execute next bounded Stage-05 task (e.g. SQLite Durable Object persistence schema / serialization).
+Define and execute next bounded Stage-05 task (e.g. Cloudflare Worker scaffold & Room Durable Object integration).
 
 
