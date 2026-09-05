@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-06
 last_verified_task: T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
-active_task: null
+active_task: T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3799,12 +3799,23 @@ tasks:
   T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION:
     title: Roulette and Challenge Reveal Presentation
     stage: STAGE-06
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement roulette chamber indicator, challenge truth/lie reveal animations, pause banner, and winner celebration screen.
     dependencies:
       - T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+    acceptance_criteria:
+      - AC-01: RouletteChamber displays 6 cylinders with spent and active indicators.
+      - AC-02: ChallengeRevealOverlay shows caller, accused, revealed cards, truth/lie verdict, and roulette shot outcome.
+      - AC-03: MatchPausedBanner displays notice when zero living connections are present.
+      - AC-04: MatchWinnerOverlay celebrates winner and provides play-again action.
+      - AC-05: Component tests in packages/client/tests/roulette-and-reveals.test.tsx verify all components.
+      - AC-06: Typecheck and full regression pass with zero regressions.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
 
   T-039-LOBBY-VIEW-AND-INVITE-FLOW:
     title: Lobby View and Invite Flow
