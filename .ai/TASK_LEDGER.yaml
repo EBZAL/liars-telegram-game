@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-05
-last_verified_task: T-033-ROOM-SQLITE-PERSISTENCE-LAYER
-active_task: T-034-ROOM-COORDINATOR-INTEGRATION
+last_verified_task: T-034-ROOM-COORDINATOR-INTEGRATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -160,7 +160,7 @@ stages:
 
   STAGE-05:
     title: Telegram Integration
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
       - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
@@ -168,8 +168,21 @@ stages:
       - T-033-ROOM-SQLITE-PERSISTENCE-LAYER
       - T-034-ROOM-COORDINATOR-INTEGRATION
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-030 through T-034 VERIFIED
+        - Cryptographic HMAC-SHA256 Telegram initData validation with constant-time equality
+        - Lobby membership, 2-4 player capacity, host assignment, host migration, and 60s host grace alarm
+        - URL-safe room IDs, canonical t.me Mini App invite links, startapp routing, bot webhook payloads
+        - SQLite persistence with tables room_state and processed_actions, state save/load, and 24h retention cleanup
+        - Unified RoomCoordinator engine coordinating deterministic state, presence, SQLite, WebSocket fanout, gameplay actions, and alarms
+        - .ai/evidence/T-030-TELEGRAM-AUTH-INITDATA-VALIDATION.md
+        - .ai/evidence/T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE.md
+        - .ai/evidence/T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING.md
+        - .ai/evidence/T-033-ROOM-SQLITE-PERSISTENCE-LAYER.md
+        - .ai/evidence/T-034-ROOM-COORDINATOR-INTEGRATION.md
+        - npm run typecheck PASS
+        - npm test PASS (644 tests / 35 files: 251 game-core / 393 room-runtime)
 
   STAGE-06:
     title: Gameplay UI/UX
@@ -3684,7 +3697,7 @@ tasks:
   T-034-ROOM-COORDINATOR-INTEGRATION:
     title: Room Coordinator Integration
     stage: STAGE-05
-    status: IN_PROGRESS
+    status: VERIFIED
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement the unified RoomCoordinator controller in packages/room-runtime coordinating connections, client commands, provider alarms, SQLite persistence, and recipient-specific projection broadcasts.

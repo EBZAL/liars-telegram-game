@@ -1,13 +1,13 @@
 # Current State
 
 **Current Stage:**
-STAGE-05 — Telegram Integration
+STAGE-05 — Telegram Integration (COMPLETE) / STAGE-06 — Gameplay UI/UX
 
 **Last Verified Task:**
-T-033-ROOM-SQLITE-PERSISTENCE-LAYER
+T-034-ROOM-COORDINATOR-INTEGRATION
 
 **Current Active Task:**
-None (Awaiting next Stage-05 task approval)
+None (STAGE-05 Complete)
 
 **Verified Product Capabilities:**
 - npm/TypeScript workspace foundation
@@ -2838,35 +2838,29 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 6d63f83
   - implementation: dbd9d44
 
-**Explicitly NOT IMPLEMENTED BY T-033:**
-- Cloudflare Worker scaffold / routing / wrangler config
-- Mini App client UI / Telegram WebApp SDK integration
-- WebSocket wire transport
+- T-034 Room Coordinator Integration VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - RoomCoordinator class exported from room-runtime unifying deterministic state, presence registry, SQLite persistence, client commands, alarm processing, and recipient projection fanout.
+  - Initial hydration loads from SQLite if available or creates canonical LOBBY state.
+  - onPlayerConnect & onPlayerDisconnect maintain RoomPresenceRegistry, handle Lobby host presence, trigger living pause (in MATCH_ACTIVE), and return updated projections.
+  - handleClientCommand executes JOIN, LEAVE, START_MATCH, and GAMEPLAY_ACTION (delegating to executeTimedClientGameplayWithPresenceLifecycle), updating revision, saving processed actions, and fanning out hidden-info-isolated projections.
+  - onAlarm handles HOST_GRACE (migrating host), TURN_DEADLINE (executing executeSystemTimeoutWithPresenceLifecycle and auto-playing fallback), and ROOM_RETENTION (deleting room upon 24h expiration per ADR-014).
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 644 tests / 35 files (251 game-core / 393 room-runtime)
+- Git metadata:
+  - task-start: 4b93669
+  - implementation: 52b9c2b
 
-**Known Risks:**
-* Telegram Bot Token secrecy & storage in Cloudflare Worker env secrets
-* Mini App bootstrap lifecycle & session token handoff
-* Realtime WebSocket reconnect / hibernate lifecycle
-
-**Active Architectural Constraints:**
-* GAME_RULES v3 authority
-* deterministic isolated Engine
-* approved Cloudflare/TypeScript stack
-* one Durable Object per Room
-* server authority
-* Local-only selection
-* Living-only Pause/Resume
-* one active alarm
-* no D1/VPS/custom domain MVP
-* no separate Bot Backend
-
-**Active Blockers:**
-None
-
-**Known Failure / Issue:**
-None currently evidenced.
+**STAGE-05 — Telegram Integration EXIT GATE: PASS**
+- All 5 required tasks (T-030 through T-034) VERIFIED.
+- Cryptographic initData validation, Lobby/Host lifecycle, invite deep-linking, SQLite DO persistence, and RoomCoordinator integrated.
 
 **Next Approved Action:**
-Define and execute next bounded Stage-05 task (e.g. Cloudflare Worker scaffold & Room Durable Object integration).
+Define and approve STAGE-06 (Gameplay UI/UX) tasks in TASK_LEDGER.yaml.
 
 

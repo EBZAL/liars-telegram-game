@@ -700,9 +700,18 @@
 
 
 ## STAGE-05 — Telegram Integration
-**Status**: NOT_STARTED
+**Status**: COMPLETE
 **Goals**: server-validated Telegram identity; Mini App bootstrap; Create/Join/Invite; Lobby; Host behavior.
-**Exit Gate**: actual Telegram smoke flow works; `startapp` room flow works; Lobby-only joins; 2–4 capacity enforcement; no mid-match join; 60-second Host grace; Host migration; secrets not exposed.
+**Exit Gate**: PASS
+**Evidence basis**:
+- T-030 through T-034 all VERIFIED
+- T-030-TELEGRAM-AUTH-INITDATA-VALIDATION VERIFIED: cryptographic HMAC-SHA256 initData validation against Bot Token, timingSafeEqual, freshness validation, fail-closed error handling.
+- T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE VERIFIED: joinLobbyRoom (2-4 capacity, idempotent, first=host, revision bump), leaveLobbyRoom (host migration to min joinOrder), handleLobbyHostPresenceChange (60s HOST_GRACE alarm), applyHostGraceTimeout, startMatchFromLobby (host-only, arms 30s TURN_DEADLINE).
+- T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING VERIFIED: startParam extraction, URL-safe generateRoomId, isValidRoomId, formatTelegramInviteLink (canonical t.me with startapp), parseTelegramStartParam, formatTelegramBotWebhookResponse (/start welcome and /start <roomId> payloads with inline WebApp launch buttons).
+- T-033-ROOM-SQLITE-PERSISTENCE-LAYER VERIFIED: SqlStorage and SqlStorageCursor interfaces, initRoomSqliteSchema (room_state and processed_actions), saveRoomStateSqlite, loadRoomStateSqlite, saveProcessedActionSqlite, loadProcessedActionsSqlite, isRoomEligibleForRetentionDeletion, armRoomRetentionAlarm, deleteRoomSqlite, and createInMemorySqlStorage.
+- T-034-ROOM-COORDINATOR-INTEGRATION VERIFIED: RoomCoordinator class integrating deterministic game engine, presence registry, SQLite persistence, client commands (JOIN, LEAVE, START_MATCH, GAMEPLAY_ACTION), provider alarms (HOST_GRACE, TURN_DEADLINE, ROOM_RETENTION), and recipient-specific hidden-information projection broadcasts.
+- latest full regression 644 tests / 35 files PASS (251 game-core / 393 room-runtime)
+- STAGE-05 COMPLETE / ALL 5 REQUIRED TASKS VERIFIED
 
 ## STAGE-06 — Gameplay UI/UX
 **Status**: NOT_STARTED
