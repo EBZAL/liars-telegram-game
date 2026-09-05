@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-06
-last_verified_task: T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
-active_task: T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
+last_verified_task: T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3799,7 +3799,7 @@ tasks:
   T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION:
     title: Roulette and Challenge Reveal Presentation
     stage: STAGE-06
-    status: IN_PROGRESS
+    status: VERIFIED
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement roulette chamber indicator, challenge truth/lie reveal animations, pause banner, and winner celebration screen.

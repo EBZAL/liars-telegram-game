@@ -4,7 +4,7 @@
 STAGE-06 — Gameplay UI/UX
 
 **Last Verified Task:**
-T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
 
 **Current Active Task:**
 None (Awaiting next Stage-06 task approval)
@@ -2910,7 +2910,24 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: 749994d
   - implementation: 0479d53
 
+- T-038 Roulette and Challenge Reveal Presentation VERIFIED.
+- Workflow: STANDARD
+- Risk: LOW
+- Implementation & Architecture:
+  - RouletteChamber component visualizes 6 revolver chambers with spent and active state and skull badge on elimination.
+  - ChallengeRevealOverlay displays caller/accused confrontation, revealed card identities, truth/lie verdict, and blank click or lethal gunshot outcome.
+  - MatchPausedBanner displays prominent notice when zero living connections are present.
+  - MatchWinnerOverlay celebrates match conclusion and provides return to lobby button.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 672 tests / 40 files (251 game-core / 393 room-runtime / 28 client)
+- Git metadata:
+  - task-start: 8391518
+  - implementation: c5aaa94
+
 **Next Approved Action:**
-Define and execute T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION.
+Define and execute T-039-LOBBY-VIEW-AND-INVITE-FLOW.
 
 
