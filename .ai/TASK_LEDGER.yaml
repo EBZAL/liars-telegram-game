@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-07
 last_verified_task: T-039-LOBBY-VIEW-AND-INVITE-FLOW
-active_task: null
+active_task: T-040-MULTI-CLIENT-E2E-MATCH-FLOW
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -212,8 +212,13 @@ stages:
 
   STAGE-07:
     title: Multiplayer & Failure Hardening
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+      - T-041-PRESENCE-PAUSE-RESUME-HARDENING
+      - T-042-ALARM-CONCURRENCY-RACE-HARDENING
+      - T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
+      - T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3862,6 +3867,110 @@ tasks:
       Risk Level: LOW
       Workflow Profile: STANDARD
       Decision: APPROVED
+
+  T-040-MULTI-CLIENT-E2E-MATCH-FLOW:
+    title: Multi-Client E2E Match Flow
+    stage: STAGE-07
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement comprehensive end-to-end multi-client simulation test suite covering complete 2, 3, and 4 player matches via RoomCoordinator, from lobby creation, invite link sharing, player admission, match start, turns of play, challenges, roulette progression, eliminations, and match finish.
+    dependencies:
+      - T-034-ROOM-COORDINATOR-INTEGRATION
+      - T-039-LOBBY-VIEW-AND-INVITE-FLOW
+    acceptance_criteria:
+      - AC-01: End-to-end 2-player match simulation through RoomCoordinator executing full lifecycle (lobby join, start match, truthful and bluffing plays, challenges, revolver shots, elimination, and winner).
+      - AC-02: End-to-end 3-player match simulation through RoomCoordinator testing cyclic turn order, multiple round resets, spectator transitions, and victory.
+      - AC-03: End-to-end 4-player match simulation through RoomCoordinator testing max capacity, turn progression, sequential eliminations, and winner.
+      - AC-04: Multi-client message broadcast validation verifying each connected client receives valid, distinct, recipient-specific projections at every state transition.
+      - AC-05: Tests in packages/room-runtime/tests/multi-client-e2e.test.ts pass cleanly.
+      - AC-06: Zero regressions across full workspace test suite (all tests in game-core, room-runtime, client pass).
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-041-PRESENCE-PAUSE-RESUME-HARDENING:
+    title: Presence, Pause, and Resume Hardening
+    stage: STAGE-07
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement multi-client presence stress test suite covering all-living disconnect pause, spectator persistence during pause, eliminated reconnect non-resumption, living reconnect fresh deadline, and multi-socket/multi-tab identity deduplication.
+    dependencies:
+      - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+    acceptance_criteria:
+      - AC-01: Disconnecting all living players transitions match to MATCH_PAUSED_NO_LIVING_CONNECTIONS and cancels active TURN_DEADLINE alarm.
+      - AC-02: Eliminated spectator presence does not prevent pause or trigger resume.
+      - AC-03: First living player reconnection resumes match with fresh 30s deadline; subsequent living connections do not reset deadline.
+      - AC-04: Multi-tab/multi-socket connections from same player identity do not inflate living player count.
+      - AC-05: Tests pass cleanly and zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-042-ALARM-CONCURRENCY-RACE-HARDENING:
+    title: Alarm and Concurrency Race Hardening
+    stage: STAGE-07
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement hardening test suite for alarm and action concurrency races, stale alarms, duplicate alarms, action vs deadline races, and revision idempotency.
+    dependencies:
+      - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+    acceptance_criteria:
+      - AC-01: Stale alarm triggers are safely dropped without state mutation.
+      - AC-02: Duplicate alarm deliveries are idempotent and do not advance state twice.
+      - AC-03: Client action arriving concurrently with deadline expiration is cleanly arbitrated.
+      - AC-04: Concurrent/out-of-order action envelopes maintain revision idempotency.
+      - AC-05: Tests pass cleanly and zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY:
+    title: Hibernation and Persistence Recovery
+    stage: STAGE-07
+    status: NOT_STARTED
+    workflow_profile: LOW
+    risk_level: LOW
+    objective: Verify Durable Object lifecycle simulation: SQLite serialization, eviction/restart, state reload, and 24h retention cleanup.
+    dependencies:
+      - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+    acceptance_criteria:
+      - AC-01: RoomCoordinator rehydrates seamlessly from SQLite without losing state, revision, or alarms.
+      - AC-02: Action dedupe records survive coordinator restarts.
+      - AC-03: 24-hour retention alarm cleans up inactive completed rooms.
+      - AC-04: Tests pass cleanly and zero regressions.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
+
+  T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT:
+    title: Hidden Info Leakage and Security Audit
+    stage: STAGE-07
+    status: NOT_STARTED
+    workflow_profile: STRICT
+    risk_level: HIGH
+    objective: Exhaustive automated security audit verifying zero hidden-information leakage across all recipient projections, spectator states, WebSocket broadcasts, error responses, and action payloads.
+    dependencies:
+      - T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+      - T-041-PRESENCE-PAUSE-RESUME-HARDENING
+      - T-042-ALARM-CONCURRENCY-RACE-HARDENING
+      - T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
+    acceptance_criteria:
+      - AC-01: No private card identities of other players are exposed in any client projection during any phase.
+      - AC-02: Undealt cards, central pile cards (face down), and future revolver sequences are never leaked.
+      - AC-03: Eliminated spectators receive strictly public state projections (privateState === null).
+      - AC-04: Security audit test suite passes cleanly with zero regressions.
+    risk_gate:
+      Risk Level: HIGH
+      Workflow Profile: STRICT
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
