@@ -2,9 +2,9 @@ schema_version: '1.0'
 architect_os_version: 0.6.0
 
 project_status: ACTIVE
-current_stage: STAGE-05
+current_stage: STAGE-06
 last_verified_task: T-034-ROOM-COORDINATOR-INTEGRATION
-active_task: null
+active_task: T-035-CLIENT-APP-FOUNDATION-AND-THEME
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -186,8 +186,13 @@ stages:
 
   STAGE-06:
     title: Gameplay UI/UX
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-035-CLIENT-APP-FOUNDATION-AND-THEME
+      - T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+      - T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+      - T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
+      - T-039-LOBBY-VIEW-AND-INVITE-FLOW
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3729,6 +3734,67 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-035-CLIENT-APP-FOUNDATION-AND-THEME:
+    title: Client App Foundation and Theatrical Dark Theme
+    stage: STAGE-06
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: LOW
+    objective: Establish packages/client workspace with React, Vite, TypeScript, theatrical dark theme tokens per DESIGN_SYSTEM.md, safe-area viewport management, and recipient-projection client state hook.
+    dependencies:
+      - T-034-ROOM-COORDINATOR-INTEGRATION
+    acceptance_criteria:
+      - AC-01: packages/client workspace initialized with package.json, vite.config.ts, tsconfig.json, and index.html.
+      - AC-02: Telegram Mini App viewport adapter handling safe areas, theme parameters, and fallback to desktop browser.
+      - AC-03: Theatrical dark theme CSS/design tokens implemented per DESIGN_SYSTEM.md (high contrast, card-room atmosphere, no copyright infringement).
+      - AC-04: RecipientRoomProjection client state provider and hook (useRoomProjection) for consuming server projection updates.
+      - AC-05: Unit tests verify Telegram adapter, theme defaults, and projection provider state updates.
+      - AC-06: Root typecheck and test scripts updated to include @liars-telegram-game/client.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
+
+  T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES:
+    title: Local Selection and Action Dispatch Primitives
+    stage: STAGE-06
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: LOW
+    objective: Implement local-only pre-confirm card selection state (ADR-008, ADR-015) and client action envelope dispatch helpers with turn legality validation.
+    dependencies:
+      - T-035-CLIENT-APP-FOUNDATION-AND-THEME
+
+  T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS:
+    title: Gameplay Table and Player Layouts
+    stage: STAGE-06
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement mobile-first card-room table view, 2/3/4-player responsive seating, table rank display, 30s countdown bar, and central claim presentation.
+    dependencies:
+      - T-036-LOCAL-SELECTION-AND-ACTION-DISPATCH-PRIMITIVES
+
+  T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION:
+    title: Roulette and Challenge Reveal Presentation
+    stage: STAGE-06
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: LOW
+    objective: Implement roulette chamber indicator, challenge truth/lie reveal animations, pause banner, and winner celebration screen.
+    dependencies:
+      - T-037-GAMEPLAY-TABLE-AND-PLAYER-LAYOUTS
+
+  T-039-LOBBY-VIEW-AND-INVITE-FLOW:
+    title: Lobby View and Invite Flow
+    stage: STAGE-06
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: LOW
+    objective: Implement Lobby screen with member list, host crown badge, invite link sharing, and host start-match button.
+    dependencies:
+      - T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
 
 
 
