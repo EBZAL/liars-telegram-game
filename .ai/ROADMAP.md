@@ -735,7 +735,8 @@
 - T-040-MULTI-CLIENT-E2E-MATCH-FLOW VERIFIED: Simulated multi-client harness covering complete 2, 3, and 4 player matches via RoomCoordinator; verified lobby admission, invite links, match start, play/challenge turns, revolver mechanics, spectator transitions on elimination, winner conclusion, recipient projection isolation, and system turn deadline timeout auto-play handling.
 - T-041-PRESENCE-PAUSE-RESUME-HARDENING VERIFIED: Multi-client presence stress suite; verified all-living disconnect zero-living pause, active alarm cancellation, eliminated spectator non-interference with pause and non-resumption on reconnect, first living reconnect fresh 30s deadline (subsequent connects do not reset), multi-tab identity deduplication, and repeated pause-resume invariant conservation.
 - T-042-ALARM-CONCURRENCY-RACE-HARDENING VERIFIED: Hardening suite for alarm and action concurrency races; verified stale and premature alarm dropping (NOT_DUE, STALE_ALARM, NO_ALARM), duplicate alarm delivery idempotency, action arrival vs deadline race arbitration (DEADLINE_DUE, STALE_REVISION), and revision idempotency across retried and conflicting action envelopes.
-- latest full regression 693 tests / 44 files PASS (251 game-core / 406 room-runtime / 36 client)
+- T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY VERIFIED: Durable Object lifecycle simulation; verified seamless SQLite rehydration of RoomCoordinator state, action dedupe survival and replay rejection across restarts, active alarm hibernation survival and accurate timer execution, and 24-hour retention database eviction.
+- latest full regression 697 tests / 45 files PASS (251 game-core / 410 room-runtime / 36 client)
 
 ## STAGE-08 — Friend MVP Release
 **Status**: NOT_STARTED

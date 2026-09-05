@@ -4,7 +4,7 @@
 STAGE-07 — Multiplayer & Failure Hardening
 
 **Last Verified Task:**
-T-042-ALARM-CONCURRENCY-RACE-HARDENING
+T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
 
 **Current Active Task:**
 None (Awaiting next Stage-07 task approval)
@@ -3001,7 +3001,24 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: a148a85
   - implementation: 51ad043
 
+- T-043 Hibernation and Persistence Recovery VERIFIED.
+- Workflow: LOW
+- Risk: LOW
+- Implementation & Architecture:
+  - Simulated DO eviction and rehydration: RoomCoordinator boots from SQLite with identical roomId, lifecycle, revision, currentTurnId, currentTurnDeadline, activeAlarm, hostPlayerId, and members list; client projections derive seamlessly.
+  - Action deduplication survives restarts: actions committed prior to hibernation return DUPLICATE without state mutation; conflicting payload returns ACTION_ID_CONFLICT.
+  - Active alarms survive hibernation: rehydrated coordinator woken on alarm due time executes timeout auto-play and schedules next turn.
+  - 24h retention cleanup: completed match arms ROOM_RETENTION; rehydrated coordinator woken early returns NOT_EXPIRED; woken after 24h deletes room from SQLite (ROOM_DELETED); subsequent coordinator boot initializes fresh room.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 697 tests / 45 files (251 game-core / 410 room-runtime / 36 client)
+- Git metadata:
+  - task-start: f27dfe0
+  - implementation: 1fb8353
+
 **Next Approved Action:**
-Define and execute T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY.
+Define and execute T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT.
 
 
