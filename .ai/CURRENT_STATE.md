@@ -1,21 +1,26 @@
 # Current State
 
 **Current Stage:**
-STAGE-08 — Friend MVP Release
+STAGE-08 — Friend MVP Release (COMPLETE)
+
+**Project Milestone Status:**
+ALL 8 STAGES COMPLETE AND VERIFIED (STAGE-00 through STAGE-08)
 
 **Last Verified Task:**
-T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
+T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS
 
 **Current Active Task:**
-None (T-046 verified; ready for T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS)
+None (All 47 tasks verified; Release Ready)
 
 **Verified Product Capabilities:**
+- End-to-end multi-tier release smoke test verifying the complete system slice (API, Webhook, Auth, WebSocket, Durable Object, SQLite, Alarms, Game Core)
+- Operational deployment runbook (docs/DEPLOYMENT.md) for zero-cost Cloudflare Workers Free Tier deployment with Telegram BotFather Mini App setup and rollback procedures
 - Client WebSocket transport hook (useRoomSocket) with Telegram initData auth, connection states, and auto-reconnection
 - Optimized production Vite build packaging producing static assets in packages/client/dist
 - Cloudflare Worker and RoomDurableObject integration with SQLite persistence and WebSocket upgrades
 - Telegram HMAC initData validation and webhook /start deep link routing
 - Single active provider alarm synchronization between RoomCoordinator and DO storage
-- Monorepo test suite passing 726 tests across 48 test files (251 game-core, 415 room-runtime, 48 client, 12 worker)
+- Monorepo test suite passing 727 tests across 49 test files (251 game-core, 415 room-runtime, 48 client, 13 worker)
 - npm/TypeScript workspace foundation
 - isolated packages/game-core
 - canonical CardRank/Card primitives
@@ -3047,6 +3052,62 @@ T27 remains mandatory STAGE-04 security work.
 - Full multiplayer failure hardening verified across multi-client E2E, presence pause/resume, concurrency & races, DO persistence/hibernation, and hidden info security audit.
 
 **Next Approved Action:**
-Define and execute STAGE-08 (Friend MVP Release) deployment packaging and readiness tasks.
+STAGE-08 (Friend MVP Release) deployment packaging and readiness tasks.
+
+- T-045 Cloudflare Worker and DO Integration VERIFIED.
+- Workflow: STRICT
+- Risk: HIGH
+- Implementation & Architecture:
+  - `@liars-telegram-game/worker` workspace package initialized with TypeScript, Cloudflare types, and wrangler.jsonc.
+  - SQLite-backed `RoomDurableObject` wrapping `RoomCoordinator` with WebSocket upgrade handling (`serverWs.accept()`), living presence tracking, and provider alarm synchronization (`deriveProviderAlarmSyncPlan`).
+  - Worker HTTP router serving `/api/health`, `/api/room`, `/api/telegram-webhook` (HMAC secret token + startapp routing), and `/room/:roomId/ws` with Telegram HMAC initData authentication.
+  - 12 unit/integration tests passing.
+- Latest regression:
+  - npm run typecheck PASS
+  - npm test PASS
+  - 714 tests / 47 files (251 game-core / 415 room-runtime / 36 client / 12 worker)
+- Git metadata:
+  - task-start: 064a086
+  - implementation: 175558d
+
+- T-046 Client Network Transport and Env Integration VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - Client WebSocket transport hook (`useRoomSocket`) implemented with Telegram `initData` authentication, discrete connection states (`CONNECTING`, `CONNECTED`, `DISCONNECTED`, `RECONNECTING`, `ERROR`), and automatic exponential backoff reconnection.
+  - Typed action dispatchers: `joinRoom()`, `leaveRoom()`, `startMatch()`, `dispatchAction()`, and `sendRaw()`.
+  - Optimized production Vite build packaging producing static assets in `packages/client/dist` (511ms build, browser crypto shim).
+  - 12 unit tests passing.
+- Latest regression:
+  - npm run typecheck PASS
+  - npm test PASS
+  - 726 tests / 48 files (251 game-core / 415 room-runtime / 48 client / 12 worker)
+- Git metadata:
+  - task-start: 175558d
+  - implementation: e95c7b3
+
+- T-047 End-to-End Release Smoke and Operational Readiness VERIFIED.
+- Workflow: STANDARD
+- Risk: LOW
+- Implementation & Architecture:
+  - Multi-tier end-to-end release smoke test (`packages/worker/tests/e2e-release-smoke.test.ts`) executing complete vertical slice: Worker HTTP API, BotFather webhook payload, Telegram HMAC authentication, WebSocket upgrade, RoomDurableObject, SQLite persistence, turn alarms, game actions, presence pause/reconnect, and 24h retention cleanup.
+  - Operational deployment runbook (`docs/DEPLOYMENT.md`) covering zero-cost Cloudflare Workers Free Tier configuration, BotFather setup, secrets management, live monitoring, and instant rollback procedures.
+- Latest regression:
+  - npm run typecheck PASS
+  - npm test PASS
+  - 727 tests / 49 files (251 game-core / 415 room-runtime / 48 client / 13 worker)
+- Git metadata:
+  - task-start: e95c7b3
+  - implementation: d5582a9
+
+**STAGE-08 Exit Gate: PASS / COMPLETE**
+- All 3 required tasks (T-045 through T-047) VERIFIED.
+- Multi-tier end-to-end release smoke test passing cleanly.
+- Zero-cost operational deployment runbook and rollback procedure documented.
+- All 8 stages (STAGE-00 through STAGE-08) complete and verified with 727 passing automated tests.
+
+**Next Approved Action:**
+Friend MVP ready for production deployment (`npm run deploy`) and Telegram BotFather launch.
+
 
 

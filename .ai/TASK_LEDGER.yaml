@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-08
-last_verified_task: T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
-active_task: T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS
+last_verified_task: T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -238,14 +238,25 @@ stages:
 
   STAGE-08:
     title: Friend MVP Release
-    status: IN_PROGRESS
+    status: COMPLETE
     required_tasks:
       - T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
       - T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
       - T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS
     exit_gate:
-      status: NOT_EVALUATED
-      evidence: []
+      status: PASS
+      evidence:
+        - T-045 through T-047 VERIFIED
+        - Cloudflare Worker package initialized with RoomDurableObject, SQLite persistence, and provider alarm synchronization
+        - Client WebSocket transport hook useRoomSocket with Telegram initData authentication and automatic reconnection
+        - Vite production build producing static assets for Cloudflare edge delivery
+        - End-to-end multi-tier release smoke test verifying full vertical slice
+        - Operational deployment runbook docs/DEPLOYMENT.md
+        - .ai/evidence/T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION.md
+        - .ai/evidence/T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION.md
+        - .ai/evidence/T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS.md
+        - npm run typecheck PASS
+        - npm test PASS (727 tests / 49 files across game-core, room-runtime, client, worker)
 
 tasks:
   T-001-DOMAIN-FOUNDATION:
@@ -4109,7 +4120,18 @@ tasks:
   T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS:
     title: End-to-End Release Smoke and Operational Readiness
     stage: STAGE-08
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: d5582a941fec23cb5d160b7f6bb1adf2733c40ee
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: d5582a941fec23cb5d160b7f6bb1adf2733c40ee
+      evidence:
+        - .ai/evidence/T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Complete end-to-end multi-tier release smoke test and create operational deployment runbook with zero-cost deployment instructions, BotFather setup, and rollback procedures.
