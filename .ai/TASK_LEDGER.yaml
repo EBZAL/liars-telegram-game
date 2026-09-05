@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-05
 last_verified_task: T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
-active_task: null
+active_task: T-033-ROOM-SQLITE-PERSISTENCE-LAYER
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -165,6 +165,7 @@ stages:
       - T-030-TELEGRAM-AUTH-INITDATA-VALIDATION
       - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
       - T-032-TELEGRAM-DEEP-LINK-INVITE-ROUTING
+      - T-033-ROOM-SQLITE-PERSISTENCE-LAYER
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -3635,6 +3636,39 @@ tasks:
       Risk Level: MEDIUM
       Workflow Profile: STANDARD
       Decision: APPROVED_WITH_CONTROLS
+
+  T-033-ROOM-SQLITE-PERSISTENCE-LAYER:
+    title: SQLite Durable Object Persistence Layer
+    stage: STAGE-05
+    status: IN_PROGRESS
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Establish the SQLite schema, serialization, deserialization, and persistence operations for RoomAuthorityState and ProcessedGameplayActionRegistry in packages/room-runtime.
+    dependencies:
+      - T-018-REVISION-IDEMPOTENCY-TURN-ADMISSION
+      - T-020-AUTHORITATIVE-GAMEPLAY-COMMIT-PRIMITIVE
+      - T-021-TURN-DEADLINE-AUTHORITY-FOUNDATION
+      - T-031-LOBBY-MEMBERSHIP-HOST-LIFECYCLE
+    acceptance_criteria:
+      - AC-01: SqlStorage and SqlStorageCursor interfaces exported from room-runtime.
+      - AC-02: Pure initRoomSqliteSchema exported from room-runtime.
+      - AC-03: initRoomSqliteSchema creates room_state and processed_actions tables with correct schema.
+      - AC-04: Pure saveRoomStateSqlite exported from room-runtime.
+      - AC-05: saveRoomStateSqlite upserts room metadata, lifecycle, revision, members, host, match snapshot, turnId, deadline, and active alarm.
+      - AC-06: Pure loadRoomStateSqlite exported from room-runtime.
+      - AC-07: loadRoomStateSqlite faithfully reconstructs RoomAuthorityState or returns null if not found.
+      - AC-08: Complete round-trip preserves LOBBY, MATCH_ACTIVE, MATCH_PAUSED_NO_LIVING_CONNECTIONS, MATCH_FINISHED, and ABANDONED states.
+      - AC-09: Pure saveProcessedActionSqlite exported from room-runtime.
+      - AC-10: Pure loadProcessedActionsSqlite exported from room-runtime.
+      - AC-11: Complete round-trip preserves ProcessedGameplayActionRegistry with actor, actionId, and resultingRevision.
+      - AC-12: Pure checkRoomRetentionExpiration exported from room-runtime implementing 24h inactivity check per ADR-014.
+      - AC-13: In-memory createInMemorySqlStorage test utility exported for unit testing.
+      - AC-14: Full test suite passes across all workspaces with zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED_WITH_CONTROLS
+
 
 
 
