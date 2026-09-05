@@ -3,8 +3,8 @@ architect_os_version: 0.6.0
 
 project_status: ACTIVE
 current_stage: STAGE-07
-last_verified_task: T-040-MULTI-CLIENT-E2E-MATCH-FLOW
-active_task: T-041-PRESENCE-PAUSE-RESUME-HARDENING
+last_verified_task: T-041-PRESENCE-PAUSE-RESUME-HARDENING
+active_task: null
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3904,7 +3904,18 @@ tasks:
   T-041-PRESENCE-PAUSE-RESUME-HARDENING:
     title: Presence, Pause, and Resume Hardening
     stage: STAGE-07
-    status: IN_PROGRESS
+    status: VERIFIED
+    implementation_commit: 20fbe9ce45902099351e3bf82787e97495fa0a10
+    verification:
+      decision: VERIFIED
+      verified_implementation_commit: 20fbe9ce45902099351e3bf82787e97495fa0a10
+      evidence:
+        - .ai/evidence/T-041-PRESENCE-PAUSE-RESUME-HARDENING.md
+      architect_review:
+        contract_review: PASS
+        quality_review: PASS
+        risk_controls: PASS
+        regression_impact: NONE
     workflow_profile: STANDARD
     risk_level: MEDIUM
     objective: Implement multi-client presence stress test suite covering all-living disconnect pause, spectator persistence during pause, eliminated reconnect non-resumption, living reconnect fresh deadline, and multi-socket/multi-tab identity deduplication.

@@ -733,7 +733,8 @@
 **Exit Gate**: 2/3/4-player E2E; all Living disconnect; eliminated spectator remains while paused; Eliminated reconnect does not Resume; Living reconnect resumes; multi-tab identity; stale alarms; duplicate alarms; action/deadline races; hibernation/reload; hidden-info leakage tests; regression suite PASS.
 **Progress**:
 - T-040-MULTI-CLIENT-E2E-MATCH-FLOW VERIFIED: Simulated multi-client harness covering complete 2, 3, and 4 player matches via RoomCoordinator; verified lobby admission, invite links, match start, play/challenge turns, revolver mechanics, spectator transitions on elimination, winner conclusion, recipient projection isolation, and system turn deadline timeout auto-play handling.
-- latest full regression 684 tests / 42 files PASS (251 game-core / 397 room-runtime / 36 client)
+- T-041-PRESENCE-PAUSE-RESUME-HARDENING VERIFIED: Multi-client presence stress suite; verified all-living disconnect zero-living pause, active alarm cancellation, eliminated spectator non-interference with pause and non-resumption on reconnect, first living reconnect fresh 30s deadline (subsequent connects do not reset), multi-tab identity deduplication, and repeated pause-resume invariant conservation.
+- latest full regression 689 tests / 43 files PASS (251 game-core / 402 room-runtime / 36 client)
 
 ## STAGE-08 — Friend MVP Release
 **Status**: NOT_STARTED

@@ -4,7 +4,7 @@
 STAGE-07 — Multiplayer & Failure Hardening
 
 **Last Verified Task:**
-T-040-MULTI-CLIENT-E2E-MATCH-FLOW
+T-041-PRESENCE-PAUSE-RESUME-HARDENING
 
 **Current Active Task:**
 None (Awaiting next Stage-07 task approval)
@@ -2966,7 +2966,25 @@ T27 remains mandatory STAGE-04 security work.
   - task-start: b40d933
   - implementation: 427e0e4
 
+- T-041 Presence, Pause, and Resume Hardening VERIFIED.
+- Workflow: STANDARD
+- Risk: MEDIUM
+- Implementation & Architecture:
+  - Disconnecting all living players triggers pause to MATCH_PAUSED_NO_LIVING_CONNECTIONS and cancels active TURN_DEADLINE alarm.
+  - In 4-player match, verified that an eliminated spectator remaining connected does not prevent zero-living pause, nor does spectator reconnect resume the match.
+  - First living player reconnect resumes match to MATCH_ACTIVE with fresh 30s deadline; subsequent living connections do not reset deadline.
+  - Multi-tab identity deduplication: multiple connections for single player count as 1 living player; tab closures keep presence until all tabs closed.
+  - 3 repeated pause-resume cycles preserve state invariants, revision monotonicity, and hand states.
+- Latest regression:
+  - npm ci PASS
+  - npm run typecheck PASS
+  - npm test PASS
+  - 689 tests / 43 files (251 game-core / 402 room-runtime / 36 client)
+- Git metadata:
+  - task-start: df52ddc
+  - implementation: 20fbe9c
+
 **Next Approved Action:**
-Define and execute T-041-PRESENCE-PAUSE-RESUME-HARDENING.
+Define and execute T-042-ALARM-CONCURRENCY-RACE-HARDENING.
 
 
