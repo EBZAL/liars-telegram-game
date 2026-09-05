@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import type { RecipientRoomProjection } from '@liars-telegram-game/room-runtime';
 
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+import type { ConnectionStatus } from './useRoomSocket.js';
+
+export type { ConnectionStatus };
 
 export interface RoomContextValue {
   projection: RecipientRoomProjection | null;

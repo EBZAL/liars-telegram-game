@@ -14,3 +14,4 @@ export * from './components/MatchWinnerOverlay.js';
 export * from './components/TableView.js';
 export * from './components/LobbyView.js';
 export * from './App.js';
+export * from './useRoomSocket.js';
