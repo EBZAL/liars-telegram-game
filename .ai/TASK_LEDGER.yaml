@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-07
 last_verified_task: T-042-ALARM-CONCURRENCY-RACE-HARDENING
-active_task: null
+active_task: T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3966,7 +3966,7 @@ tasks:
   T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY:
     title: Hibernation and Persistence Recovery
     stage: STAGE-07
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: LOW
     risk_level: LOW
     objective: Verify Durable Object lifecycle simulation: SQLite serialization, eviction/restart, state reload, and 24h retention cleanup.
