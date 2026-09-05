@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-08
 last_verified_task: T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
-active_task: null
+active_task: T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -238,8 +238,11 @@ stages:
 
   STAGE-08:
     title: Friend MVP Release
-    status: NOT_STARTED
-    required_tasks: []
+    status: IN_PROGRESS
+    required_tasks:
+      - T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
+      - T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
+      - T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS
     exit_gate:
       status: NOT_EVALUATED
       evidence: []
@@ -4038,6 +4041,68 @@ tasks:
       Risk Level: HIGH
       Workflow Profile: STRICT
       Decision: APPROVED_WITH_CONTROLS
+
+  T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION:
+    title: Cloudflare Worker and Durable Object Integration
+    stage: STAGE-08
+    status: IN_PROGRESS
+    workflow_profile: STRICT
+    risk_level: HIGH
+    objective: Implement @liars-telegram-game/worker workspace package, Cloudflare Worker entrypoint, SQLite-backed RoomDurableObject, WebSocket upgrade handling, provider alarm integration, Telegram initData validation, bot webhook routing, and static asset fallback.
+    dependencies:
+      - T-034-ROOM-COORDINATOR-INTEGRATION
+      - T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
+    acceptance_criteria:
+      - AC-01: @liars-telegram-game/worker workspace package initialized with TypeScript, Cloudflare Workers types, and wrangler configuration.
+      - AC-02: RoomDurableObject integrates RoomCoordinator with ctx.storage.sql, handles WebSocket fetch upgrades, serializes client messages (JOIN, LEAVE, START_MATCH, GAMEPLAY_ACTION), broadcasts recipient-specific projections, and maps coordinator.activeAlarm to ctx.storage.setAlarm().
+      - AC-03: Cloudflare Worker HTTP router handles Telegram auth validation, routes /room/:roomId/ws to the Room DO, serves Telegram Bot webhook /api/telegram-webhook with startapp deep-link buttons, and serves static assets.
+      - AC-04: Unit and integration tests in packages/worker/tests/worker.test.ts verify WebSocket upgrades, DO state persistence, alarm scheduling, and webhook routing.
+      - AC-05: Typecheck and full test regression pass with zero regressions.
+    risk_gate:
+      Risk Level: HIGH
+      Workflow Profile: STRICT
+      Decision: APPROVED_WITH_CONTROLS
+
+  T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION:
+    title: Client Network Transport and Environment Integration
+    stage: STAGE-08
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: MEDIUM
+    objective: Implement WebSocket client transport layer in @liars-telegram-game/client, connecting UI to Cloudflare Worker with Telegram initData authentication, connection state tracking, automatic reconnection with backoff, and production build packaging.
+    dependencies:
+      - T-039-LOBBY-VIEW-AND-INVITE-FLOW
+      - T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
+    acceptance_criteria:
+      - AC-01: useRoomSocket hook establishes WebSocket connection to /room/:roomId/ws with initData authentication.
+      - AC-02: Handles connection states (CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING), receives recipient projections, and dispatches actions.
+      - AC-03: Vite production build configured producing production-ready static assets.
+      - AC-04: Unit tests in client verify socket transport hook and error handling.
+      - AC-05: Typecheck and full test regression pass with zero regressions.
+    risk_gate:
+      Risk Level: MEDIUM
+      Workflow Profile: STANDARD
+      Decision: APPROVED
+
+  T-047-END-TO-END-RELEASE-SMOKE-AND-OPERATIONAL-READINESS:
+    title: End-to-End Release Smoke and Operational Readiness
+    stage: STAGE-08
+    status: NOT_STARTED
+    workflow_profile: STANDARD
+    risk_level: LOW
+    objective: Complete end-to-end multi-tier release smoke test and create operational deployment runbook with zero-cost deployment instructions, BotFather setup, and rollback procedures.
+    dependencies:
+      - T-045-CLOUDFLARE-WORKER-AND-DO-INTEGRATION
+      - T-046-CLIENT-NETWORK-TRANSPORT-AND-ENV-INTEGRATION
+    acceptance_criteria:
+      - AC-01: Full end-to-end integration test verifies client, worker, and DO working together.
+      - AC-02: Operational runbook docs/DEPLOYMENT.md documents Cloudflare Workers free-tier setup, BotFather configuration, environment variables, and rollback steps.
+      - AC-03: All 8 stages complete and project success criteria satisfied.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
+
 
 
 
