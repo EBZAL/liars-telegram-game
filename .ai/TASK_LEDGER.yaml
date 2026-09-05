@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-07
 last_verified_task: T-043-HIBERNATION-AND-PERSISTENCE-RECOVERY
-active_task: null
+active_task: T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3996,7 +3996,7 @@ tasks:
   T-044-HIDDEN-INFO-LEAKAGE-AND-SECURITY-AUDIT:
     title: Hidden Info Leakage and Security Audit
     stage: STAGE-07
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: STRICT
     risk_level: HIGH
     objective: Exhaustive automated security audit verifying zero hidden-information leakage across all recipient projections, spectator states, WebSocket broadcasts, error responses, and action payloads.
