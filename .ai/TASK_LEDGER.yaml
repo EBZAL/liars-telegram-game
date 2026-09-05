@@ -4,7 +4,7 @@ architect_os_version: 0.6.0
 project_status: ACTIVE
 current_stage: STAGE-06
 last_verified_task: T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
-active_task: null
+active_task: T-039-LOBBY-VIEW-AND-INVITE-FLOW
 
 status_definitions:
   NOT_STARTED: Task exists but is not approved for execution.
@@ -3820,12 +3820,24 @@ tasks:
   T-039-LOBBY-VIEW-AND-INVITE-FLOW:
     title: Lobby View and Invite Flow
     stage: STAGE-06
-    status: NOT_STARTED
+    status: IN_PROGRESS
     workflow_profile: STANDARD
     risk_level: LOW
     objective: Implement Lobby screen with member list, host crown badge, invite link sharing, and host start-match button.
     dependencies:
       - T-038-ROULETTE-AND-CHALLENGE-REVEAL-PRESENTATION
+    acceptance_criteria:
+      - AC-01: LobbyView renders Room ID, member slots (2-4 players), and host crown badge.
+      - AC-02: Copy/Share Invite Link button generates canonical invite link with startapp param.
+      - AC-03: START MATCH button is enabled only for Host when members count >= 2.
+      - AC-04: Non-host sees waiting message and cannot start match.
+      - AC-05: Root App.tsx routes between LobbyView and TableView based on projection.publicState.lifecycle.
+      - AC-06: Unit/component tests in packages/client/tests/lobby-view.test.tsx verify lobby rendering, host start controls, invite copy, and App routing.
+      - AC-07: Typecheck and full test regression pass with zero regressions.
+    risk_gate:
+      Risk Level: LOW
+      Workflow Profile: STANDARD
+      Decision: APPROVED
 
 
 
