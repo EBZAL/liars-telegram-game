@@ -1,0 +1,126 @@
+:root {
+  /* Theatrical Dark Palette */
+  --bg-primary: #0e1117;
+  --bg-secondary: #171b24;
+  --bg-tertiary: #222836;
+  --bg-surface: #1e2330;
+  --bg-card: #282f42;
+
+  /* Accent Colors */
+  --accent-gold: #e5a93b;
+  --accent-gold-hover: #f5bc56;
+  --accent-crimson: #c93b3b;
+  --accent-crimson-hover: #e04848;
+  --accent-velvet-green: #1f523c;
+  --accent-velvet-dark: #123325;
+  --accent-blue: #3b82f6;
+
+  /* Typography & High Contrast Text */
+  --text-primary: #f0f2f5;
+  --text-secondary: #a0aec0;
+  --text-muted: #64748b;
+  --text-gold: #ffd27d;
+  --text-danger: #ff6b6b;
+
+  /* Borders and Highlights */
+  --border-subtle: #2d3748;
+  --border-gold: #b38228;
+  --border-crimson: #992828;
+
+  /* Telegram Safe Areas */
+  --tg-safe-top: var(--tg-viewport-safe-area-inset-top, 0px);
+  --tg-safe-bottom: var(--tg-viewport-safe-area-inset-bottom, 0px);
+  --tg-safe-left: var(--tg-viewport-safe-area-inset-left, 0px);
+  --tg-safe-right: var(--tg-viewport-safe-area-inset-right, 0px);
+
+  /* Card Dimensions */
+  --card-width: 72px;
+  --card-height: 104px;
+  --card-radius: 8px;
+}
+
+/* Telegram Theme Overrides (if present) */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--tg-theme-bg-color, var(--bg-primary));
+  color: var(--tg-theme-text-color, var(--text-primary));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* App Container */
+.app-viewport {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: max(12px, var(--tg-safe-top));
+  padding-bottom: max(12px, var(--tg-safe-bottom));
+  padding-left: max(12px, var(--tg-safe-left));
+  padding-right: max(12px, var(--tg-safe-right));
+  background: radial-gradient(circle at 50% 30%, #1a2233 0%, #0d1017 100%);
+  position: relative;
+}
+
+/* Button Reset and Primary Styling */
+.btn-primary {
+  background: linear-gradient(180deg, #e5a93b 0%, #b87c1e 100%);
+  color: #111;
+  font-weight: 700;
+  font-size: 15px;
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(229, 169, 59, 0.25);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  filter: brightness(0.9);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-danger {
+  background: linear-gradient(180deg, #c93b3b 0%, #992424 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  border: 1px solid var(--border-crimson);
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(201, 59, 59, 0.3);
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+  filter: brightness(0.9);
+}
+
+.btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
