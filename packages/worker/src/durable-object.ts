@@ -54,7 +54,7 @@ export class RoomDurableObject {
     try {
       const row = (this.state.storage.sql as any)
         .exec('SELECT room_id FROM room_state LIMIT 1')
-        .one() as { room_id?: string } | null;
+        .toArray()[0] as { room_id?: string } | undefined;
       if (row && row.room_id) {
         this.coordinator = new RoomCoordinator(row.room_id, this.state.storage.sql as any);
         return this.coordinator;
@@ -136,7 +136,8 @@ export class RoomDurableObject {
 
     // Create WebSocket pair for Durable Object
     const webSocketPair = new (globalThis as any).WebSocketPair();
-    const [clientWs, serverWs] = Object.values(webSocketPair) as [WebSocket, WebSocket];
+    const clientWs = (webSocketPair[0] ?? Object.values(webSocketPair)[0]) as WebSocket;
+    const serverWs = (webSocketPair[1] ?? Object.values(webSocketPair)[1]) as WebSocket;
 
     serverWs.accept();
     this.sockets.set(serverWs, { connectionId, playerId });

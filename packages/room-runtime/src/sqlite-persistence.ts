@@ -118,7 +118,7 @@ export function loadRoomStateSqlite<TMatchSnapshot = unknown>(
     updated_at: number;
   }>('SELECT * FROM room_state WHERE room_id = ?', roomId.trim());
 
-  const row = cursor.one();
+  const row = cursor.toArray()[0] ?? null;
   if (!row) {
     return null;
   }

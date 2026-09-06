@@ -80,8 +80,9 @@ export default {
         url.searchParams.get('initData') || request.headers.get('x-telegram-init-data');
 
       if (env.BOT_TOKEN) {
+        const botToken = env.BOT_TOKEN.trim().replace(/^["']|["']$/g, '');
         if (initData) {
-          const authResult = validateTelegramInitData(initData, env.BOT_TOKEN);
+          const authResult = validateTelegramInitData(initData, botToken);
           if (!authResult.success || !authResult.user) {
             return new Response(`Unauthorized: Invalid Telegram initData (${authResult.error})`, {
               status: 401,
@@ -118,10 +119,8 @@ export default {
       doHeaders.set('x-player-id', playerId);
       doHeaders.set('x-room-id', roomId);
 
-      const doRequest = new Request(request.url, {
-        method: request.method,
+      const doRequest = new Request(request, {
         headers: doHeaders,
-        body: request.body,
       });
 
       return stub.fetch(doRequest);
