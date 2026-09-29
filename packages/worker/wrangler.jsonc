@@ -25,5 +25,8 @@
   "assets": {
     "directory": "../client/dist",
     "binding": "ASSETS"
+  },
+  "vars": {
+    "BOT_USERNAME": "LIRESBARBOT"
   }
 }

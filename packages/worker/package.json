@@ -6,6 +6,7 @@
   "scripts": {
     "typecheck": "npm run build --workspace=@liars-telegram-game/room-runtime && tsc --noEmit",
     "test": "npm run build --workspace=@liars-telegram-game/room-runtime && vitest run",
+    "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
