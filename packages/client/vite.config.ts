@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       'node:crypto': path.resolve(__dirname, 'src/crypto-shim.ts'),
+      'node:buffer': path.resolve(__dirname, 'src/buffer-shim.ts'),
+      'buffer': path.resolve(__dirname, 'src/buffer-shim.ts'),
     },
   },
   build: {
