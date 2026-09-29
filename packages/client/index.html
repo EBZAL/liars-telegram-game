@@ -9,6 +9,50 @@
     <link rel="stylesheet" href="/src/theme.css" />
   </head>
   <body class="theme-dark">
+    <audio id="bgm-audio" src="/bgm.mp3" loop autoplay playsinline preload="auto" style="display:none;"></audio>
+    <script>
+      (function() {
+        var audio = document.getElementById('bgm-audio');
+        if (!audio) return;
+        audio.volume = 0.35;
+
+        function attemptPlay() {
+          if (audio && audio.paused) {
+            var promise = audio.play();
+            if (promise && promise.catch) {
+              promise.catch(function() {});
+            }
+          }
+        }
+
+        // Try playing immediately on load
+        attemptPlay();
+        window.addEventListener('load', attemptPlay);
+        document.addEventListener('DOMContentLoaded', attemptPlay);
+
+        // Telegram WebApp ready trigger
+        if (window.Telegram && window.Telegram.WebApp) {
+          try {
+            window.Telegram.WebApp.ready();
+            attemptPlay();
+          } catch(e) {}
+        }
+
+        // Capture ANY user touch/click anywhere on the screen to unblock audio
+        var events = ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'click'];
+        function onFirstUserGesture() {
+          attemptPlay();
+          events.forEach(function(evt) {
+            window.removeEventListener(evt, onFirstUserGesture, true);
+            document.removeEventListener(evt, onFirstUserGesture, true);
+          });
+        }
+        events.forEach(function(evt) {
+          window.addEventListener(evt, onFirstUserGesture, true);
+          document.addEventListener(evt, onFirstUserGesture, true);
+        });
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

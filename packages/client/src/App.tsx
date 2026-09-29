@@ -307,18 +307,25 @@ export const App: React.FC<AppProps> = (props) => {
     adapter.expand();
     adapter.enableClosingConfirmation();
 
-    // Start background music loop on first user interaction (required by browser autoplay policy)
+    // Attempt immediate background music playback on mount
     soundManager.playBgm();
-    const startAudioOnInteraction = () => {
+
+    // Catch ANY touch or click anywhere on screen to unlock audio immediately
+    const unlockAudio = () => {
       soundManager.playBgm();
-      window.removeEventListener('pointerdown', startAudioOnInteraction);
-      window.removeEventListener('keydown', startAudioOnInteraction);
     };
-    window.addEventListener('pointerdown', startAudioOnInteraction);
-    window.addEventListener('keydown', startAudioOnInteraction);
+
+    const gestureEvents = ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'click'];
+    gestureEvents.forEach((evt) => {
+      window.addEventListener(evt, unlockAudio, { capture: true, passive: true });
+      document.addEventListener(evt, unlockAudio, { capture: true, passive: true });
+    });
+
     return () => {
-      window.removeEventListener('pointerdown', startAudioOnInteraction);
-      window.removeEventListener('keydown', startAudioOnInteraction);
+      gestureEvents.forEach((evt) => {
+        window.removeEventListener(evt, unlockAudio, true);
+        document.removeEventListener(evt, unlockAudio, true);
+      });
     };
   }, []);
 

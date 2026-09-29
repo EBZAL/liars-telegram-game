@@ -7,18 +7,11 @@ class SoundSystem {
   private ctx: AudioContext | null = null;
   private muted: boolean = false;
   private bgmAudio: HTMLAudioElement | null = null;
-  private bgmPlaying: boolean = false;
+  private bgmPlaying: boolean = true;
   private bgmVolume: number = 0.35; // Background volume (so SFX remain prominent)
 
   constructor() {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage) {
-      try {
-        const stored = localStorage.getItem('liars_deck_muted');
-        if (stored === 'true') {
-          this.muted = true;
-        }
-      } catch {}
-    }
+    this.muted = false;
   }
 
   private getContext(): AudioContext | null {
@@ -44,19 +37,34 @@ class SoundSystem {
     return this.muted;
   }
 
+  private getBgmAudio(url: string = '/bgm.mp3'): HTMLAudioElement | null {
+    if (typeof window === 'undefined') return null;
+    if (!this.bgmAudio) {
+      const existing = document.getElementById('bgm-audio') as HTMLAudioElement | null;
+      if (existing) {
+        this.bgmAudio = existing;
+      } else {
+        try {
+          this.bgmAudio = new Audio(url);
+          this.bgmAudio.loop = true;
+          this.bgmAudio.volume = this.bgmVolume;
+          this.bgmAudio.setAttribute('playsinline', 'true');
+        } catch {
+          return null;
+        }
+      }
+    }
+    return this.bgmAudio;
+  }
+
   public setMuted(muted: boolean): void {
     this.muted = muted;
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage) {
-      try {
-        localStorage.setItem('liars_deck_muted', String(this.muted));
-      } catch {}
-    }
-
-    if (this.bgmAudio) {
+    const audio = this.getBgmAudio();
+    if (audio) {
       if (this.muted) {
-        this.bgmAudio.pause();
+        audio.pause();
       } else if (this.bgmPlaying) {
-        this.bgmAudio.play().catch(() => {});
+        audio.play().catch(() => {});
       }
     }
   }
@@ -68,18 +76,14 @@ class SoundSystem {
     if (typeof window === 'undefined') return;
     this.bgmPlaying = true;
 
-    if (!this.bgmAudio) {
-      try {
-        this.bgmAudio = new Audio(url);
-        this.bgmAudio.loop = true;
-        this.bgmAudio.volume = this.bgmVolume;
-      } catch {
-        return;
-      }
-    }
+    const audio = this.getBgmAudio(url);
+    if (!audio) return;
 
-    if (!this.muted && this.bgmAudio) {
-      this.bgmAudio.play().catch(() => {
+    audio.volume = this.bgmVolume;
+    audio.loop = true;
+
+    if (!this.muted && audio.paused) {
+      audio.play().catch(() => {
         // Autoplay may wait for user interaction
       });
     }
@@ -87,15 +91,17 @@ class SoundSystem {
 
   public pauseBgm(): void {
     this.bgmPlaying = false;
-    if (this.bgmAudio) {
-      this.bgmAudio.pause();
+    const audio = this.getBgmAudio();
+    if (audio) {
+      audio.pause();
     }
   }
 
   public setBgmVolume(volume: number): void {
     this.bgmVolume = Math.max(0, Math.min(1, volume));
-    if (this.bgmAudio) {
-      this.bgmAudio.volume = this.bgmVolume;
+    const audio = this.getBgmAudio();
+    if (audio) {
+      audio.volume = this.bgmVolume;
     }
   }
 
