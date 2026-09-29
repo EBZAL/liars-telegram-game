@@ -27,6 +27,7 @@
     "binding": "ASSETS"
   },
   "vars": {
-    "BOT_USERNAME": "LIRESBARBOT"
+    "BOT_USERNAME": "LIRESBARBOT",
+    "APP_URL": "https://liars-deck-worker.aebzalian.workers.dev"
   }
 }
