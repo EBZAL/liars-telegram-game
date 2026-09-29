@@ -6,6 +6,7 @@ import { CentralClaimBanner } from './CentralClaimBanner.js';
 import { OpponentSeat } from './OpponentSeat.js';
 import { PlayerHand } from './PlayerHand.js';
 import { ActionControls } from './ActionControls.js';
+import { RouletteChamber } from './RouletteChamber.js';
 import {
   useCardSelection,
   isOwnTurn,
@@ -45,8 +46,9 @@ export const TableView: React.FC<TableViewProps> = ({
   const previousPlay = match.round.previousPlay;
   const currentActorId = match.round.currentPlayerId;
 
-  // Filter opponents
+  // Filter opponents and find own player
   const opponents = match.players.filter((p) => p.playerId !== ownPlayerId);
+  const ownPlayer = match.players.find((p) => p.playerId === ownPlayerId);
 
   // Position opponents based on count (1, 2, or 3 opponents)
   const positionedOpponents: { player: PublicPlayerProjection; position: 'top' | 'left' | 'right' }[] = [];
@@ -159,6 +161,41 @@ export const TableView: React.FC<TableViewProps> = ({
 
       {/* Bottom: Player's Hand & Action Controls */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '8px' }}>
+        {/* Own Player Status & Revolver */}
+        <div
+          data-testid="own-player-status"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '6px 14px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '12px',
+            margin: '0 8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '13px' }}>
+              {ownPlayer?.lifeStatus === 'ELIMINATED' ? '💀' : ownTurn ? '🎯' : '👤'}
+            </span>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: ownTurn ? 'var(--text-gold)' : 'var(--text-primary)',
+              }}
+            >
+              {ownPlayer?.lifeStatus === 'ELIMINATED' ? 'You (Eliminated)' : 'Your Revolver'}
+            </span>
+          </div>
+
+          <RouletteChamber
+            shotsUsed={ownPlayer?.shotsUsed ?? 0}
+            isEliminated={ownPlayer?.lifeStatus === 'ELIMINATED'}
+          />
+        </div>
+
         {privateState && (
           <PlayerHand
             hand={privateState.hand}

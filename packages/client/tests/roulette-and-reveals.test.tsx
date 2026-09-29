@@ -1,9 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
+import React, { useEffect } from 'react';
 import { RouletteChamber } from '../src/components/RouletteChamber.js';
 import { ChallengeRevealOverlay } from '../src/components/ChallengeRevealOverlay.js';
 import { MatchPausedBanner } from '../src/components/MatchPausedBanner.js';
 import { MatchWinnerOverlay } from '../src/components/MatchWinnerOverlay.js';
+import { GameContainer } from '../src/App.js';
+import { RoomProvider, useRoomProjection } from '../src/room-context.js';
+import type { RecipientRoomProjection } from '@liars-telegram-game/room-runtime';
 
 describe('T-038 Roulette and Challenge Reveal Presentation', () => {
   describe('RouletteChamber', () => {
@@ -102,6 +106,77 @@ describe('T-038 Roulette and Challenge Reveal Presentation', () => {
       render(<MatchWinnerOverlay winnerId="bob" isOwnWin={false} onReturnToLobby={onReturn} />);
 
       expect(screen.getByTestId('match-winner-overlay').textContent).toContain('bob WON THE MATCH');
+    });
+  });
+
+  describe('GameContainer Challenge Integration', () => {
+    it('renders ChallengeRevealOverlay when lastChallenge is in projection and allows dismissal', () => {
+      const proj: RecipientRoomProjection = {
+        publicState: {
+          roomId: 'r_test',
+          lifecycle: 'MATCH_ACTIVE',
+          revision: 5,
+          memberPlayerIds: ['alice', 'bob'],
+          hostPlayerId: 'alice',
+          currentTurnId: 'turn-2',
+          currentTurnDeadline: Date.now() + 20000,
+          match: {
+            status: 'IN_PROGRESS',
+            seatOrder: ['alice', 'bob'],
+            players: [
+              { playerId: 'alice', lifeStatus: 'ALIVE', handCount: 4, shotsUsed: 0 },
+              { playerId: 'bob', lifeStatus: 'ALIVE', handCount: 5, shotsUsed: 1 },
+            ],
+            round: {
+              roundNumber: 2,
+              tableRank: 'KING',
+              currentPlayerId: 'alice',
+              previousPlay: null,
+            },
+            winnerId: null,
+          },
+          lastChallenge: {
+            callerId: 'bob',
+            accusedId: 'alice',
+            tableRank: 'KING',
+            revealedCards: [{ id: 'c1', rank: 'KING' }],
+            isLie: false,
+            shooterId: 'bob',
+            rouletteOutcome: 'BLANK',
+            eliminated: false,
+            resolvedAtRevision: 5,
+          },
+        },
+        privateState: {
+          playerId: 'alice',
+          hand: [{ id: 'c2', rank: 'QUEEN' }],
+        },
+      };
+
+      const Setup: React.FC = () => {
+        const { setProjection } = useRoomProjection();
+        useEffect(() => {
+          setProjection(proj);
+        }, [setProjection]);
+        return <GameContainer />;
+      };
+
+      render(
+        <RoomProvider>
+          <Setup />
+        </RoomProvider>
+      );
+
+      expect(screen.getByTestId('challenge-reveal-overlay')).toBeTruthy();
+      expect(screen.getByTestId('challenge-title').textContent).toContain('bob challenged alice');
+      expect(screen.getByTestId('challenge-verdict').textContent).toContain('HONEST PLAY');
+
+      // Dismiss
+      act(() => {
+        screen.getByTestId('btn-dismiss-reveal').click();
+      });
+
+      expect(screen.queryByTestId('challenge-reveal-overlay')).toBeNull();
     });
   });
 });

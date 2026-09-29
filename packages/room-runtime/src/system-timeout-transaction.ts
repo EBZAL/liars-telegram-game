@@ -2,6 +2,7 @@ import type { MatchState, RandomSource } from '@liars-telegram-game/game-core';
 import { applySystemTimeout } from '@liars-telegram-game/game-core';
 
 import type { RoomAuthorityState } from './room-state.js';
+import type { PublicChallengeResolutionProjection } from './recipient-projection.js';
 import { nextRoomRevision } from './gameplay-admission.js';
 import type { ServerPreparedNextTurn } from './gameplay-transaction.js';
 import { evaluateTurnDeadlineDueState, armActiveTurnDeadline } from './turn-deadline.js';
@@ -152,6 +153,22 @@ export function executeSystemTimeoutDeadlineTransaction(
 
   const timeoutResult = applySystemTimeout(currentMatchState, random);
   const nextMatchState = timeoutResult.state;
+
+  if (timeoutResult.forcedCall) {
+    const call = timeoutResult.forcedCall;
+    const lastChallenge: PublicChallengeResolutionProjection = {
+      callerId: call.callerId,
+      accusedId: call.challenge.accusedPlayerId,
+      tableRank: currentMatchState.round.tableRank,
+      revealedCards: call.challenge.revealedCards.map((c) => ({ id: c.id, rank: c.rank })),
+      isLie: call.challenge.challengerWasCorrect,
+      shooterId: call.shot.playerId,
+      rouletteOutcome: call.shot.outcome,
+      eliminated: call.shot.eliminated,
+      resolvedAtRevision: resultingRevision,
+    };
+    (nextMatchState as any).lastChallenge = lastChallenge;
+  }
 
   // Step 8 — Validate Core result consistency
   if (nextMatchState.status === 'IN_PROGRESS' && nextMatchState.winnerId !== null) {

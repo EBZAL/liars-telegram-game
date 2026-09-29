@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PublicPlayerProjection } from '@liars-telegram-game/room-runtime';
+import { RouletteChamber } from './RouletteChamber.js';
 
 export interface OpponentSeatProps {
   player: PublicPlayerProjection;
@@ -57,10 +58,11 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         </span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-        <span>🎴 {player.handCount}</span>
-        <span>•</span>
-        <span>🔫 {player.shotsUsed}/6</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span>🎴 {player.handCount} {player.handCount === 1 ? 'card' : 'cards'}</span>
+        </div>
+        <RouletteChamber shotsUsed={player.shotsUsed} isEliminated={isEliminated} />
       </div>
 
       {isCurrentTurn && (

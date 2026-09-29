@@ -35,12 +35,25 @@ export interface PublicRoundProjection {
   previousPlay: PublicPreviousPlayProjection | null;
 }
 
+export interface PublicChallengeResolutionProjection {
+  callerId: string;
+  accusedId: string;
+  tableRank: TableRank;
+  revealedCards: { id: string; rank: CardRank }[];
+  isLie: boolean;
+  shooterId: string;
+  rouletteOutcome: 'BLANK' | 'LETHAL';
+  eliminated: boolean;
+  resolvedAtRevision: number;
+}
+
 export interface PublicMatchProjection {
   status: MatchStatus;
   seatOrder: string[];
   players: PublicPlayerProjection[];
   round: PublicRoundProjection;
   winnerId: string | null;
+  lastChallenge?: PublicChallengeResolutionProjection | null;
 }
 
 export interface PublicRoomProjection {
@@ -52,6 +65,7 @@ export interface PublicRoomProjection {
   currentTurnId: string | null;
   currentTurnDeadline: number | null;
   match: PublicMatchProjection | null;
+  lastChallenge?: PublicChallengeResolutionProjection | null;
 }
 
 export interface RecipientRoomProjection {
@@ -346,12 +360,16 @@ export function deriveRecipientRoomProjection(
     });
   }
 
+  const lastChallenge =
+    (roomState as any).lastChallenge ?? ((match as any).lastChallenge ?? null);
+
   const publicMatch: PublicMatchProjection = {
     status: match.status,
     seatOrder,
     players: publicPlayers,
     round: publicRound,
     winnerId: match.winnerId,
+    lastChallenge,
   };
 
   const publicState: PublicRoomProjection = {
@@ -363,6 +381,7 @@ export function deriveRecipientRoomProjection(
     currentTurnId: roomState.currentTurnId,
     currentTurnDeadline: roomState.currentTurnDeadline,
     match: publicMatch,
+    lastChallenge,
   };
 
   // 5. Derive private state for recipient

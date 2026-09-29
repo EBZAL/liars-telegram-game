@@ -2,6 +2,7 @@ import type { MatchState, RandomSource } from '@liars-telegram-game/game-core';
 import { applyPlayCardsCommand, applyCallLiar } from '@liars-telegram-game/game-core';
 
 import type { RoomAuthorityState } from './room-state.js';
+import type { PublicChallengeResolutionProjection } from './recipient-projection.js';
 import type { GameplayActionEnvelope } from './gameplay-protocol.js';
 import type {
   ServerResolvedActor,
@@ -89,6 +90,8 @@ export function executeClientGameplayTransaction(
   const actorPlayerId = actor.playerId.trim();
   const currentMatchState = roomState.match!;
   let nextMatchState: MatchState;
+  let lastChallenge: PublicChallengeResolutionProjection | null = null;
+  const resultingRevision = nextRoomRevision(roomState.revision);
 
   // Step 5 — Dispatch verified Core command
   if (envelope.actionType === 'PLAY_CARDS') {
@@ -99,9 +102,36 @@ export function executeClientGameplayTransaction(
       random
     );
     nextMatchState = playResult.state;
+    if (playResult.forcedCall) {
+      const call = playResult.forcedCall;
+      lastChallenge = {
+        callerId: call.callerId,
+        accusedId: call.challenge.accusedPlayerId,
+        tableRank: currentMatchState.round.tableRank,
+        revealedCards: call.challenge.revealedCards.map((c) => ({ id: c.id, rank: c.rank })),
+        isLie: call.challenge.challengerWasCorrect,
+        shooterId: call.shot.playerId,
+        rouletteOutcome: call.shot.outcome,
+        eliminated: call.shot.eliminated,
+        resolvedAtRevision: resultingRevision,
+      };
+      (nextMatchState as any).lastChallenge = lastChallenge;
+    }
   } else if (envelope.actionType === 'CALL_LIAR') {
     const callResult = applyCallLiar(currentMatchState, actorPlayerId, random);
     nextMatchState = callResult.state;
+    lastChallenge = {
+      callerId: callResult.challenge.callerId,
+      accusedId: callResult.challenge.accusedPlayerId,
+      tableRank: currentMatchState.round.tableRank,
+      revealedCards: callResult.challenge.revealedCards.map((c) => ({ id: c.id, rank: c.rank })),
+      isLie: callResult.challenge.challengerWasCorrect,
+      shooterId: callResult.shot.playerId,
+      rouletteOutcome: callResult.shot.outcome,
+      eliminated: callResult.shot.eliminated,
+      resolvedAtRevision: resultingRevision,
+    };
+    (nextMatchState as any).lastChallenge = lastChallenge;
   } else {
     throw new Error(`Unsupported actionType: ${(envelope as GameplayActionEnvelope).actionType}`);
   }
@@ -114,8 +144,7 @@ export function executeClientGameplayTransaction(
     throw new Error('Invariant failure: MatchState status is FINISHED but winnerId is null');
   }
 
-  // Step 7 — Calculate resulting revision
-  const resultingRevision = nextRoomRevision(roomState.revision);
+  // Step 7 — Calculate resulting revision (already computed)
 
   // Step 8 — Record successful action in processed registry
   const nextRegistry = recordSuccessfulGameplayAction(

@@ -5,6 +5,7 @@ import { TableView } from './components/TableView.js';
 import { LobbyView } from './components/LobbyView.js';
 import { MatchPausedBanner } from './components/MatchPausedBanner.js';
 import { MatchWinnerOverlay } from './components/MatchWinnerOverlay.js';
+import { ChallengeRevealOverlay } from './components/ChallengeRevealOverlay.js';
 import { useRoomSocket } from './useRoomSocket.js';
 import {
   buildPlayCardsEnvelope,
@@ -56,6 +57,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onRetry,
 }) => {
   const { projection, setProjection } = useRoomProjection();
+  const [dismissedChallengeRevision, setDismissedChallengeRevision] = useState<number | null>(null);
   const tg = getTelegramAdapter();
   const ownPlayerId = tg.user?.id ? String(tg.user.id) : (tg.user?.username || 'player_anon');
 
@@ -124,6 +126,20 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const isFinished = lifecycle === 'MATCH_FINISHED';
   const winnerId = match?.winnerId ?? null;
 
+  const lastChallenge =
+    projection.publicState.lastChallenge ??
+    projection.publicState.match?.lastChallenge ??
+    null;
+
+  const activeChallenge =
+    lastChallenge && lastChallenge.resolvedAtRevision !== dismissedChallengeRevision
+      ? lastChallenge
+      : null;
+
+  const shooterPlayer = activeChallenge
+    ? match?.players.find((p) => p.playerId === activeChallenge.shooterId)
+    : null;
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
       <MatchPausedBanner visible={isPaused} />
@@ -135,7 +151,21 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         onCallLiar={() => onDispatchAction({ type: 'CALL_LIAR' })}
       />
 
-      {isFinished && winnerId && (
+      {activeChallenge && (
+        <ChallengeRevealOverlay
+          callerId={activeChallenge.callerId}
+          accusedId={activeChallenge.accusedId}
+          revealedCards={activeChallenge.revealedCards}
+          tableRank={activeChallenge.tableRank}
+          isLie={activeChallenge.isLie}
+          shooterId={activeChallenge.shooterId}
+          rouletteOutcome={activeChallenge.rouletteOutcome}
+          shotsUsed={shooterPlayer?.shotsUsed}
+          onDismiss={() => setDismissedChallengeRevision(activeChallenge.resolvedAtRevision)}
+        />
+      )}
+
+      {isFinished && winnerId && !activeChallenge && (
         <MatchWinnerOverlay
           winnerId={winnerId}
           isOwnWin={winnerId === ownPlayerId}
