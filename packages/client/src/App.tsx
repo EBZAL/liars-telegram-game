@@ -6,6 +6,7 @@ import { LobbyView } from './components/LobbyView.js';
 import { MatchPausedBanner } from './components/MatchPausedBanner.js';
 import { MatchWinnerOverlay } from './components/MatchWinnerOverlay.js';
 import { ChallengeRevealOverlay } from './components/ChallengeRevealOverlay.js';
+import { soundManager } from './sound.js';
 import { useRoomSocket } from './useRoomSocket.js';
 import {
   buildPlayCardsEnvelope,
@@ -25,6 +26,7 @@ export interface GameContainerProps extends AppProps {
   errorMessage?: string | null;
   onRetry?: () => void;
   onJoinRoomCode?: (code: string) => void;
+  onPlayAgain?: () => void;
 }
 
 function getEffectiveRoomId(): string {
@@ -53,6 +55,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onStartMatch = () => {},
   onLeaveRoom = () => {},
   onJoinRoomCode,
+  onPlayAgain,
   errorMessage = null,
   onRetry,
 }) => {
@@ -60,6 +63,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [dismissedChallengeRevision, setDismissedChallengeRevision] = useState<number | null>(null);
   const tg = getTelegramAdapter();
   const ownPlayerId = tg.user?.id ? String(tg.user.id) : (tg.user?.username || 'player_anon');
+  const ownDisplayName = tg.user?.first_name || tg.user?.username || ownPlayerId;
 
   if (!projection) {
     return (
@@ -105,7 +109,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     );
   }
 
-  const { lifecycle, roomId, memberPlayerIds, hostPlayerId, match } = projection.publicState;
+  const { lifecycle, roomId, memberPlayerIds, hostPlayerId, match, playerNames } = projection.publicState;
 
   if (lifecycle === 'LOBBY') {
     return (
@@ -114,6 +118,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         members={memberPlayerIds}
         hostPlayerId={hostPlayerId}
         ownPlayerId={ownPlayerId}
+        ownDisplayName={ownDisplayName}
+        playerNames={playerNames}
         botUsername="LIRESBARBOT"
         onStartMatch={onStartMatch}
         onLeaveRoom={onLeaveRoom}
@@ -147,6 +153,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       <TableView
         projection={projection}
         ownPlayerId={ownPlayerId}
+        ownDisplayName={ownDisplayName}
         onPlayCards={(cardIds) => onDispatchAction({ type: 'PLAY_CARDS', cardIds })}
         onCallLiar={() => onDispatchAction({ type: 'CALL_LIAR' })}
       />
@@ -161,6 +168,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           shooterId={activeChallenge.shooterId}
           rouletteOutcome={activeChallenge.rouletteOutcome}
           shotsUsed={shooterPlayer?.shotsUsed}
+          playerNames={playerNames}
           onDismiss={() => setDismissedChallengeRevision(activeChallenge.resolvedAtRevision)}
         />
       )}
@@ -169,6 +177,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         <MatchWinnerOverlay
           winnerId={winnerId}
           isOwnWin={winnerId === ownPlayerId}
+          playerNames={playerNames}
+          onPlayAgain={onPlayAgain}
           onReturnToLobby={() => {
             setProjection(null);
             onLeaveRoom();
@@ -182,6 +192,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 const ConnectedGame: React.FC<AppProps> = (props) => {
   const { projection, setProjection, setConnectionStatus, setError } = useRoomProjection();
   const [roomId, setRoomId] = useState<string>(() => props.roomId || getEffectiveRoomId());
+  const tg = getTelegramAdapter();
+  const ownDisplayName = tg.user?.first_name || tg.user?.username || undefined;
 
   const {
     connectionStatus,
@@ -190,6 +202,7 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
     joinRoom,
     leaveRoom,
     startMatch,
+    playAgain,
     dispatchAction,
     connect,
   } = useRoomSocket({
@@ -213,12 +226,12 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
     }
   }, [socketError, setError]);
 
-  // When WebSocket opens and no projection yet, automatically send JOIN
+  // When WebSocket opens and no projection yet, automatically send JOIN with displayName
   useEffect(() => {
     if (connectionStatus === 'CONNECTED' && !projection) {
-      joinRoom();
+      joinRoom(ownDisplayName);
     }
-  }, [connectionStatus, projection, joinRoom]);
+  }, [connectionStatus, projection, joinRoom, ownDisplayName]);
 
   const handleDispatchAction = useCallback(
     (actionOrEnvelope: any) => {
@@ -275,6 +288,7 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
       onStartMatch={handleStartMatch}
       onLeaveRoom={handleLeaveRoom}
       onJoinRoomCode={handleJoinRoomCode}
+      onPlayAgain={playAgain}
       connectionStatus={connectionStatus}
       errorMessage={socketError}
       onRetry={connect}
@@ -284,6 +298,7 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
 
 export const App: React.FC<AppProps> = (props) => {
   const [tg, setTg] = useState<TelegramAdapterContext | null>(null);
+  const [isMuted, setIsMuted] = useState(() => soundManager.isMuted());
 
   useEffect(() => {
     const adapter = getTelegramAdapter();
@@ -293,6 +308,11 @@ export const App: React.FC<AppProps> = (props) => {
     adapter.enableClosingConfirmation();
   }, []);
 
+  const handleToggleSound = () => {
+    const next = soundManager.toggleMute();
+    setIsMuted(next);
+  };
+
   return (
     <RoomProvider>
       <div className="app-viewport">
@@ -301,7 +321,7 @@ export const App: React.FC<AppProps> = (props) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '4px 8px',
+            padding: '6px 10px',
             borderBottom: '1px solid var(--border-subtle)',
             marginBottom: '8px',
           }}
@@ -309,11 +329,35 @@ export const App: React.FC<AppProps> = (props) => {
           <h1 style={{ margin: 0, fontSize: '16px', color: 'var(--accent-gold)', letterSpacing: '1px' }}>
             LIAR'S DECK
           </h1>
-          {tg?.user && (
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              👤 {tg.user.first_name}
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={handleToggleSound}
+              title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
+              data-testid="btn-toggle-sound"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                fontSize: '13px',
+                padding: '3px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>{isMuted ? '🔇' : '🔊'}</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                {isMuted ? 'MUTE' : 'SOUND'}
+              </span>
+            </button>
+            {tg?.user && (
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                👤 {tg.user.first_name}
+              </span>
+            )}
+          </div>
         </header>
 
         <main style={{ flex: 1, overflow: 'hidden' }}>

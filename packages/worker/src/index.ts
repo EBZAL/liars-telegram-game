@@ -76,6 +76,7 @@ export default {
       }
 
       let playerId: string | null = null;
+      let playerName: string | null = null;
       const initData =
         url.searchParams.get('initData') || request.headers.get('x-telegram-init-data');
 
@@ -89,8 +90,10 @@ export default {
             });
           }
           playerId = String(authResult.user.id);
+          playerName = authResult.user.first_name || authResult.user.username || playerId;
         } else if (env.ALLOW_INSECURE_AUTH === 'true') {
           playerId = url.searchParams.get('playerId') || request.headers.get('x-player-id');
+          playerName = url.searchParams.get('playerName') || request.headers.get('x-player-name') || playerId;
           if (!playerId) {
             return new Response('Unauthorized: Missing credentials', { status: 401 });
           }
@@ -102,12 +105,21 @@ export default {
         if (initData) {
           const authResult = validateTelegramInitData(initData, 'DEV_TOKEN');
           playerId = authResult.success && authResult.user ? String(authResult.user.id) : null;
+          if (authResult.success && authResult.user) {
+            playerName = authResult.user.first_name || authResult.user.username || playerId;
+          }
         }
         if (!playerId) {
           playerId =
             url.searchParams.get('playerId') ||
             request.headers.get('x-player-id') ||
             'dev_player';
+        }
+        if (!playerName) {
+          playerName =
+            url.searchParams.get('playerName') ||
+            request.headers.get('x-player-name') ||
+            playerId;
         }
       }
 
@@ -118,6 +130,9 @@ export default {
       const doHeaders = new Headers(request.headers);
       doHeaders.set('x-player-id', playerId);
       doHeaders.set('x-room-id', roomId);
+      if (playerName) {
+        doHeaders.set('x-player-name', encodeURIComponent(playerName));
+      }
 
       const doRequest = new Request(request, {
         headers: doHeaders,

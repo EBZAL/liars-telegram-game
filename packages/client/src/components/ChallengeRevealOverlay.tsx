@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { RouletteChamber } from './RouletteChamber.js';
+import { soundManager } from '../sound.js';
+import { getPlayerDisplayName } from '../player-names.js';
 
 export interface RevealedCard {
   id: string;
@@ -15,6 +17,7 @@ export interface ChallengeRevealOverlayProps {
   shooterId: string;
   rouletteOutcome: 'BLANK' | 'LETHAL';
   shotsUsed?: number;
+  playerNames?: Record<string, string>;
   onDismiss: () => void;
 }
 
@@ -27,10 +30,28 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
   shooterId,
   rouletteOutcome,
   shotsUsed,
+  playerNames,
   onDismiss,
 }) => {
   const isLethal = rouletteOutcome === 'LETHAL';
   const effectiveShots = shotsUsed !== undefined ? shotsUsed : (isLethal ? 6 : 1);
+
+  const callerName = getPlayerDisplayName(callerId, playerNames);
+  const accusedName = getPlayerDisplayName(accusedId, playerNames);
+  const shooterName = getPlayerDisplayName(shooterId, playerNames);
+
+  // Play gunshot sound immediately upon mount
+  useEffect(() => {
+    if (isLethal) {
+      soundManager.playGunBang();
+      const elimTimer = setTimeout(() => {
+        soundManager.playElimination();
+      }, 700);
+      return () => clearTimeout(elimTimer);
+    } else {
+      soundManager.playGunClick();
+    }
+  }, [isLethal]);
 
   // Auto-dismiss after 8 seconds if not dismissed manually
   useEffect(() => {
@@ -81,8 +102,8 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
         </div>
 
         <div data-testid="challenge-title" style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600 }}>
-          <span style={{ color: 'var(--accent-gold)' }}>{callerId}</span> challenged{' '}
-          <span style={{ color: 'var(--accent-gold)' }}>{accusedId}</span>
+          <span style={{ color: 'var(--accent-gold)' }}>{callerName}</span> challenged{' '}
+          <span style={{ color: 'var(--accent-gold)' }}>{accusedName}</span>
         </div>
 
         {/* Revealed Cards */}
@@ -159,7 +180,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           }}
         >
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Trigger pulled by: <strong style={{ color: 'var(--text-primary)' }}>{shooterId}</strong>
+            Trigger pulled by: <strong style={{ color: 'var(--text-primary)' }}>{shooterName}</strong>
           </div>
 
           {/* Visual 6-Chamber Revolver Cylinder */}
@@ -179,7 +200,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
             {isLethal ? '💥 *BANG!* LETHAL BULLET!' : '💨 *CLICK* EMPTY CHAMBER!'}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            {isLethal ? `${shooterId} has been ELIMINATED.` : `${shooterId} survives the chamber.`}
+            {isLethal ? `${shooterName} has been ELIMINATED.` : `${shooterName} survives the chamber.`}
           </div>
         </div>
 

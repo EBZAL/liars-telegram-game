@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PrivateCardProjection } from '@liars-telegram-game/room-runtime';
 import type { CardRank } from '@liars-telegram-game/game-core';
+import { soundManager } from '../sound.js';
 
 export interface PlayerHandProps {
   hand: PrivateCardProjection[];
@@ -45,6 +46,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             data-testid={`card-${card.id}`}
             onClick={() => {
               if (!disabled) {
+                soundManager.playCardSelect();
                 onToggleCard(card.id);
               }
             }}

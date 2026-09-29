@@ -21,6 +21,7 @@ import type {
 } from './gameplay-admission.js';
 import {
   createProcessedGameplayActionRegistry,
+  nextRoomRevision,
 } from './gameplay-admission.js';
 import type { GameplayActionEnvelope } from './gameplay-protocol.js';
 import {
@@ -54,7 +55,8 @@ export type RoomClientCommand =
   | { type: 'JOIN' }
   | { type: 'LEAVE' }
   | { type: 'START_MATCH'; initialTurnId?: string }
-  | { type: 'GAMEPLAY_ACTION'; envelope: GameplayActionEnvelope };
+  | { type: 'GAMEPLAY_ACTION'; envelope: GameplayActionEnvelope }
+  | { type: 'PLAY_AGAIN' };
 
 export interface RoomCommandExecutionResult {
   success: boolean;
@@ -242,6 +244,28 @@ export class RoomCoordinator {
             command.initialTurnId
           );
           this.roomState = matchRoom;
+          saveRoomStateSqlite(this.sql, this.roomState, nowMs);
+          break;
+        }
+
+        case 'PLAY_AGAIN': {
+          if (this.roomState.lifecycle !== 'MATCH_FINISHED') {
+            throw new Error(
+              `Cannot play again: room lifecycle is '${this.roomState.lifecycle}' (expected 'MATCH_FINISHED')`
+            );
+          }
+          const nextRevision = nextRoomRevision(this.roomState.revision);
+          this.roomState = {
+            roomId: this.roomState.roomId,
+            lifecycle: 'LOBBY',
+            revision: nextRevision,
+            members: this.roomState.members,
+            hostPlayerId: this.roomState.hostPlayerId,
+            match: null,
+            currentTurnId: null,
+            currentTurnDeadline: null,
+            activeAlarm: null,
+          };
           saveRoomStateSqlite(this.sql, this.roomState, nowMs);
           break;
         }

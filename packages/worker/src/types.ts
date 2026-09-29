@@ -13,10 +13,11 @@ export interface Env {
 }
 
 export type IncomingClientMessage =
-  | { type: 'JOIN' }
+  | { type: 'JOIN'; playerName?: string }
   | { type: 'LEAVE' }
   | { type: 'START_MATCH'; initialTurnId?: string }
   | { type: 'GAMEPLAY_ACTION'; envelope: GameplayActionEnvelope }
+  | { type: 'PLAY_AGAIN' }
   | GameplayActionEnvelope;
 
 export type OutgoingServerMessage =

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { formatTelegramInviteLink, isValidRoomId } from '@liars-telegram-game/room-runtime';
+import { getPlayerDisplayName } from '../player-names.js';
 
 export interface LobbyViewProps {
   roomId: string;
   members: string[];
   hostPlayerId: string | null;
   ownPlayerId: string;
+  ownDisplayName?: string;
+  playerNames?: Record<string, string>;
   botUsername?: string;
   onStartMatch: () => void;
   onLeaveRoom?: () => void;
@@ -17,6 +20,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   members,
   hostPlayerId,
   ownPlayerId,
+  ownDisplayName,
+  playerNames,
   botUsername = 'LiarsDeckBot',
   onStartMatch,
   onLeaveRoom,
@@ -161,7 +166,8 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                     #{index + 1}
                   </span>
                   <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {memberId} {isSelf && <span style={{ fontSize: '12px', color: 'var(--accent-gold)' }}>(You)</span>}
+                    {getPlayerDisplayName(memberId, playerNames, ownPlayerId, ownDisplayName)}{' '}
+                    {isSelf && <span style={{ fontSize: '12px', color: 'var(--accent-gold)' }}>(You)</span>}
                   </span>
                 </div>
 

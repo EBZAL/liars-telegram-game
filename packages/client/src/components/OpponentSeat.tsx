@@ -6,12 +6,14 @@ export interface OpponentSeatProps {
   player: PublicPlayerProjection;
   isCurrentTurn: boolean;
   position: 'top' | 'left' | 'right';
+  displayName?: string;
 }
 
 export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   player,
   isCurrentTurn,
   position,
+  displayName,
 }) => {
   const isEliminated = player.lifeStatus === 'ELIMINATED';
 
@@ -54,7 +56,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
             whiteSpace: 'nowrap',
           }}
         >
-          {player.playerId}
+          {displayName || player.playerId}
         </span>
       </div>
 

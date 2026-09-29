@@ -31,9 +31,10 @@ export interface UseRoomSocketResult {
   error: string | null;
   connect: () => void;
   disconnect: () => void;
-  joinRoom: () => void;
+  joinRoom: (playerName?: string) => void;
   leaveRoom: () => void;
   startMatch: (initialTurnId?: string) => void;
+  playAgain: () => void;
   dispatchAction: (envelope: GameplayActionEnvelope) => void;
   sendRaw: (msg: unknown) => void;
 }
@@ -231,8 +232,8 @@ export function useRoomSocket(options: UseRoomSocketOptions): UseRoomSocketResul
     }
   }, []);
 
-  const joinRoom = useCallback(() => {
-    sendRaw({ type: 'JOIN' });
+  const joinRoom = useCallback((playerName?: string) => {
+    sendRaw({ type: 'JOIN', playerName });
   }, [sendRaw]);
 
   const leaveRoom = useCallback(() => {
@@ -245,6 +246,10 @@ export function useRoomSocket(options: UseRoomSocketOptions): UseRoomSocketResul
     },
     [sendRaw]
   );
+
+  const playAgain = useCallback(() => {
+    sendRaw({ type: 'PLAY_AGAIN' });
+  }, [sendRaw]);
 
   const dispatchAction = useCallback(
     (envelope: GameplayActionEnvelope) => {
@@ -271,6 +276,7 @@ export function useRoomSocket(options: UseRoomSocketOptions): UseRoomSocketResul
     joinRoom,
     leaveRoom,
     startMatch,
+    playAgain,
     dispatchAction,
     sendRaw,
   };

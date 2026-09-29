@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { soundManager } from '../sound.js';
+import { getPlayerDisplayName } from '../player-names.js';
 
 export interface MatchWinnerOverlayProps {
   winnerId: string;
   isOwnWin: boolean;
+  playerNames?: Record<string, string>;
+  onPlayAgain?: () => void;
   onReturnToLobby: () => void;
 }
 
 export const MatchWinnerOverlay: React.FC<MatchWinnerOverlayProps> = ({
   winnerId,
   isOwnWin,
+  playerNames,
+  onPlayAgain,
   onReturnToLobby,
 }) => {
+  const winnerName = getPlayerDisplayName(winnerId, playerNames);
+
+  useEffect(() => {
+    if (isOwnWin) {
+      soundManager.playVictory();
+    }
+  }, [isOwnWin]);
+
   return (
     <div
       data-testid="match-winner-overlay"
@@ -20,13 +34,14 @@ export const MatchWinnerOverlay: React.FC<MatchWinnerOverlayProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(7, 9, 13, 0.9)',
+        backgroundColor: 'rgba(7, 9, 13, 0.92)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1100,
+        zIndex: 1300,
         padding: '16px',
+        animation: 'fadeIn 0.3s ease-out',
       }}
     >
       <div
@@ -54,21 +69,44 @@ export const MatchWinnerOverlay: React.FC<MatchWinnerOverlayProps> = ({
             {isOwnWin ? 'VICTORY!' : 'MATCH CONCLUDED'}
           </span>
           <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>
-            {isOwnWin ? 'YOU ARE THE SOLE SURVIVOR!' : `${winnerId} WON THE MATCH!`}
+            {isOwnWin ? 'YOU ARE THE SOLE SURVIVOR!' : `${winnerName} WON THE MATCH!`}
           </h2>
           <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
             All other contenders have fallen to Russian Roulette.
           </p>
         </div>
 
-        <button
-          data-testid="btn-return-lobby"
-          className="btn-primary"
-          onClick={onReturnToLobby}
-          style={{ width: '100%', marginTop: '8px', padding: '14px' }}
-        >
-          RETURN TO LOBBY
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '8px' }}>
+          {onPlayAgain && (
+            <button
+              data-testid="btn-play-again"
+              className="btn-primary"
+              onClick={onPlayAgain}
+              style={{
+                width: '100%',
+                padding: '14px',
+                fontSize: '15px',
+                fontWeight: 800,
+                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🔄</span> PLAY AGAIN (بازی مجدد)
+            </button>
+          )}
+
+          <button
+            data-testid="btn-return-lobby"
+            className="btn-secondary"
+            onClick={onReturnToLobby}
+            style={{ width: '100%', padding: '12px', fontSize: '13px' }}
+          >
+            🚪 Leave Room
+          </button>
+        </div>
       </div>
     </div>
   );

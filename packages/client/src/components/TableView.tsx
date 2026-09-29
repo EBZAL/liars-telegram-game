@@ -7,6 +7,8 @@ import { OpponentSeat } from './OpponentSeat.js';
 import { PlayerHand } from './PlayerHand.js';
 import { ActionControls } from './ActionControls.js';
 import { RouletteChamber } from './RouletteChamber.js';
+import { getPlayerDisplayName } from '../player-names.js';
+import { soundManager } from '../sound.js';
 import {
   useCardSelection,
   isOwnTurn,
@@ -18,6 +20,7 @@ import {
 export interface TableViewProps {
   projection: RecipientRoomProjection;
   ownPlayerId: string;
+  ownDisplayName?: string;
   onPlayCards: (cardIds: string[]) => void;
   onCallLiar: () => void;
 }
@@ -25,6 +28,7 @@ export interface TableViewProps {
 export const TableView: React.FC<TableViewProps> = ({
   projection,
   ownPlayerId,
+  ownDisplayName,
   onPlayCards,
   onCallLiar,
 }) => {
@@ -70,6 +74,7 @@ export const TableView: React.FC<TableViewProps> = ({
 
   const handlePlayClick = () => {
     if (playEligible) {
+      soundManager.playCardPlay();
       onPlayCards(selectedCardIds);
       clearSelection();
     }
@@ -77,6 +82,7 @@ export const TableView: React.FC<TableViewProps> = ({
 
   const handleChallengeClick = () => {
     if (challengeEligible) {
+      soundManager.playLiarCall();
       onCallLiar();
       clearSelection();
     }
@@ -109,6 +115,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 player={o.player}
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
+                displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
               />
             ))}
         </div>
@@ -125,7 +132,7 @@ export const TableView: React.FC<TableViewProps> = ({
         }}
       >
         {/* Left Opponent */}
-        <div style={{ minWidth: '90px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ minWidth: '95px', display: 'flex', justifyContent: 'center' }}>
           {positionedOpponents
             .filter((o) => o.position === 'left')
             .map((o) => (
@@ -134,6 +141,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 player={o.player}
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
+                displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
               />
             ))}
         </div>
@@ -145,7 +153,7 @@ export const TableView: React.FC<TableViewProps> = ({
         </div>
 
         {/* Right Opponent */}
-        <div style={{ minWidth: '90px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ minWidth: '95px', display: 'flex', justifyContent: 'center' }}>
           {positionedOpponents
             .filter((o) => o.position === 'right')
             .map((o) => (
@@ -154,6 +162,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 player={o.player}
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
+                displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
               />
             ))}
         </div>
@@ -186,7 +195,9 @@ export const TableView: React.FC<TableViewProps> = ({
                 color: ownTurn ? 'var(--text-gold)' : 'var(--text-primary)',
               }}
             >
-              {ownPlayer?.lifeStatus === 'ELIMINATED' ? 'You (Eliminated)' : 'Your Revolver'}
+              {ownPlayer?.lifeStatus === 'ELIMINATED'
+                ? `${ownDisplayName || 'You'} (Eliminated)`
+                : `${ownDisplayName || 'Your'} Revolver`}
             </span>
           </div>
 

@@ -66,6 +66,7 @@ export interface PublicRoomProjection {
   currentTurnDeadline: number | null;
   match: PublicMatchProjection | null;
   lastChallenge?: PublicChallengeResolutionProjection | null;
+  playerNames?: Record<string, string>;
 }
 
 export interface RecipientRoomProjection {
@@ -382,6 +383,7 @@ export function deriveRecipientRoomProjection(
     currentTurnDeadline: roomState.currentTurnDeadline,
     match: publicMatch,
     lastChallenge,
+    playerNames: (roomState as any).playerNames ?? ((match as any)?.playerNames ?? undefined),
   };
 
   // 5. Derive private state for recipient

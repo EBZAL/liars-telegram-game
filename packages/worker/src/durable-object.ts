@@ -34,6 +34,7 @@ export class RoomDurableObject {
   private coordinator: RoomCoordinator | null = null;
   private sockets = new Map<WebSocket, SocketConnectionInfo>();
   private connectionCounter = 0;
+  private playerNames = new Map<string, string>();
 
   constructor(state: DurableObjectState, env: Env) {
     this.state = state;
@@ -82,11 +83,19 @@ export class RoomDurableObject {
   }
 
   public broadcastProjections(projections: Map<string, RecipientRoomProjection>): void {
+    const playerNamesObj = Object.fromEntries(this.playerNames);
     for (const [ws, info] of this.sockets) {
       const projection = projections.get(info.playerId);
       if (projection) {
+        const enriched = {
+          ...projection,
+          publicState: {
+            ...projection.publicState,
+            playerNames: playerNamesObj,
+          },
+        };
         try {
-          ws.send(JSON.stringify({ type: 'PROJECTION', projection }));
+          ws.send(JSON.stringify({ type: 'PROJECTION', projection: enriched }));
         } catch {
           // Socket send failure will be handled by close/error handler
         }
@@ -124,6 +133,15 @@ export class RoomDurableObject {
     const playerId = request.headers.get('x-player-id');
     if (!playerId || playerId.trim().length === 0) {
       return new Response('Unauthorized: Missing x-player-id header', { status: 401 });
+    }
+
+    const rawPlayerName = request.headers.get('x-player-name');
+    if (rawPlayerName) {
+      try {
+        this.playerNames.set(playerId, decodeURIComponent(rawPlayerName));
+      } catch {
+        this.playerNames.set(playerId, rawPlayerName);
+      }
     }
 
     const roomId =
@@ -211,6 +229,9 @@ export class RoomDurableObject {
     const msg = rawData as Record<string, unknown>;
     if (msg.type === 'JOIN') {
       command = { type: 'JOIN' };
+      if (typeof msg.playerName === 'string' && msg.playerName.trim().length > 0) {
+        this.playerNames.set(info.playerId, msg.playerName.trim());
+      }
     } else if (msg.type === 'LEAVE') {
       command = { type: 'LEAVE' };
     } else if (msg.type === 'START_MATCH') {
@@ -218,6 +239,8 @@ export class RoomDurableObject {
         type: 'START_MATCH',
         initialTurnId: typeof msg.initialTurnId === 'string' ? msg.initialTurnId : undefined,
       };
+    } else if (msg.type === 'PLAY_AGAIN') {
+      command = { type: 'PLAY_AGAIN' };
     } else if (msg.type === 'GAMEPLAY_ACTION') {
       const parsedEnvelope = parseGameplayActionEnvelope(msg.envelope);
       if (!parsedEnvelope) {
