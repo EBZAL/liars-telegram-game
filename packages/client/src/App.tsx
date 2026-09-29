@@ -1,25 +1,63 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getTelegramAdapter, type TelegramAdapterContext } from './telegram.js';
 import { RoomProvider, useRoomProjection } from './room-context.js';
 import { TableView } from './components/TableView.js';
 import { LobbyView } from './components/LobbyView.js';
 import { MatchPausedBanner } from './components/MatchPausedBanner.js';
 import { MatchWinnerOverlay } from './components/MatchWinnerOverlay.js';
+import { useRoomSocket } from './useRoomSocket.js';
+import {
+  buildPlayCardsEnvelope,
+  buildCallLiarEnvelope,
+} from './selection-and-actions.js';
+import { isValidRoomId, generateRoomId } from '@liars-telegram-game/room-runtime';
 
 export interface AppProps {
   onDispatchAction?: (envelope: unknown) => void;
   onStartMatch?: () => void;
   onLeaveRoom?: () => void;
+  roomId?: string;
 }
 
-export const GameContainer: React.FC<AppProps> = ({
+export interface GameContainerProps extends AppProps {
+  connectionStatus?: string;
+  errorMessage?: string | null;
+  onRetry?: () => void;
+}
+
+function getEffectiveRoomId(): string {
+  const tg = getTelegramAdapter();
+  if (tg.startParam && isValidRoomId(tg.startParam)) {
+    return tg.startParam;
+  }
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const param = params.get('startapp') || params.get('roomId');
+    if (param && isValidRoomId(param)) {
+      return param;
+    }
+    const sessionRoom = sessionStorage.getItem('liars_deck_active_room');
+    if (sessionRoom && isValidRoomId(sessionRoom)) {
+      return sessionRoom;
+    }
+  }
+  const generated = generateRoomId();
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('liars_deck_active_room', generated);
+  }
+  return generated;
+}
+
+export const GameContainer: React.FC<GameContainerProps> = ({
   onDispatchAction = () => {},
   onStartMatch = () => {},
   onLeaveRoom = () => {},
+  errorMessage = null,
+  onRetry,
 }) => {
   const { projection, setProjection } = useRoomProjection();
   const tg = getTelegramAdapter();
-  const ownPlayerId = tg.user?.username || `player_${tg.user?.id || 'anon'}`;
+  const ownPlayerId = tg.user?.id ? String(tg.user.id) : (tg.user?.username || 'player_anon');
 
   if (!projection) {
     return (
@@ -32,10 +70,35 @@ export const GameContainer: React.FC<AppProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           gap: '12px',
+          height: '100%',
         }}
       >
-        <span style={{ fontSize: '32px' }}>🃏</span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Connecting to room...</span>
+        <span style={{ fontSize: '36px' }}>🃏</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500 }}>
+          {errorMessage ? 'Connection Failed' : 'Connecting to room...'}
+        </span>
+        {errorMessage && (
+          <span style={{ color: 'var(--accent-red, #ff4d4f)', fontSize: '12px', maxWidth: '280px', textAlign: 'center' }}>
+            {errorMessage}
+          </span>
+        )}
+        {errorMessage && onRetry && (
+          <button
+            onClick={onRetry}
+            style={{
+              marginTop: '8px',
+              padding: '8px 20px',
+              borderRadius: '8px',
+              background: 'var(--accent-gold, #d4af37)',
+              color: '#000',
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: 'none',
+            }}
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }
@@ -49,6 +112,7 @@ export const GameContainer: React.FC<AppProps> = ({
         members={memberPlayerIds}
         hostPlayerId={hostPlayerId}
         ownPlayerId={ownPlayerId}
+        botUsername="LIRESBARBOT"
         onStartMatch={onStartMatch}
         onLeaveRoom={onLeaveRoom}
       />
@@ -81,6 +145,95 @@ export const GameContainer: React.FC<AppProps> = ({
         />
       )}
     </div>
+  );
+};
+
+const ConnectedGame: React.FC<AppProps> = (props) => {
+  const { projection, setProjection, setConnectionStatus, setError } = useRoomProjection();
+  const [roomId] = useState<string>(() => props.roomId || getEffectiveRoomId());
+
+  const {
+    connectionStatus,
+    projection: socketProjection,
+    error: socketError,
+    joinRoom,
+    leaveRoom,
+    startMatch,
+    dispatchAction,
+    connect,
+  } = useRoomSocket({
+    roomId,
+    autoConnect: true,
+  });
+
+  useEffect(() => {
+    if (socketProjection) {
+      setProjection(socketProjection);
+    }
+  }, [socketProjection, setProjection]);
+
+  useEffect(() => {
+    setConnectionStatus(connectionStatus);
+  }, [connectionStatus, setConnectionStatus]);
+
+  useEffect(() => {
+    if (socketError) {
+      setError(socketError);
+    }
+  }, [socketError, setError]);
+
+  // When WebSocket opens and no projection yet, automatically send JOIN
+  useEffect(() => {
+    if (connectionStatus === 'CONNECTED' && !projection) {
+      joinRoom();
+    }
+  }, [connectionStatus, projection, joinRoom]);
+
+  const handleDispatchAction = useCallback(
+    (actionOrEnvelope: any) => {
+      if (props.onDispatchAction) {
+        props.onDispatchAction(actionOrEnvelope);
+      }
+      if (!projection) return;
+
+      if (actionOrEnvelope?.actionId && actionOrEnvelope?.actionType) {
+        dispatchAction(actionOrEnvelope);
+      } else if (actionOrEnvelope?.type === 'PLAY_CARDS') {
+        const envelope = buildPlayCardsEnvelope(projection, actionOrEnvelope.cardIds);
+        dispatchAction(envelope);
+      } else if (actionOrEnvelope?.type === 'CALL_LIAR') {
+        const envelope = buildCallLiarEnvelope(projection);
+        dispatchAction(envelope);
+      }
+    },
+    [props.onDispatchAction, projection, dispatchAction]
+  );
+
+  const handleStartMatch = useCallback(() => {
+    if (props.onStartMatch) {
+      props.onStartMatch();
+    }
+    startMatch();
+  }, [props.onStartMatch, startMatch]);
+
+  const handleLeaveRoom = useCallback(() => {
+    if (props.onLeaveRoom) {
+      props.onLeaveRoom();
+    }
+    leaveRoom();
+    setProjection(null);
+  }, [props.onLeaveRoom, leaveRoom, setProjection]);
+
+  return (
+    <GameContainer
+      {...props}
+      onDispatchAction={handleDispatchAction}
+      onStartMatch={handleStartMatch}
+      onLeaveRoom={handleLeaveRoom}
+      connectionStatus={connectionStatus}
+      errorMessage={socketError}
+      onRetry={connect}
+    />
   );
 };
 
@@ -119,7 +272,7 @@ export const App: React.FC<AppProps> = (props) => {
         </header>
 
         <main style={{ flex: 1, overflow: 'hidden' }}>
-          <GameContainer {...props} />
+          <ConnectedGame {...props} />
         </main>
       </div>
     </RoomProvider>

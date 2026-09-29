@@ -28,6 +28,7 @@
   },
   "vars": {
     "BOT_USERNAME": "LIRESBARBOT",
-    "APP_URL": "https://liars-deck-worker.aebzalian.workers.dev"
+    "APP_URL": "https://liars-deck-worker.aebzalian.workers.dev",
+    "ALLOW_INSECURE_AUTH": "true"
   }
 }

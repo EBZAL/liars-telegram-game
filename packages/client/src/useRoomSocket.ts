@@ -146,7 +146,7 @@ export function useRoomSocket(options: UseRoomSocketOptions): UseRoomSocketResul
     const tg = getTelegramAdapter();
     const effectiveInitData = initData ?? (tg.initData || undefined);
     const effectivePlayerId =
-      tg.user?.username || (tg.user?.id ? `player_${tg.user.id}` : undefined);
+      tg.user?.id ? String(tg.user.id) : (tg.user?.username || undefined);
     const wsUrl = buildRoomWebSocketUrl(roomId, serverUrl, effectiveInitData, effectivePlayerId);
 
     try {
