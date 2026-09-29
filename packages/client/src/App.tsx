@@ -23,19 +23,18 @@ export interface GameContainerProps extends AppProps {
   connectionStatus?: string;
   errorMessage?: string | null;
   onRetry?: () => void;
+  onJoinRoomCode?: (code: string) => void;
 }
 
 function getEffectiveRoomId(): string {
   const tg = getTelegramAdapter();
   if (tg.startParam && isValidRoomId(tg.startParam)) {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('liars_deck_active_room', tg.startParam);
+    }
     return tg.startParam;
   }
   if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const param = params.get('startapp') || params.get('roomId');
-    if (param && isValidRoomId(param)) {
-      return param;
-    }
     const sessionRoom = sessionStorage.getItem('liars_deck_active_room');
     if (sessionRoom && isValidRoomId(sessionRoom)) {
       return sessionRoom;
@@ -52,6 +51,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onDispatchAction = () => {},
   onStartMatch = () => {},
   onLeaveRoom = () => {},
+  onJoinRoomCode,
   errorMessage = null,
   onRetry,
 }) => {
@@ -115,6 +115,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         botUsername="LIRESBARBOT"
         onStartMatch={onStartMatch}
         onLeaveRoom={onLeaveRoom}
+        onJoinRoomCode={onJoinRoomCode}
       />
     );
   }
@@ -150,7 +151,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
 const ConnectedGame: React.FC<AppProps> = (props) => {
   const { projection, setProjection, setConnectionStatus, setError } = useRoomProjection();
-  const [roomId] = useState<string>(() => props.roomId || getEffectiveRoomId());
+  const [roomId, setRoomId] = useState<string>(() => props.roomId || getEffectiveRoomId());
 
   const {
     connectionStatus,
@@ -224,12 +225,26 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
     setProjection(null);
   }, [props.onLeaveRoom, leaveRoom, setProjection]);
 
+  const handleJoinRoomCode = useCallback(
+    (code: string) => {
+      if (isValidRoomId(code)) {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('liars_deck_active_room', code);
+        }
+        setProjection(null);
+        setRoomId(code);
+      }
+    },
+    [setProjection]
+  );
+
   return (
     <GameContainer
       {...props}
       onDispatchAction={handleDispatchAction}
       onStartMatch={handleStartMatch}
       onLeaveRoom={handleLeaveRoom}
+      onJoinRoomCode={handleJoinRoomCode}
       connectionStatus={connectionStatus}
       errorMessage={socketError}
       onRetry={connect}

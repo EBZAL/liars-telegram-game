@@ -29,6 +29,7 @@ export interface TelegramWebApp {
   disableClosingConfirmation(): void;
   setHeaderColor(color: string): void;
   setBackgroundColor(color: string): void;
+  openTelegramLink?(url: string): void;
 }
 
 declare global {
@@ -52,6 +53,57 @@ export interface TelegramAdapterContext {
   enableClosingConfirmation: () => void;
 }
 
+function extractStartParam(webApp?: TelegramWebApp): string | null {
+  if (webApp?.initDataUnsafe?.start_param) {
+    return webApp.initDataUnsafe.start_param;
+  }
+  if (webApp?.initData) {
+    try {
+      const initParams = new URLSearchParams(webApp.initData);
+      const sp =
+        initParams.get('start_param') ||
+        initParams.get('startapp') ||
+        initParams.get('roomId');
+      if (sp) return sp;
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    const searchParams = new URLSearchParams(window.location.search);
+    const fromSearch =
+      searchParams.get('startapp') ||
+      searchParams.get('tgWebAppStartParam') ||
+      searchParams.get('start_param') ||
+      searchParams.get('roomId') ||
+      searchParams.get('start');
+    if (fromSearch) return fromSearch;
+
+    if (window.location.hash) {
+      try {
+        const hashStr = window.location.hash.replace(/^#/, '');
+        const hashParams = new URLSearchParams(hashStr);
+        const fromHash =
+          hashParams.get('tgWebAppStartParam') ||
+          hashParams.get('startapp') ||
+          hashParams.get('start_param') ||
+          hashParams.get('roomId') ||
+          hashParams.get('start');
+        if (fromHash) return fromHash;
+
+        const tgWebAppData = hashParams.get('tgWebAppData');
+        if (tgWebAppData) {
+          const innerParams = new URLSearchParams(tgWebAppData);
+          const fromInner =
+            innerParams.get('start_param') ||
+            innerParams.get('startapp') ||
+            innerParams.get('roomId');
+          if (fromInner) return fromInner;
+        }
+      } catch {}
+    }
+  }
+  return null;
+}
+
 /**
  * Initializes and provides a safe abstraction over window.Telegram.WebApp.
  * Supports running inside Telegram or in standalone web browsers with mock fallback.
@@ -63,7 +115,7 @@ export function getTelegramAdapter(): TelegramAdapterContext {
     return {
       isAvailable: true,
       initData: webApp.initData,
-      startParam: webApp.initDataUnsafe?.start_param ?? null,
+      startParam: extractStartParam(webApp),
       user: webApp.initDataUnsafe?.user ?? null,
       colorScheme: webApp.colorScheme ?? 'dark',
       viewportHeight: webApp.viewportHeight ?? (typeof window !== 'undefined' ? window.innerHeight : 800),
