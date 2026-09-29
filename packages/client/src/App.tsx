@@ -306,6 +306,20 @@ export const App: React.FC<AppProps> = (props) => {
     adapter.ready();
     adapter.expand();
     adapter.enableClosingConfirmation();
+
+    // Start background music loop on first user interaction (required by browser autoplay policy)
+    soundManager.playBgm();
+    const startAudioOnInteraction = () => {
+      soundManager.playBgm();
+      window.removeEventListener('pointerdown', startAudioOnInteraction);
+      window.removeEventListener('keydown', startAudioOnInteraction);
+    };
+    window.addEventListener('pointerdown', startAudioOnInteraction);
+    window.addEventListener('keydown', startAudioOnInteraction);
+    return () => {
+      window.removeEventListener('pointerdown', startAudioOnInteraction);
+      window.removeEventListener('keydown', startAudioOnInteraction);
+    };
   }, []);
 
   const handleToggleSound = () => {

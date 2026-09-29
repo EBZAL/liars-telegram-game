@@ -6,6 +6,9 @@
 class SoundSystem {
   private ctx: AudioContext | null = null;
   private muted: boolean = false;
+  private bgmAudio: HTMLAudioElement | null = null;
+  private bgmPlaying: boolean = false;
+  private bgmVolume: number = 0.35; // Background volume (so SFX remain prominent)
 
   constructor() {
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage) {
@@ -37,17 +40,62 @@ class SoundSystem {
   }
 
   public toggleMute(): boolean {
-    this.muted = !this.muted;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('liars_deck_muted', String(this.muted));
-    }
+    this.setMuted(!this.muted);
     return this.muted;
   }
 
   public setMuted(muted: boolean): void {
     this.muted = muted;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('liars_deck_muted', String(this.muted));
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage) {
+      try {
+        localStorage.setItem('liars_deck_muted', String(this.muted));
+      } catch {}
+    }
+
+    if (this.bgmAudio) {
+      if (this.muted) {
+        this.bgmAudio.pause();
+      } else if (this.bgmPlaying) {
+        this.bgmAudio.play().catch(() => {});
+      }
+    }
+  }
+
+  /**
+   * Starts playing looping background ambient music
+   */
+  public playBgm(url: string = '/bgm.mp3'): void {
+    if (typeof window === 'undefined') return;
+    this.bgmPlaying = true;
+
+    if (!this.bgmAudio) {
+      try {
+        this.bgmAudio = new Audio(url);
+        this.bgmAudio.loop = true;
+        this.bgmAudio.volume = this.bgmVolume;
+      } catch {
+        return;
+      }
+    }
+
+    if (!this.muted && this.bgmAudio) {
+      this.bgmAudio.play().catch(() => {
+        // Autoplay may wait for user interaction
+      });
+    }
+  }
+
+  public pauseBgm(): void {
+    this.bgmPlaying = false;
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+    }
+  }
+
+  public setBgmVolume(volume: number): void {
+    this.bgmVolume = Math.max(0, Math.min(1, volume));
+    if (this.bgmAudio) {
+      this.bgmAudio.volume = this.bgmVolume;
     }
   }
 
