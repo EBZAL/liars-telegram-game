@@ -28,14 +28,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         padding: '8px 12px',
         borderRadius: '12px',
         background: isCurrentTurn
-          ? 'linear-gradient(180deg, #2a2214 0%, #17130c 100%)'
-          : 'var(--bg-surface)',
+          ? 'linear-gradient(180deg, rgba(45, 36, 20, 0.92) 0%, rgba(24, 20, 12, 0.95) 100%)'
+          : 'rgba(23, 28, 40, 0.85)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         border: isCurrentTurn
           ? '2px solid var(--accent-gold)'
           : '1px solid var(--border-subtle)',
         boxShadow: isCurrentTurn
           ? '0 0 16px rgba(229, 169, 59, 0.4)'
-          : '0 4px 12px rgba(0, 0, 0, 0.3)',
+          : '0 4px 14px rgba(0, 0, 0, 0.45)',
         opacity: isEliminated ? 0.45 : 1,
         transition: 'all 0.2s ease',
         minWidth: '90px',

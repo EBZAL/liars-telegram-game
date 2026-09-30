@@ -99,14 +99,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   return (
     <div
       data-testid="lobby-view"
+      className="bg-lobby"
       style={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100%',
-        maxWidth: '380px',
+        maxWidth: '420px',
         margin: '0 auto',
-        padding: '16px 8px',
+        padding: '16px 12px',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+        overflowY: 'auto',
       }}
     >
       {/* Top Header */}
@@ -119,11 +123,13 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'var(--bg-surface)',
+            background: 'rgba(23, 28, 40, 0.85)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
             border: '1px solid var(--border-gold)',
             borderRadius: '20px',
             padding: '6px 16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
             cursor: 'pointer',
           }}
         >
@@ -154,11 +160,15 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: isSelf ? 'linear-gradient(90deg, #242c3d 0%, #171b26 100%)' : 'var(--bg-surface)',
-                  border: isSelf ? '1px solid var(--accent-gold)' : '1px solid var(--border-subtle)',
+                  background: isSelf
+                    ? 'linear-gradient(90deg, rgba(38, 48, 66, 0.90) 0%, rgba(22, 27, 38, 0.94) 100%)'
+                    : 'rgba(22, 27, 38, 0.82)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: isSelf ? '1.5px solid var(--accent-gold)' : '1px solid var(--border-subtle)',
                   borderRadius: '12px',
                   padding: '12px 16px',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -199,7 +209,10 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px dashed var(--border-subtle)',
+                border: '1px dashed rgba(255, 255, 255, 0.22)',
+                background: 'rgba(10, 13, 20, 0.50)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
                 borderRadius: '12px',
                 padding: '12px 16px',
                 color: 'var(--text-muted)',
@@ -221,7 +234,9 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
             onClick={handleCopyInvite}
             style={{
               flex: 1,
-              background: 'var(--bg-surface)',
+              background: 'rgba(23, 28, 40, 0.85)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid var(--border-subtle)',
               borderRadius: '10px',
               color: 'var(--text-primary)',
@@ -267,7 +282,9 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
         {onJoinRoomCode && (
           <div
             style={{
-              background: 'var(--bg-surface)',
+              background: 'rgba(23, 28, 40, 0.85)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid var(--border-subtle)',
               borderRadius: '10px',
               padding: '10px',

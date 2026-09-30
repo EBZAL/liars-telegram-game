@@ -351,9 +351,14 @@ export const App: React.FC<AppProps> = (props) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '6px 10px',
-            borderBottom: '1px solid var(--border-subtle)',
-            marginBottom: '8px',
+            padding: '6px 12px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(13, 16, 23, 0.75)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderRadius: '10px',
+            marginBottom: '6px',
+            zIndex: 10,
           }}
         >
           <h1 style={{ margin: 0, fontSize: '16px', color: 'var(--accent-gold)', letterSpacing: '1px' }}>

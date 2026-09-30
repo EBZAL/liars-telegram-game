@@ -93,6 +93,7 @@ export const TableView: React.FC<TableViewProps> = ({
   return (
     <div
       data-testid="table-view"
+      className="bg-table"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -101,6 +102,10 @@ export const TableView: React.FC<TableViewProps> = ({
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+        overflow: 'hidden',
+        padding: '6px 4px',
       }}
     >
       {/* Top Header: Table Rank Banner & Top Opponent(s) */}
@@ -180,10 +185,13 @@ export const TableView: React.FC<TableViewProps> = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '6px 14px',
-            background: 'var(--bg-surface)',
+            background: 'rgba(23, 28, 40, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '12px',
             margin: '0 8px',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.45)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

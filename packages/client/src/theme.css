@@ -3,8 +3,8 @@
   --bg-primary: #0e1117;
   --bg-secondary: #171b24;
   --bg-tertiary: #222836;
-  --bg-surface: #1e2330;
-  --bg-card: #282f42;
+  --bg-surface: rgba(26, 32, 44, 0.85);
+  --bg-card: rgba(35, 43, 58, 0.85);
 
   /* Accent Colors */
   --accent-gold: #e5a93b;
@@ -81,12 +81,36 @@ body {
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
-  padding-top: max(12px, var(--tg-safe-top));
-  padding-bottom: max(12px, var(--tg-safe-bottom));
-  padding-left: max(12px, var(--tg-safe-left));
-  padding-right: max(12px, var(--tg-safe-right));
-  background: radial-gradient(circle at 50% 30%, #1a2233 0%, #0d1017 100%);
+  padding-top: max(8px, var(--tg-safe-top));
+  padding-bottom: max(8px, var(--tg-safe-bottom));
+  padding-left: max(8px, var(--tg-safe-left));
+  padding-right: max(8px, var(--tg-safe-right));
+  background: #090c12;
   position: relative;
+  overflow: hidden;
+}
+
+/* Atmospheric Backgrounds */
+.bg-lobby {
+  background-color: #0d1017;
+  background-image:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.65) 0%, rgba(12, 15, 22, 0.82) 48%, rgba(6, 8, 12, 0.95) 100%),
+    url('/bg-lobby.webp'),
+    url('/bg-lobby.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+.bg-table {
+  background-color: #0b0d13;
+  background-image:
+    radial-gradient(ellipse at 50% 35%, rgba(15, 19, 28, 0.48) 0%, rgba(10, 13, 19, 0.82) 75%, rgba(5, 7, 10, 0.96) 100%),
+    url('/bg-table.webp'),
+    url('/bg-table.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
 }
 
 /* Button Reset and Primary Styling */
