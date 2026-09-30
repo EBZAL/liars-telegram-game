@@ -148,7 +148,7 @@ export const TableView: React.FC<TableViewProps> = ({
 
         {/* Central Claim & Turn Timer */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <CentralClaimBanner previousPlay={previousPlay} />
+          <CentralClaimBanner previousPlay={previousPlay} playerNames={publicState.playerNames} />
           <TurnTimerBar deadline={publicState.currentTurnDeadline} />
         </div>
 

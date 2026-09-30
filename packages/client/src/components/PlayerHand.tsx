@@ -10,11 +10,11 @@ export interface PlayerHandProps {
   disabled?: boolean;
 }
 
-const CARD_RANK_DISPLAY: Record<CardRank, { label: string; icon: string; color: string }> = {
-  KING: { label: 'K', icon: '👑', color: '#e5a93b' },
-  QUEEN: { label: 'Q', icon: '👸', color: '#3b82f6' },
-  ACE: { label: 'A', icon: '🅰️', color: '#10b981' },
-  JOKER: { label: '★', icon: '🃏', color: '#a855f7' },
+export const CARD_IMAGE_SOURCES: Record<CardRank, { webp: string; png: string; label: string }> = {
+  KING: { webp: '/cards/king.webp', png: '/cards/king.png', label: 'King' },
+  QUEEN: { webp: '/cards/queen.webp', png: '/cards/queen.png', label: 'Queen' },
+  ACE: { webp: '/cards/ace.webp', png: '/cards/ace.png', label: 'Ace' },
+  JOKER: { webp: '/cards/joker.webp', png: '/cards/joker.png', label: 'Joker' },
 };
 
 export const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -38,12 +38,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     >
       {hand.map((card) => {
         const isSelected = selectedCardIds.includes(card.id);
-        const rankInfo = CARD_RANK_DISPLAY[card.rank] ?? { label: '?', icon: '🎴', color: '#fff' };
+        const imgInfo = CARD_IMAGE_SOURCES[card.rank] ?? CARD_IMAGE_SOURCES.KING;
 
         return (
           <div
             key={card.id}
             data-testid={`card-${card.id}`}
+            data-card-rank={card.rank}
             onClick={() => {
               if (!disabled) {
                 soundManager.playCardSelect();
@@ -53,62 +54,59 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             style={{
               width: 'var(--card-width)',
               height: 'var(--card-height)',
-              background: isSelected
-                ? 'linear-gradient(180deg, #322617 0%, #1c150c 100%)'
-                : 'linear-gradient(180deg, #242938 0%, #151822 100%)',
-              border: isSelected
-                ? '2px solid var(--accent-gold)'
-                : '1px solid var(--border-subtle)',
+              aspectRatio: '1060 / 1484',
               borderRadius: 'var(--card-radius)',
-              transform: isSelected ? 'translateY(-14px)' : 'none',
-              transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s ease',
+              transform: isSelected ? 'translateY(-16px) scale(1.05)' : 'none',
+              transition:
+                'transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s ease, border-color 0.18s ease',
               cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '8px',
-              boxShadow: isSelected
-                ? '0 8px 24px rgba(229, 169, 59, 0.35)'
-                : '0 4px 12px rgba(0, 0, 0, 0.4)',
-              userSelect: 'none',
               position: 'relative',
+              userSelect: 'none',
+              boxShadow: isSelected
+                ? '0 12px 28px rgba(229, 169, 59, 0.45), 0 0 12px rgba(229, 169, 59, 0.7)'
+                : '0 6px 16px rgba(0, 0, 0, 0.55)',
+              border: isSelected ? '2px solid var(--accent-gold)' : '1px solid rgba(255, 255, 255, 0.12)',
+              backgroundColor: '#1b1f2b',
+              flexShrink: 0,
             }}
           >
-            {/* Top Left Rank */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 800, color: rankInfo.color }}>
-                {rankInfo.label}
-              </span>
-            </div>
-
-            {/* Center Icon */}
-            <div style={{ alignSelf: 'center', fontSize: '24px' }}>
-              {rankInfo.icon}
-            </div>
-
-            {/* Bottom Right Rank */}
-            <div style={{ alignSelf: 'flex-end', fontSize: '12px', fontWeight: 700, color: rankInfo.color }}>
-              {card.rank === 'JOKER' ? 'WILD' : card.rank}
-            </div>
+            <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+              <source srcSet={imgInfo.webp} type="image/webp" />
+              <img
+                src={imgInfo.png}
+                alt={imgInfo.label}
+                loading="eager"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 'calc(var(--card-radius) - 1px)',
+                  display: 'block',
+                  pointerEvents: 'none',
+                }}
+              />
+            </picture>
 
             {/* Selection Checkmark */}
             {isSelected && (
               <div
                 style={{
                   position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
+                  top: '-7px',
+                  right: '-7px',
                   background: 'var(--accent-gold)',
                   color: '#000',
                   borderRadius: '50%',
-                  width: '18px',
-                  height: '18px',
+                  width: '20px',
+                  height: '20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 900,
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
+                  border: '1.5px solid #fff',
+                  zIndex: 2,
                 }}
               >
                 ✓

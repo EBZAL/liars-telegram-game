@@ -107,39 +107,68 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
         </div>
 
         {/* Revealed Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '100%' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Claimed Table Rank: <strong>{tableRank}</strong>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Claimed Table Rank: <strong style={{ color: 'var(--text-gold)' }}>{tableRank}</strong>
           </span>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
             {revealedCards.map((card) => {
               const matchesClaim = card.rank === tableRank || card.rank === 'JOKER';
+              const rank = card.rank.toLowerCase();
               return (
                 <div
                   key={card.id}
                   data-testid={`revealed-card-${card.id}`}
                   style={{
-                    width: '56px',
-                    height: '80px',
+                    width: '68px',
+                    height: '95px',
+                    aspectRatio: '1060 / 1484',
                     borderRadius: '8px',
-                    background: 'linear-gradient(180deg, #2a3347 0%, #151924 100%)',
-                    border: `2px solid ${matchesClaim ? '#22c55e' : '#ef4444'}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '6px 4px',
-                    fontWeight: 800,
-                    fontSize: '15px',
-                    color: card.rank === 'JOKER' ? '#a855f7' : 'var(--text-gold)',
-                    boxShadow: matchesClaim ? '0 0 10px rgba(34, 197, 94, 0.3)' : '0 0 10px rgba(239, 68, 68, 0.4)',
+                    position: 'relative',
+                    border: `2.5px solid ${matchesClaim ? '#22c55e' : '#ef4444'}`,
+                    boxShadow: matchesClaim
+                      ? '0 0 16px rgba(34, 197, 94, 0.6), 0 4px 12px rgba(0,0,0,0.5)'
+                      : '0 0 16px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0,0,0,0.5)',
+                    backgroundColor: '#1b1f2b',
+                    overflow: 'visible',
                   }}
                 >
-                  <div style={{ fontSize: '10px', color: matchesClaim ? '#4ade80' : '#f87171' }}>
-                    {matchesClaim ? '✔' : '✖'}
+                  <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+                    <source srcSet={`/cards/${rank}.webp`} type="image/webp" />
+                    <img
+                      src={`/cards/${rank}.png`}
+                      alt={card.rank}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '5px',
+                        display: 'block',
+                      }}
+                    />
+                  </picture>
+
+                  {/* Verdict Badge */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: matchesClaim ? '#166534' : '#991b1b',
+                      color: '#fff',
+                      borderRadius: '10px',
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      letterSpacing: '0.5px',
+                      border: `1px solid ${matchesClaim ? '#4ade80' : '#f87171'}`,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {matchesClaim ? '✔ TRUTH' : '✖ LIE'}
                   </div>
-                  <span style={{ fontSize: '18px' }}>{card.rank === 'JOKER' ? '★' : card.rank[0]}</span>
-                  <span style={{ fontSize: '9px', letterSpacing: '0.5px' }}>{card.rank}</span>
                 </div>
               );
             })}

@@ -5,14 +5,14 @@ export interface TableRankBannerProps {
   tableRank: TableRank;
 }
 
-const RANK_SYMBOLS: Record<TableRank, { label: string; icon: string }> = {
-  KING: { label: 'KING', icon: '👑' },
-  QUEEN: { label: 'QUEEN', icon: '👸' },
-  ACE: { label: 'ACE', icon: '🅰️' },
+const RANK_SYMBOLS: Record<TableRank, { label: string; icon: string; file: string }> = {
+  KING: { label: 'KING', icon: '👑', file: 'king' },
+  QUEEN: { label: 'QUEEN', icon: '👸', file: 'queen' },
+  ACE: { label: 'ACE', icon: '🅰️', file: 'ace' },
 };
 
 export const TableRankBanner: React.FC<TableRankBannerProps> = ({ tableRank }) => {
-  const info = RANK_SYMBOLS[tableRank] ?? { label: tableRank, icon: '🃏' };
+  const info = RANK_SYMBOLS[tableRank] ?? { label: tableRank, icon: '🃏', file: 'king' };
 
   return (
     <div
@@ -28,7 +28,29 @@ export const TableRankBanner: React.FC<TableRankBannerProps> = ({ tableRank }) =
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
       }}
     >
-      <span style={{ fontSize: '18px' }}>{info.icon}</span>
+      <div
+        style={{
+          width: '20px',
+          height: '28px',
+          borderRadius: '3px',
+          overflow: 'hidden',
+          border: '1px solid var(--border-gold)',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#1b1f2b',
+        }}
+      >
+        <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+          <source srcSet={`/cards/${info.file}.webp`} type="image/webp" />
+          <img
+            src={`/cards/${info.file}.png`}
+            alt={info.label}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </picture>
+      </div>
       <span
         style={{
           color: 'var(--text-gold)',

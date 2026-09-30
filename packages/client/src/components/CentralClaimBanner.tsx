@@ -1,14 +1,17 @@
 import React from 'react';
 import type { PublicPreviousPlayProjection } from '@liars-telegram-game/room-runtime';
+import { getPlayerDisplayName } from '../player-names.js';
 
 export interface CentralClaimBannerProps {
   previousPlay: PublicPreviousPlayProjection | null;
   centralPileCount?: number;
+  playerNames?: Record<string, string>;
 }
 
 export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
   previousPlay,
   centralPileCount = 0,
+  playerNames,
 }) => {
   return (
     <div
@@ -21,7 +24,7 @@ export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
         background: 'radial-gradient(circle, #1a4332 0%, #0d2119 100%)',
         border: '1px solid var(--accent-velvet-green)',
         borderRadius: '16px',
-        padding: '16px 24px',
+        padding: '16px 20px',
         minWidth: '220px',
         maxWidth: '320px',
         margin: '12px auto',
@@ -34,8 +37,11 @@ export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
           <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px' }}>
             Current Play
           </span>
-          <div style={{ margin: '8px 0', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
-            <span style={{ color: 'var(--accent-gold)' }}>{previousPlay.playerId}</span> claimed
+          <div style={{ margin: '6px 0', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+            <span style={{ color: 'var(--accent-gold)' }}>
+              {getPlayerDisplayName(previousPlay.playerId, playerNames)}
+            </span>{' '}
+            claimed
           </div>
           <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-gold)', letterSpacing: '0.5px' }}>
             {previousPlay.count} × {previousPlay.claimedRank}
@@ -45,25 +51,47 @@ export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
               Pile: {centralPileCount} cards
             </span>
           )}
-          <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
+          {/* Visual Face-down Card Backs */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
             {Array.from({ length: previousPlay.count }).map((_, i) => (
               <div
                 key={i}
                 style={{
-                  width: '24px',
-                  height: '34px',
-                  background: 'linear-gradient(135deg, #2b3347 0%, #171b26 100%)',
-                  border: '1px solid #4a5568',
+                  width: '32px',
+                  height: '45px',
+                  aspectRatio: '1060 / 1484',
                   borderRadius: '4px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                  border: '1px solid var(--border-gold)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+                  overflow: 'hidden',
+                  backgroundColor: '#1b1f2b',
                 }}
-              />
+              >
+                <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+                  <source srcSet="/cards/card-back.webp" type="image/webp" />
+                  <img
+                    src="/cards/card-back.png"
+                    alt="Card back"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                </picture>
+              </div>
             ))}
           </div>
         </>
       ) : (
         <>
-          <span style={{ fontSize: '24px', marginBottom: '4px' }}>🃏</span>
+          <div style={{ width: '36px', height: '50px', marginBottom: '8px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-gold)', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+            <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+              <source srcSet="/cards/card-back.webp" type="image/webp" />
+              <img src="/cards/card-back.png" alt="Deck" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </picture>
+          </div>
           <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-gold)' }}>
             First Turn of Round
           </span>

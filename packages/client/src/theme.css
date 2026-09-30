@@ -34,9 +34,24 @@
   --tg-safe-right: var(--tg-viewport-safe-area-inset-right, 0px);
 
   /* Card Dimensions */
-  --card-width: 72px;
+  --card-width: 74px;
   --card-height: 104px;
   --card-radius: 8px;
+  --card-aspect-ratio: 1060 / 1484;
+}
+
+@media (max-width: 400px) {
+  :root {
+    --card-width: 66px;
+    --card-height: 92px;
+  }
+}
+
+@media (max-width: 350px) {
+  :root {
+    --card-width: 58px;
+    --card-height: 81px;
+  }
 }
 
 /* Telegram Theme Overrides (if present) */
