@@ -27,6 +27,7 @@ export interface GameContainerProps extends AppProps {
   onRetry?: () => void;
   onJoinRoomCode?: (code: string) => void;
   onPlayAgain?: () => void;
+  onTimeout?: () => void;
 }
 
 function getEffectiveRoomId(): string {
@@ -56,6 +57,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onLeaveRoom = () => {},
   onJoinRoomCode,
   onPlayAgain,
+  onTimeout,
   errorMessage = null,
   onRetry,
 }) => {
@@ -156,6 +158,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         ownDisplayName={ownDisplayName}
         onPlayCards={(cardIds) => onDispatchAction({ type: 'PLAY_CARDS', cardIds })}
         onCallLiar={() => onDispatchAction({ type: 'CALL_LIAR' })}
+        onTimeout={onTimeout}
       />
 
       {activeChallenge && (
@@ -204,6 +207,7 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
     startMatch,
     playAgain,
     dispatchAction,
+    sendRaw,
     connect,
   } = useRoomSocket({
     roomId,
@@ -281,6 +285,10 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
     [setProjection]
   );
 
+  const handleTimeout = useCallback(() => {
+    sendRaw({ type: 'CHECK_DEADLINE' });
+  }, [sendRaw]);
+
   return (
     <GameContainer
       {...props}
@@ -289,6 +297,7 @@ const ConnectedGame: React.FC<AppProps> = (props) => {
       onLeaveRoom={handleLeaveRoom}
       onJoinRoomCode={handleJoinRoomCode}
       onPlayAgain={playAgain}
+      onTimeout={handleTimeout}
       connectionStatus={connectionStatus}
       errorMessage={socketError}
       onRetry={connect}

@@ -18,6 +18,7 @@ export type IncomingClientMessage =
   | { type: 'START_MATCH'; initialTurnId?: string }
   | { type: 'GAMEPLAY_ACTION'; envelope: GameplayActionEnvelope }
   | { type: 'PLAY_AGAIN' }
+  | { type: 'CHECK_DEADLINE' }
   | GameplayActionEnvelope;
 
 export type OutgoingServerMessage =

@@ -35,6 +35,7 @@ export class RoomDurableObject {
   private sockets = new Map<WebSocket, SocketConnectionInfo>();
   private connectionCounter = 0;
   private playerNames = new Map<string, string>();
+  private inMemoryAlarmTimeout: any = null;
 
   constructor(state: DurableObjectState, env: Env) {
     this.state = state;
@@ -75,8 +76,23 @@ export class RoomDurableObject {
     if (!this.coordinator) return;
     const currentAlarm = await this.state.storage.getAlarm();
     const plan = deriveProviderAlarmSyncPlan(this.coordinator.getRoomState(), currentAlarm);
+
+    if (this.inMemoryAlarmTimeout) {
+      clearTimeout(this.inMemoryAlarmTimeout);
+      this.inMemoryAlarmTimeout = null;
+    }
+
     if (plan.decision === 'SET_ALARM') {
       await this.state.storage.setAlarm(plan.dueAt);
+
+      const delayMs = Math.max(0, plan.dueAt - Date.now());
+      this.inMemoryAlarmTimeout = setTimeout(async () => {
+        try {
+          await this.alarm(Date.now());
+        } catch (err) {
+          console.error('In-memory alarm execution failed:', err);
+        }
+      }, delayMs);
     } else if (plan.decision === 'DELETE_ALARM') {
       await this.state.storage.deleteAlarm();
     }
@@ -241,6 +257,8 @@ export class RoomDurableObject {
       };
     } else if (msg.type === 'PLAY_AGAIN') {
       command = { type: 'PLAY_AGAIN' };
+    } else if (msg.type === 'CHECK_DEADLINE') {
+      command = { type: 'CHECK_DEADLINE' };
     } else if (msg.type === 'GAMEPLAY_ACTION') {
       const parsedEnvelope = parseGameplayActionEnvelope(msg.envelope);
       if (!parsedEnvelope) {
@@ -277,6 +295,11 @@ export class RoomDurableObject {
       );
       this.broadcastProjections(memberProjections);
     } else {
+      if (result.error === 'DEADLINE_DUE') {
+        // Late action when deadline is due -> immediately execute alarm auto-play
+        await this.alarm(nowMs);
+        return;
+      }
       if (!result.success) {
         ws.send(JSON.stringify({ type: 'ERROR', error: result.error }));
       }

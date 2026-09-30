@@ -23,6 +23,7 @@ export interface TableViewProps {
   ownDisplayName?: string;
   onPlayCards: (cardIds: string[]) => void;
   onCallLiar: () => void;
+  onTimeout?: () => void;
 }
 
 export const TableView: React.FC<TableViewProps> = ({
@@ -31,6 +32,7 @@ export const TableView: React.FC<TableViewProps> = ({
   ownDisplayName,
   onPlayCards,
   onCallLiar,
+  onTimeout,
 }) => {
   const { publicState, privateState } = projection;
   const match = publicState.match;
@@ -149,7 +151,7 @@ export const TableView: React.FC<TableViewProps> = ({
         {/* Central Claim & Turn Timer */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CentralClaimBanner previousPlay={previousPlay} playerNames={publicState.playerNames} />
-          <TurnTimerBar deadline={publicState.currentTurnDeadline} />
+          <TurnTimerBar deadline={publicState.currentTurnDeadline} onExpire={onTimeout} />
         </div>
 
         {/* Right Opponent */}

@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react';
 export interface TurnTimerBarProps {
   deadline: number | null;
   totalDurationMs?: number;
+  onExpire?: () => void;
 }
 
 export const TurnTimerBar: React.FC<TurnTimerBarProps> = ({
   deadline,
   totalDurationMs = 30000,
+  onExpire,
 }) => {
   const [remainingMs, setRemainingMs] = useState<number>(() => {
     if (!deadline) return 0;
@@ -20,16 +22,21 @@ export const TurnTimerBar: React.FC<TurnTimerBarProps> = ({
       return;
     }
 
+    let hasFiredExpire = false;
     const interval = setInterval(() => {
       const remaining = Math.max(0, deadline - Date.now());
       setRemainingMs(remaining);
       if (remaining <= 0) {
         clearInterval(interval);
+        if (!hasFiredExpire) {
+          hasFiredExpire = true;
+          onExpire?.();
+        }
       }
     }, 200);
 
     return () => clearInterval(interval);
-  }, [deadline]);
+  }, [deadline, onExpire]);
 
   if (!deadline) {
     return null;

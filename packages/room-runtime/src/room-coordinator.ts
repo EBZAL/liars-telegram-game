@@ -56,7 +56,8 @@ export type RoomClientCommand =
   | { type: 'LEAVE' }
   | { type: 'START_MATCH'; initialTurnId?: string }
   | { type: 'GAMEPLAY_ACTION'; envelope: GameplayActionEnvelope }
-  | { type: 'PLAY_AGAIN' };
+  | { type: 'PLAY_AGAIN' }
+  | { type: 'CHECK_DEADLINE' };
 
 export interface RoomCommandExecutionResult {
   success: boolean;
@@ -267,6 +268,24 @@ export class RoomCoordinator {
             activeAlarm: null,
           };
           saveRoomStateSqlite(this.sql, this.roomState, nowMs);
+          break;
+        }
+
+        case 'CHECK_DEADLINE': {
+          if (
+            this.roomState.lifecycle === 'MATCH_ACTIVE' &&
+            this.roomState.activeAlarm &&
+            this.roomState.activeAlarm.kind === 'TURN_DEADLINE'
+          ) {
+            if (nowMs >= this.roomState.activeAlarm.dueAt) {
+              const alarmRes = this.onAlarm(nowMs, random);
+              return {
+                success: true,
+                roomState: this.roomState,
+                projections: alarmRes.projections,
+              };
+            }
+          }
           break;
         }
 
