@@ -275,7 +275,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           {isLie ? '🚨 BLUFF CAUGHT! (LIE)' : '🛡️ HONEST PLAY! (TRUTH)'}
         </div>
 
-        {/* Suspense Phase Banner */}
+        {/* Suspense Phase */}
         {stage === 'SUSPENSE' && (
           <div
             style={{
@@ -296,11 +296,28 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
             </div>
 
             {/* Revolver Cylinder Spinning Visual */}
-            <div style={{ position: 'relative', width: '96px', height: '96px', margin: '4px 0' }}>
+            <div style={{ position: 'relative', width: '100px', height: '100px', margin: '6px 0' }}>
+              {/* Stationary Aiming Hammer Arrow at 12 o'clock */}
               <div
                 style={{
-                  width: '96px',
-                  height: '96px',
+                  position: 'absolute',
+                  top: '-12px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: '16px',
+                  color: 'var(--accent-gold)',
+                  filter: 'drop-shadow(0 0 4px #000)',
+                  zIndex: 10,
+                }}
+              >
+                ▼
+              </div>
+
+              {/* Rotating Cylinder Body */}
+              <div
+                style={{
+                  width: '100px',
+                  height: '100px',
                   borderRadius: '50%',
                   background: 'radial-gradient(circle, #333d4f 0%, #11151f 100%)',
                   border: '3px solid #64748b',
@@ -312,13 +329,11 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
                   position: 'relative',
                 }}
               >
-                {/* 6 Chambers */}
+                {/* 6 Chambers - All dark during suspense (no spoilers) */}
                 {Array.from({ length: 6 }).map((_, idx) => {
-                  const angle = (idx * 60 * Math.PI) / 180;
-                  const x = 48 + 30 * Math.cos(angle) - 10;
-                  const y = 48 + 30 * Math.sin(angle) - 10;
-                  const isSpent = idx < effectiveShots - 1;
-                  const isTarget = idx === effectiveShots - 1;
+                  const angle = (-90 + idx * 60) * (Math.PI / 180);
+                  const x = 50 + 32 * Math.cos(angle) - 10;
+                  const y = 50 + 32 * Math.sin(angle) - 10;
 
                   return (
                     <div
@@ -330,13 +345,9 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
                         width: '20px',
                         height: '20px',
                         borderRadius: '50%',
-                        background: isSpent
-                          ? '#1e2430'
-                          : isTarget
-                          ? 'var(--accent-crimson)'
-                          : '#090c12',
-                        border: isTarget ? '2px solid #ff4d4f' : '1px solid #334155',
-                        boxShadow: isTarget ? '0 0 10px #ff4d4f' : 'inset 0 2px 5px rgba(0,0,0,0.8)',
+                        background: '#090c12',
+                        border: '1px solid #334155',
+                        boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.8)',
                       }}
                     />
                   );
@@ -352,21 +363,6 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
                     border: '2px solid #475569',
                   }}
                 />
-              </div>
-
-              {/* Aiming Hammer Arrow */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-10px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: '14px',
-                  color: 'var(--accent-gold)',
-                  filter: 'drop-shadow(0 0 4px #000)',
-                }}
-              >
-                ▼
               </div>
             </div>
 
@@ -393,29 +389,121 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           </div>
         )}
 
-        {/* Russian Roulette Cylinder & Consequence */}
+        {/* Shot Result Stage: Cylinder Reveals RED (Bullet) or WHITE (Blank) */}
         <div
           data-testid="roulette-outcome"
           style={{
             display: stage === 'SUSPENSE' ? 'none' : 'flex',
             background: isLethal ? 'rgba(201, 59, 59, 0.22)' : 'rgba(34, 197, 94, 0.16)',
-            border: `1px solid ${isLethal ? 'var(--border-crimson)' : '#22c55e'}`,
-            borderRadius: '12px',
-            padding: '14px',
+            border: `1.5px solid ${isLethal ? 'var(--border-crimson)' : '#22c55e'}`,
+            borderRadius: '14px',
+            padding: '16px 14px',
             width: '100%',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
-            boxShadow: isLethal ? '0 0 24px rgba(201, 59, 59, 0.35)' : '0 0 20px rgba(34, 197, 94, 0.25)',
+            gap: '10px',
+            boxShadow: isLethal ? '0 0 28px rgba(201, 59, 59, 0.4)' : '0 0 24px rgba(34, 197, 94, 0.3)',
           }}
         >
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             Trigger pulled by: <strong style={{ color: 'var(--text-primary)' }}>{shooterName}</strong>
           </div>
 
-          {/* Visual 6-Chamber Revolver Cylinder */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '2px 0' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>CYLINDER:</span>
+          {/* Visual Cylinder with Top Chamber Revealed: RED for Bullet, WHITE for Blank */}
+          <div style={{ position: 'relative', width: '100px', height: '100px', margin: '4px 0' }}>
+            {/* Stationary Aiming Hammer Arrow at 12 o'clock */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '-12px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '16px',
+                color: isLethal ? '#ef4444' : '#ffffff',
+                filter: isLethal ? 'drop-shadow(0 0 6px #ef4444)' : 'drop-shadow(0 0 6px #fff)',
+                zIndex: 10,
+              }}
+            >
+              ▼
+            </div>
+
+            {/* Stopped Cylinder */}
+            <div
+              style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, #333d4f 0%, #11151f 100%)',
+                border: '3px solid #64748b',
+                boxShadow: isLethal
+                  ? '0 0 24px rgba(239, 68, 68, 0.5), inset 0 0 12px rgba(0,0,0,0.95)'
+                  : '0 0 20px rgba(255, 255, 255, 0.35), inset 0 0 12px rgba(0,0,0,0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+              }}
+            >
+              {Array.from({ length: 6 }).map((_, idx) => {
+                const angle = (-90 + idx * 60) * (Math.PI / 180);
+                const x = 50 + 32 * Math.cos(angle) - 10;
+                const y = 50 + 32 * Math.sin(angle) - 10;
+                const isTopChamber = idx === 0;
+
+                // Color of the chamber:
+                // If top chamber (active shot):
+                //   isLethal -> RED (قرمز)
+                //   blank -> WHITE (سفید)
+                let bg = '#090c12';
+                let border = '1px solid #334155';
+                let shadow = 'inset 0 2px 5px rgba(0,0,0,0.8)';
+
+                if (isTopChamber) {
+                  if (isLethal) {
+                    bg = '#ef4444';
+                    border = '2.5px solid #ff6b6b';
+                    shadow = '0 0 16px #ff3333, 0 0 28px #ef4444';
+                  } else {
+                    bg = '#ffffff';
+                    border = '2.5px solid #e2e8f0';
+                    shadow = '0 0 14px rgba(255, 255, 255, 0.95), 0 0 24px rgba(255, 255, 255, 0.6)';
+                  }
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'absolute',
+                      left: `${x}px`,
+                      top: `${y}px`,
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: bg,
+                      border: border,
+                      boxShadow: shadow,
+                    }}
+                  />
+                );
+              })}
+
+              {/* Center Pin */}
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: '#94a3b8',
+                  border: '2px solid #475569',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 6-Chamber Overall Match Progress */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>MATCH PROGRESS:</span>
             <RouletteChamber shotsUsed={effectiveShots} isEliminated={isLethal} />
           </div>
 
