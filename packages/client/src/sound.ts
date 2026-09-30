@@ -7,6 +7,7 @@ class SoundSystem {
   private ctx: AudioContext | null = null;
   private muted: boolean = false;
   private bgmAudio: HTMLAudioElement | null = null;
+  private shotAudio: HTMLAudioElement | null = null;
   private bgmPlaying: boolean = true;
   private bgmVolume: number = 0.35; // Background volume (so SFX remain prominent)
 
@@ -97,8 +98,46 @@ class SoundSystem {
     }
   }
 
+  private getShotAudio(url: string = '/shot.wav'): HTMLAudioElement | null {
+    if (typeof window === 'undefined') return null;
+    if (!this.shotAudio) {
+      const existing = document.getElementById('shot-audio') as HTMLAudioElement | null;
+      if (existing) {
+        this.shotAudio = existing;
+      } else {
+        try {
+          this.shotAudio = new Audio(url);
+          this.shotAudio.preload = 'auto';
+        } catch {
+          return null;
+        }
+      }
+    }
+    return this.shotAudio;
+  }
+
   public setBgmVolume(volume: number): void {
     this.bgmVolume = Math.max(0, Math.min(1, volume));
+    const audio = this.getBgmAudio();
+    if (audio) {
+      audio.volume = this.bgmVolume;
+    }
+  }
+
+  /**
+   * Ducks background music volume during high-suspense roulette moments
+   */
+  public duckBgm(targetVolume: number = 0.04): void {
+    const audio = this.getBgmAudio();
+    if (audio) {
+      audio.volume = targetVolume;
+    }
+  }
+
+  /**
+   * Restores background music volume to default level
+   */
+  public restoreBgm(): void {
     const audio = this.getBgmAudio();
     if (audio) {
       audio.volume = this.bgmVolume;
@@ -254,60 +293,47 @@ class SoundSystem {
   }
 
   /**
-   * Revolver BANG: explosive gunshot boom + sub-bass drop + ear ringing
+   * Revolver BANG: plays the authentic user gunshot sound (/shot.wav) + tinnitus ear ringing
    */
-  public playGunBang(): void {
+  public playGunBang(url: string = '/shot.wav'): void {
     if (this.muted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
 
-    try {
-      const now = ctx.currentTime;
-
-      // 1. Explosive noise blast
-      const noiseDuration = 0.55;
-      const bufferSize = Math.floor(ctx.sampleRate * noiseDuration);
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
+    // 1. Play authentic gunshot audio file
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    if (!isTest) {
+      const audio = this.getShotAudio(url);
+      if (audio && typeof audio.play === 'function') {
+        try {
+          audio.currentTime = 0;
+          audio.volume = 1.0;
+          const p = audio.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+          }
+        } catch {}
       }
+    }
 
-      const noiseSource = ctx.createBufferSource();
-      noiseSource.buffer = buffer;
+    // 2. Synthesize sub-bass punch and tinnitus
+    const ctx = this.getContext();
+    if (ctx) {
+      try {
+        const now = ctx.currentTime;
+        const sub = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(100, now);
+        sub.frequency.exponentialRampToValueAtTime(25, now + 0.4);
+        subGain.gain.setValueAtTime(0.5, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+        sub.start(now);
+        sub.stop(now + 0.4);
 
-      const noiseFilter = ctx.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.setValueAtTime(1400, now);
-      noiseFilter.frequency.exponentialRampToValueAtTime(120, now + noiseDuration);
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.65, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseDuration);
-
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(ctx.destination);
-      noiseSource.start(now);
-
-      // 2. Sub-bass cannon kick
-      const sub = ctx.createOscillator();
-      const subGain = ctx.createGain();
-      sub.type = 'sine';
-      sub.frequency.setValueAtTime(120, now);
-      sub.frequency.exponentialRampToValueAtTime(28, now + 0.45);
-
-      subGain.gain.setValueAtTime(0.7, now);
-      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-      sub.connect(subGain);
-      subGain.connect(ctx.destination);
-      sub.start(now);
-      sub.stop(now + 0.45);
-
-      // 3. Tinnitus ringing after gun blast
-      this.playTinnitus();
-    } catch {}
+        this.playTinnitus();
+      } catch {}
+    }
   }
 
   /**

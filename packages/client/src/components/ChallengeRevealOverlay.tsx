@@ -61,7 +61,8 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       return;
     }
 
-    // 1. Initial spin and first heartbeat
+    // 1. Initial spin and first heartbeat + duck background music
+    soundManager.duckBgm(0.04);
     soundManager.playCylinderSpin();
     soundManager.playHeartbeat();
 
@@ -87,6 +88,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
     }, 2900);
 
     return () => {
+      soundManager.restoreBgm();
       clearTimeout(hb1);
       clearTimeout(hb2);
       clearTimeout(hammerTimer);
@@ -104,6 +106,11 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       setTimeout(() => setFlash(false), 250);
       setTimeout(() => setScreenShake(false), 450);
 
+      // Restore BGM after gunshot + elimination fanfare
+      setTimeout(() => {
+        soundManager.restoreBgm();
+      }, 2200);
+
       const elimTimer = setTimeout(() => {
         soundManager.playElimination();
       }, 700);
@@ -111,6 +118,11 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
     } else {
       soundManager.playGunClick();
       soundManager.playRelief();
+
+      // Restore BGM after blank click and relief chime
+      setTimeout(() => {
+        soundManager.restoreBgm();
+      }, 1400);
     }
   };
 
