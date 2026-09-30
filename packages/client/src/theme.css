@@ -139,3 +139,38 @@ body {
   transform: none;
   box-shadow: none;
 }
+
+/* Russian Roulette Cinematic Keyframes */
+@keyframes heartbeatPulse {
+  0% { box-shadow: inset 0 0 20px rgba(200, 20, 20, 0.2); }
+  50% { box-shadow: inset 0 0 70px rgba(220, 20, 20, 0.55); }
+  100% { box-shadow: inset 0 0 20px rgba(200, 20, 20, 0.2); }
+}
+
+@keyframes muzzleFlash {
+  0% { opacity: 0.95; background-color: #ffffff; }
+  25% { opacity: 0.85; background-color: #ff3333; }
+  100% { opacity: 0; background-color: transparent; }
+}
+
+@keyframes screenRecoil {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-8px, -12px) rotate(-3deg) scale(1.03); }
+  30% { transform: translate(7px, 6px) rotate(2.5deg); }
+  45% { transform: translate(-5px, -4px) rotate(-1.5deg); }
+  60% { transform: translate(4px, 2px) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes cylinderSpin {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(720deg); }
+  75% { transform: rotate(1040deg); }
+  100% { transform: rotate(1080deg); }
+}
+
+@keyframes stampIn {
+  0% { transform: scale(2.2); opacity: 0; }
+  60% { transform: scale(0.92); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
