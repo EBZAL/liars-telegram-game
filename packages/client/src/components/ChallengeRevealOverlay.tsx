@@ -204,7 +204,10 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             Claimed Table Rank: <strong style={{ color: 'var(--text-gold)' }}>{tableRank}</strong>
           </span>
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '12px', color: 'var(--accent-gold)', fontWeight: 600 }}>
+            🃏 {accusedName}'s secret played {revealedCards.length === 1 ? 'card' : 'cards'}:
+          </div>
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
             {revealedCards.map((card) => {
               const matchesClaim = card.rank === tableRank || card.rank === 'JOKER';
               const rank = card.rank.toLowerCase();
@@ -260,7 +263,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {matchesClaim ? '✔ TRUTH' : '✖ LIE'}
+                    {matchesClaim ? '✔ TRUTH' : `✖ LIE (${card.rank})`}
                   </div>
                 </div>
               );
