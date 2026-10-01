@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getTelegramAdapter, type TelegramWebApp } from '../src/telegram.js';
+import {
+  getTelegramAdapter,
+  triggerLethalShotHaptic,
+  triggerBlankShotHaptic,
+  type TelegramWebApp,
+} from '../src/telegram.js';
 
 describe('T-035 Telegram Adapter', () => {
   const originalTelegram = window.Telegram;
@@ -72,5 +77,33 @@ describe('T-035 Telegram Adapter', () => {
 
     adapter.enableClosingConfirmation();
     expect(enableClosingMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers haptic feedback via window.Telegram.WebApp.HapticFeedback', () => {
+    const impactMock = vi.fn();
+    const notificationMock = vi.fn();
+
+    window.Telegram = {
+      WebApp: {
+        HapticFeedback: {
+          impactOccurred: impactMock,
+          notificationOccurred: notificationMock,
+          selectionChanged: vi.fn(),
+        },
+      } as unknown as TelegramWebApp,
+    };
+
+    triggerLethalShotHaptic();
+    expect(impactMock).toHaveBeenCalledWith('heavy');
+    expect(notificationMock).toHaveBeenCalledWith('error');
+
+    triggerBlankShotHaptic();
+    expect(impactMock).toHaveBeenCalledWith('light');
+  });
+
+  it('safely falls back without throwing when Telegram or HapticFeedback is undefined', () => {
+    delete (window as { Telegram?: unknown }).Telegram;
+    expect(() => triggerLethalShotHaptic()).not.toThrow();
+    expect(() => triggerBlankShotHaptic()).not.toThrow();
   });
 });

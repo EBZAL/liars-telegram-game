@@ -6,6 +6,12 @@ export interface TelegramUser {
   language_code?: string;
 }
 
+export interface TelegramHapticFeedback {
+  impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+  notificationOccurred(type: 'error' | 'success' | 'warning'): void;
+  selectionChanged(): void;
+}
+
 export interface TelegramWebApp {
   initData: string;
   initDataUnsafe: {
@@ -22,6 +28,7 @@ export interface TelegramWebApp {
   viewportStableHeight: number;
   headerColor: string;
   backgroundColor: string;
+  HapticFeedback?: TelegramHapticFeedback;
   expand(): void;
   close(): void;
   ready(): void;
@@ -165,4 +172,33 @@ export function getTelegramAdapter(): TelegramAdapterContext {
     ready: () => {},
     enableClosingConfirmation: () => {},
   };
+}
+
+/**
+ * Triggers a heavy/rigid shock vibration on lethal bullet shot
+ */
+export function triggerLethalShotHaptic(): void {
+  try {
+    const haptic = typeof window !== 'undefined' ? window.Telegram?.WebApp?.HapticFeedback : undefined;
+    if (haptic && typeof haptic.impactOccurred === 'function') {
+      haptic.impactOccurred('heavy');
+      haptic.notificationOccurred?.('error');
+    } else if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate([180, 60, 220]);
+    }
+  } catch {}
+}
+
+/**
+ * Triggers a light relief vibration on empty blank chamber
+ */
+export function triggerBlankShotHaptic(): void {
+  try {
+    const haptic = typeof window !== 'undefined' ? window.Telegram?.WebApp?.HapticFeedback : undefined;
+    if (haptic && typeof haptic.impactOccurred === 'function') {
+      haptic.impactOccurred('light');
+    } else if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(50);
+    }
+  } catch {}
 }

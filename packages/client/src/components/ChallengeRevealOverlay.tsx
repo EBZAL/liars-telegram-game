@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { RouletteChamber } from './RouletteChamber.js';
 import { soundManager } from '../sound.js';
 import { getPlayerDisplayName } from '../player-names.js';
+import { triggerLethalShotHaptic, triggerBlankShotHaptic } from '../telegram.js';
 
 export interface RevealedCard {
   id: string;
@@ -55,8 +56,10 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
     if (isTestEnv) {
       if (isLethal) {
         soundManager.playGunBang();
+        triggerLethalShotHaptic();
       } else {
         soundManager.playGunClick();
+        triggerBlankShotHaptic();
       }
       return;
     }
@@ -102,6 +105,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       setFlash(true);
       setScreenShake(true);
       soundManager.playGunBang();
+      triggerLethalShotHaptic();
 
       setTimeout(() => setFlash(false), 250);
       setTimeout(() => setScreenShake(false), 450);
@@ -118,6 +122,7 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
     } else {
       soundManager.playGunClick();
       soundManager.playRelief();
+      triggerBlankShotHaptic();
 
       // Restore BGM after blank click and relief chime
       setTimeout(() => {
