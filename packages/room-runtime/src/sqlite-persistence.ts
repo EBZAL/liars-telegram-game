@@ -54,6 +54,45 @@ export function initRoomSqliteSchema(sql: SqlStorage): void {
       resulting_revision INTEGER NOT NULL
     )
   `);
+
+  sql.exec(`
+    CREATE TABLE IF NOT EXISTS room_scoreboard (
+      room_id TEXT NOT NULL,
+      player_id TEXT NOT NULL,
+      wins INTEGER NOT NULL,
+      PRIMARY KEY (room_id, player_id)
+    )
+  `);
+}
+
+/**
+ * Records a match victory for a player in a room.
+ */
+export function recordRoomWinSqlite(sql: SqlStorage, roomId: string, playerId: string): void {
+  if (!roomId || !playerId) return;
+  sql.exec(
+    `INSERT INTO room_scoreboard (room_id, player_id, wins)
+     VALUES (?, ?, 1)
+     ON CONFLICT(room_id, player_id) DO UPDATE SET wins = wins + 1`,
+    roomId.trim(),
+    playerId.trim()
+  );
+}
+
+/**
+ * Loads all accumulated player wins for a room.
+ */
+export function loadRoomWinsSqlite(sql: SqlStorage, roomId: string): Record<string, number> {
+  if (!roomId) return {};
+  const cursor = sql.exec<{ player_id: string; wins: number }>(
+    'SELECT player_id, wins FROM room_scoreboard WHERE room_id = ?',
+    roomId.trim()
+  );
+  const result: Record<string, number> = {};
+  for (const row of cursor.toArray()) {
+    result[row.player_id] = Number(row.wins) || 0;
+  }
+  return result;
 }
 
 /**
@@ -247,6 +286,7 @@ export function armRoomRetentionAlarm<TMatchSnapshot = unknown>(
 export function deleteRoomSqlite(sql: SqlStorage, roomId: string): void {
   sql.exec('DELETE FROM room_state WHERE room_id = ?', roomId.trim());
   sql.exec('DELETE FROM processed_actions');
+  sql.exec('DELETE FROM room_scoreboard WHERE room_id = ?', roomId.trim());
 }
 
 /**
@@ -255,6 +295,7 @@ export function deleteRoomSqlite(sql: SqlStorage, roomId: string): void {
 export function createInMemorySqlStorage(): SqlStorage {
   const roomStateTable = new Map<string, Record<string, unknown>>();
   const processedActionsTable = new Map<string, Record<string, unknown>>();
+  const scoreboardTable = new Map<string, number>();
 
   return {
     exec<T = Record<string, unknown>>(query: string, ...bindings: unknown[]): SqlStorageCursor<T> {
@@ -355,6 +396,36 @@ export function createInMemorySqlStorage(): SqlStorage {
 
       if (normalized.startsWith('DELETE FROM processed_actions')) {
         processedActionsTable.clear();
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('INSERT INTO room_scoreboard')) {
+        const [roomId, playerId] = bindings;
+        const key = `${roomId}:${playerId}`;
+        const current = scoreboardTable.get(key) ?? 0;
+        scoreboardTable.set(key, current + 1);
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('SELECT player_id, wins FROM room_scoreboard WHERE room_id = ?')) {
+        const roomId = String(bindings[0]);
+        const rows: { player_id: string; wins: number }[] = [];
+        for (const [key, wins] of scoreboardTable.entries()) {
+          const [rId, pId] = key.split(':');
+          if (rId === roomId) {
+            rows.push({ player_id: pId, wins });
+          }
+        }
+        return createCursor((rows as unknown) as T[]);
+      }
+
+      if (normalized.startsWith('DELETE FROM room_scoreboard WHERE room_id = ?')) {
+        const roomId = String(bindings[0]);
+        for (const key of Array.from(scoreboardTable.keys())) {
+          if (key.startsWith(`${roomId}:`)) {
+            scoreboardTable.delete(key);
+          }
+        }
         return createCursor([]);
       }
 

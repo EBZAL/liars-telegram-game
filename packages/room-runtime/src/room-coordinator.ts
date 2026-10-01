@@ -49,6 +49,8 @@ import {
   isRoomEligibleForRetentionDeletion,
   armRoomRetentionAlarm,
   deleteRoomSqlite,
+  recordRoomWinSqlite,
+  loadRoomWinsSqlite,
 } from './sqlite-persistence.js';
 
 export type RoomClientCommand =
@@ -115,6 +117,7 @@ export class RoomCoordinator {
   public getConnectedMemberProjections(): Map<string, RecipientRoomProjection> {
     const projections = new Map<string, RecipientRoomProjection>();
     const presence = evaluateRoomPresence(this.roomState, this.presenceRegistry);
+    const roomWins = loadRoomWinsSqlite(this.sql, this.roomState.roomId);
 
     for (const memberId of presence.connectedMemberPlayerIds) {
       const result = deriveRecipientRoomProjection(
@@ -122,6 +125,7 @@ export class RoomCoordinator {
         { playerId: memberId }
       );
       if (result.decision === 'PROJECTED') {
+        result.projection.publicState.playerWins = roomWins;
         projections.set(memberId, result.projection);
       }
     }
@@ -313,15 +317,11 @@ export class RoomCoordinator {
             this.roomState = result.roomState;
             this.processedRegistry = result.processedRegistry;
 
-            // If match finished, track winner and arm retention alarm
+            // If match finished, record winner in SQLite and arm retention alarm
             if (this.roomState.lifecycle === 'MATCH_FINISHED') {
               const winnerId = (this.roomState.match as any)?.winnerId;
               if (winnerId) {
-                const prevWins = (this.roomState as any).playerWins ?? {};
-                (this.roomState as any).playerWins = {
-                  ...prevWins,
-                  [winnerId]: (prevWins[winnerId] ?? 0) + 1,
-                };
+                recordRoomWinSqlite(this.sql, this.roomState.roomId, winnerId);
               }
               this.roomState = armRoomRetentionAlarm(this.roomState, nowMs);
             }
@@ -418,11 +418,7 @@ export class RoomCoordinator {
         if (this.roomState.lifecycle === 'MATCH_FINISHED') {
           const winnerId = (this.roomState.match as any)?.winnerId;
           if (winnerId) {
-            const prevWins = (this.roomState as any).playerWins ?? {};
-            (this.roomState as any).playerWins = {
-              ...prevWins,
-              [winnerId]: (prevWins[winnerId] ?? 0) + 1,
-            };
+            recordRoomWinSqlite(this.sql, this.roomState.roomId, winnerId);
           }
           this.roomState = armRoomRetentionAlarm(this.roomState, nowMs);
         }

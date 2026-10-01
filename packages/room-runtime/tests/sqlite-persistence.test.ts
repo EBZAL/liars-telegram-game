@@ -11,6 +11,8 @@ import {
   isRoomEligibleForRetentionDeletion,
   armRoomRetentionAlarm,
   deleteRoomSqlite,
+  recordRoomWinSqlite,
+  loadRoomWinsSqlite,
   createInMemorySqlStorage,
   ROOM_RETENTION_DURATION_MS,
   joinLobbyRoom,
@@ -289,6 +291,37 @@ describe('T-033 SQLite Durable Object Persistence Layer', () => {
 
       expect(loadRoomStateSqlite(sql, 'room-to-delete')).toBeNull();
       expect(Object.keys(loadProcessedActionsSqlite(sql))).toHaveLength(0);
+    });
+
+    it('accumulates and isolates room scoreboard wins in SQLite', () => {
+      const sql = createInMemorySqlStorage();
+      initRoomSqliteSchema(sql);
+
+      // Room A: Alice wins match 1
+      recordRoomWinSqlite(sql, 'room-A', 'alice');
+      expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({ alice: 1 });
+
+      // Room A: Alice wins match 2
+      recordRoomWinSqlite(sql, 'room-A', 'alice');
+      expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({ alice: 2 });
+
+      // Room A: Bob wins match 3
+      recordRoomWinSqlite(sql, 'room-A', 'bob');
+      expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({ alice: 2, bob: 1 });
+
+      // New Room B: starts completely empty
+      expect(loadRoomWinsSqlite(sql, 'room-B')).toEqual({});
+
+      // Room B: Bob wins
+      recordRoomWinSqlite(sql, 'room-B', 'bob');
+      expect(loadRoomWinsSqlite(sql, 'room-B')).toEqual({ bob: 1 });
+      // Room A unaffected
+      expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({ alice: 2, bob: 1 });
+
+      // Deleting Room A cleans its scoreboard
+      deleteRoomSqlite(sql, 'room-A');
+      expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({});
+      expect(loadRoomWinsSqlite(sql, 'room-B')).toEqual({ bob: 1 });
     });
   });
 });
