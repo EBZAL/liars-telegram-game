@@ -4,6 +4,7 @@ export interface TelegramInlineKeyboardButton {
   text: string;
   web_app?: { url: string };
   url?: string;
+  callback_data?: string;
 }
 
 export interface TelegramSendMessagePayload {
@@ -23,6 +24,7 @@ export interface TelegramUpdate {
     from?: {
       id: number;
       first_name: string;
+      last_name?: string;
       username?: string;
     };
     chat: {
@@ -30,6 +32,22 @@ export interface TelegramUpdate {
       type: string;
     };
     text?: string;
+  };
+  callback_query?: {
+    id: string;
+    from: {
+      id: number;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+    };
+    message?: {
+      message_id: number;
+      chat: {
+        id: number | string;
+      };
+    };
+    data?: string;
   };
 }
 

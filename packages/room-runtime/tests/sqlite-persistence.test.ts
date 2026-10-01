@@ -13,6 +13,12 @@ import {
   deleteRoomSqlite,
   recordRoomWinSqlite,
   loadRoomWinsSqlite,
+  saveRegisteredUserSqlite,
+  banUserSqlite,
+  unbanUserSqlite,
+  checkUserBanSqlite,
+  searchUsersSqlite,
+  getModerationStatsSqlite,
   createInMemorySqlStorage,
   ROOM_RETENTION_DURATION_MS,
   joinLobbyRoom,
@@ -322,6 +328,59 @@ describe('T-033 SQLite Durable Object Persistence Layer', () => {
       deleteRoomSqlite(sql, 'room-A');
       expect(loadRoomWinsSqlite(sql, 'room-A')).toEqual({});
       expect(loadRoomWinsSqlite(sql, 'room-B')).toEqual({ bob: 1 });
+    });
+
+    it('manages registered users, banning, unbanning, and search in SQLite', () => {
+      const sql = createInMemorySqlStorage();
+      initRoomSqliteSchema(sql);
+
+      // 1. Register users
+      saveRegisteredUserSqlite(sql, { userId: '1001', firstName: 'Ali', username: 'ali_dev' });
+      saveRegisteredUserSqlite(sql, { userId: '1002', firstName: 'Reza', lastName: 'Tehrani' });
+      saveRegisteredUserSqlite(sql, { userId: '1003', firstName: 'Sarah', username: 'sarah_queen' });
+
+      expect(getModerationStatsSqlite(sql).totalUsers).toBe(3);
+
+      // 2. Search users
+      const searchAli = searchUsersSqlite(sql, 'ali');
+      expect(searchAli).toHaveLength(1);
+      expect(searchAli[0].userId).toBe('1001');
+      expect(searchAli[0].isBanned).toBe(false);
+
+      const searchByUsername = searchUsersSqlite(sql, 'queen');
+      expect(searchByUsername).toHaveLength(1);
+      expect(searchByUsername[0].userId).toBe('1003');
+
+      // 3. Ban a user permanently
+      banUserSqlite(sql, { userId: '1001', reason: 'Cheating', bannedBy: 'admin_7833' });
+      const checkBan1001 = checkUserBanSqlite(sql, '1001');
+      expect(checkBan1001.isBanned).toBe(true);
+      expect(checkBan1001.reason).toBe('Cheating');
+      expect(checkBan1001.expiresAt).toBeNull();
+
+      // Check stats
+      expect(getModerationStatsSqlite(sql).totalBanned).toBe(1);
+
+      // Search reflects ban status
+      const searchAfterBan = searchUsersSqlite(sql, 'ali');
+      expect(searchAfterBan[0].isBanned).toBe(true);
+      expect(searchAfterBan[0].banReason).toBe('Cheating');
+
+      // 4. Temporary ban
+      const now = Date.now();
+      banUserSqlite(sql, { userId: '1002', reason: 'Spamming', durationHours: 1, bannedBy: 'admin_7833' }, now);
+      const checkBan1002Active = checkUserBanSqlite(sql, '1002', now + 1000);
+      expect(checkBan1002Active.isBanned).toBe(true);
+      expect(checkBan1002Active.expiresAt).toBe(now + 3600000);
+
+      // After 2 hours, temporary ban should expire
+      const checkBan1002Expired = checkUserBanSqlite(sql, '1002', now + 7200000);
+      expect(checkBan1002Expired.isBanned).toBe(false);
+
+      // 5. Unban
+      unbanUserSqlite(sql, '1001');
+      expect(checkUserBanSqlite(sql, '1001').isBanned).toBe(false);
+      expect(getModerationStatsSqlite(sql).totalBanned).toBe(0);
     });
   });
 });

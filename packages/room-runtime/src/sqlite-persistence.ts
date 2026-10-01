@@ -63,6 +63,224 @@ export function initRoomSqliteSchema(sql: SqlStorage): void {
       PRIMARY KEY (room_id, player_id)
     )
   `);
+
+  sql.exec(`
+    CREATE TABLE IF NOT EXISTS registered_users (
+      user_id TEXT PRIMARY KEY,
+      first_name TEXT,
+      last_name TEXT,
+      username TEXT,
+      first_seen INTEGER,
+      last_seen INTEGER
+    )
+  `);
+
+  sql.exec(`
+    CREATE TABLE IF NOT EXISTS banned_users (
+      user_id TEXT PRIMARY KEY,
+      reason TEXT,
+      banned_at INTEGER,
+      banned_by TEXT,
+      expires_at INTEGER
+    )
+  `);
+}
+
+export interface RegisteredUserRecord {
+  userId: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  username?: string | null;
+  firstSeen: number;
+  lastSeen: number;
+}
+
+export interface BannedUserRecord {
+  userId: string;
+  reason: string;
+  bannedAt: number;
+  bannedBy: string;
+  expiresAt: number | null;
+}
+
+export function saveRegisteredUserSqlite(
+  sql: SqlStorage,
+  user: { userId: string; firstName?: string | null; lastName?: string | null; username?: string | null },
+  nowMs: number = Date.now()
+): void {
+  if (!user.userId) return;
+  const uid = user.userId.trim();
+  sql.exec(
+    `INSERT INTO registered_users (user_id, first_name, last_name, username, first_seen, last_seen)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
+       first_name = excluded.first_name,
+       last_name = excluded.last_name,
+       username = excluded.username,
+       last_seen = excluded.last_seen`,
+    uid,
+    user.firstName ?? null,
+    user.lastName ?? null,
+    user.username ?? null,
+    nowMs,
+    nowMs
+  );
+}
+
+export function banUserSqlite(
+  sql: SqlStorage,
+  ban: { userId: string; reason: string; durationHours?: number | null; bannedBy: string },
+  nowMs: number = Date.now()
+): void {
+  if (!ban.userId) return;
+  const uid = ban.userId.trim();
+  const expiresAt =
+    ban.durationHours && ban.durationHours > 0
+      ? nowMs + Math.round(ban.durationHours * 3600 * 1000)
+      : null;
+
+  sql.exec(
+    `INSERT INTO banned_users (user_id, reason, banned_at, banned_by, expires_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET
+       reason = excluded.reason,
+       banned_at = excluded.banned_at,
+       banned_by = excluded.banned_by,
+       expires_at = excluded.expires_at`,
+    uid,
+    ban.reason.trim(),
+    nowMs,
+    ban.bannedBy.trim(),
+    expiresAt
+  );
+}
+
+export function unbanUserSqlite(sql: SqlStorage, userId: string): boolean {
+  if (!userId) return false;
+  const uid = userId.trim();
+  sql.exec('DELETE FROM banned_users WHERE user_id = ?', uid);
+  return true;
+}
+
+export function checkUserBanSqlite(
+  sql: SqlStorage,
+  userId: string,
+  nowMs: number = Date.now()
+): { isBanned: boolean; reason?: string; expiresAt?: number | null; bannedAt?: number; bannedBy?: string } {
+  if (!userId) return { isBanned: false };
+  const uid = userId.trim();
+  const cursor = sql.exec<{
+    user_id: string;
+    reason: string;
+    banned_at: number;
+    banned_by: string;
+    expires_at: number | null;
+  }>('SELECT * FROM banned_users WHERE user_id = ?', uid);
+
+  const row = cursor.toArray()[0];
+  if (!row) {
+    return { isBanned: false };
+  }
+
+  // Check expiration for temporary ban
+  if (row.expires_at !== null && row.expires_at <= nowMs) {
+    unbanUserSqlite(sql, uid);
+    return { isBanned: false };
+  }
+
+  return {
+    isBanned: true,
+    reason: row.reason,
+    bannedAt: row.banned_at,
+    expiresAt: row.expires_at,
+    bannedBy: row.banned_by,
+  };
+}
+
+export function listBannedUsersSqlite(
+  sql: SqlStorage,
+  nowMs: number = Date.now()
+): BannedUserRecord[] {
+  const cursor = sql.exec<{
+    user_id: string;
+    reason: string;
+    banned_at: number;
+    banned_by: string;
+    expires_at: number | null;
+  }>('SELECT * FROM banned_users');
+
+  const result: BannedUserRecord[] = [];
+  for (const row of cursor.toArray()) {
+    if (row.expires_at !== null && row.expires_at <= nowMs) {
+      unbanUserSqlite(sql, row.user_id);
+    } else {
+      result.push({
+        userId: row.user_id,
+        reason: row.reason,
+        bannedAt: row.banned_at,
+        bannedBy: row.banned_by,
+        expiresAt: row.expires_at,
+      });
+    }
+  }
+  return result;
+}
+
+export function searchUsersSqlite(
+  sql: SqlStorage,
+  query: string,
+  nowMs: number = Date.now()
+): Array<RegisteredUserRecord & { isBanned: boolean; banReason?: string; banExpiresAt?: number | null }> {
+  if (!query || !query.trim()) return [];
+  const q = query.trim().toLowerCase();
+
+  const cursor = sql.exec<{
+    user_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    username: string | null;
+    first_seen: number;
+    last_seen: number;
+  }>('SELECT * FROM registered_users');
+
+  const matches: Array<RegisteredUserRecord & { isBanned: boolean; banReason?: string; banExpiresAt?: number | null }> = [];
+  for (const row of cursor.toArray()) {
+    const uId = String(row.user_id).toLowerCase();
+    const uName = (row.username || '').toLowerCase();
+    const fName = (row.first_name || '').toLowerCase();
+    const lName = (row.last_name || '').toLowerCase();
+
+    if (uId.includes(q) || uName.includes(q) || fName.includes(q) || lName.includes(q)) {
+      const ban = checkUserBanSqlite(sql, row.user_id, nowMs);
+      matches.push({
+        userId: row.user_id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        username: row.username,
+        firstSeen: row.first_seen,
+        lastSeen: row.last_seen,
+        isBanned: ban.isBanned,
+        banReason: ban.reason,
+        banExpiresAt: ban.expiresAt,
+      });
+    }
+  }
+  return matches;
+}
+
+export function getModerationStatsSqlite(
+  sql: SqlStorage,
+  nowMs: number = Date.now()
+): { totalUsers: number; totalBanned: number } {
+  const usersCursor = sql.exec('SELECT COUNT(*) as cnt FROM registered_users');
+  const userRow = usersCursor.toArray()[0] as { cnt: number } | undefined;
+  const totalUsers = userRow ? Number(userRow.cnt) || 0 : 0;
+
+  const banned = listBannedUsersSqlite(sql, nowMs);
+  return {
+    totalUsers,
+    totalBanned: banned.length,
+  };
 }
 
 /**
@@ -296,6 +514,8 @@ export function createInMemorySqlStorage(): SqlStorage {
   const roomStateTable = new Map<string, Record<string, unknown>>();
   const processedActionsTable = new Map<string, Record<string, unknown>>();
   const scoreboardTable = new Map<string, number>();
+  const registeredUsersTable = new Map<string, Record<string, unknown>>();
+  const bannedUsersTable = new Map<string, Record<string, unknown>>();
 
   return {
     exec<T = Record<string, unknown>>(query: string, ...bindings: unknown[]): SqlStorageCursor<T> {
@@ -426,6 +646,60 @@ export function createInMemorySqlStorage(): SqlStorage {
             scoreboardTable.delete(key);
           }
         }
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('INSERT INTO registered_users')) {
+        const [userId, firstName, lastName, username, firstSeen, lastSeen] = bindings;
+        const uid = String(userId);
+        const existing = registeredUsersTable.get(uid);
+        registeredUsersTable.set(uid, {
+          user_id: uid,
+          first_name: firstName,
+          last_name: lastName,
+          username: username,
+          first_seen: existing ? existing.first_seen : firstSeen,
+          last_seen: lastSeen,
+        });
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('SELECT COUNT(*) as cnt FROM registered_users')) {
+        return createCursor([{ cnt: registeredUsersTable.size }] as unknown as T[]);
+      }
+
+      if (normalized.startsWith('SELECT * FROM registered_users')) {
+        const rows = Array.from(registeredUsersTable.values()) as unknown as T[];
+        return createCursor(rows);
+      }
+
+      if (normalized.startsWith('INSERT INTO banned_users')) {
+        const [userId, reason, bannedAt, bannedBy, expiresAt] = bindings;
+        const uid = String(userId);
+        bannedUsersTable.set(uid, {
+          user_id: uid,
+          reason,
+          banned_at: bannedAt,
+          banned_by: bannedBy,
+          expires_at: expiresAt,
+        });
+        return createCursor([]);
+      }
+
+      if (normalized.startsWith('SELECT * FROM banned_users WHERE user_id = ?')) {
+        const uid = String(bindings[0]);
+        const row = bannedUsersTable.get(uid);
+        return createCursor(row ? [(row as unknown) as T] : []);
+      }
+
+      if (normalized.startsWith('SELECT * FROM banned_users')) {
+        const rows = Array.from(bannedUsersTable.values()) as unknown as T[];
+        return createCursor(rows);
+      }
+
+      if (normalized.startsWith('DELETE FROM banned_users WHERE user_id = ?')) {
+        const uid = String(bindings[0]);
+        bannedUsersTable.delete(uid);
         return createCursor([]);
       }
 

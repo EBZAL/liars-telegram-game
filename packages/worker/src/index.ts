@@ -11,6 +11,14 @@ import {
   isAdminUser,
   notifyAdminsOnBotStart,
   notifyAdminsOnUserEntry,
+  modRegisterUser,
+  modCheckBan,
+  modBanUser,
+  modUnbanUser,
+  modSearchUsers,
+  modListBanned,
+  modGetStats,
+  buildAdminDashboardPayload,
 } from './admin.js';
 
 export { RoomDurableObject, cryptoRandomSource } from './durable-object.js';
@@ -19,6 +27,35 @@ export * from './admin.js';
 
 export interface ExecutionContextLike {
   waitUntil?: (promise: Promise<unknown>) => void;
+}
+
+function verifyAdminRequest(
+  request: Request,
+  url: URL,
+  env: Env
+): { authorized: boolean; error?: string; status?: number; adminId?: string; username?: string; firstName?: string } {
+  const initData =
+    url.searchParams.get('initData') || request.headers.get('x-telegram-init-data');
+  if (!initData) {
+    return { authorized: false, error: 'MISSING_INIT_DATA', status: 401 };
+  }
+
+  const botToken = env.BOT_TOKEN ? env.BOT_TOKEN.trim().replace(/^["']|["']$/g, '') : 'DEV_TOKEN';
+  const authResult = validateTelegramInitData(initData, botToken);
+  if (!authResult.success || !authResult.user) {
+    return { authorized: false, error: 'INVALID_INIT_DATA', status: 401 };
+  }
+
+  if (!isAdminUser(authResult.user.id, env.ADMIN_IDS)) {
+    return { authorized: false, error: 'FORBIDDEN_NOT_ADMIN', status: 403 };
+  }
+
+  return {
+    authorized: true,
+    adminId: String(authResult.user.id),
+    username: authResult.user.username,
+    firstName: authResult.user.first_name,
+  };
 }
 
 export default {
@@ -58,27 +95,476 @@ export default {
       }
 
       const appUrl = env.APP_URL || `${url.protocol}//${url.host}`;
-      const botUsername = env.BOT_USERNAME || 'LiarsDeckBot';
+      const botUsername = env.BOT_USERNAME || 'LIRESBARBOT';
       const appName = env.APP_NAME;
 
-      const payload = formatTelegramBotWebhookResponse(update, appUrl, botUsername, appName);
+      // 3.1 Handle Callback Queries (Admin interactive buttons)
+      if (update.callback_query) {
+        const cq = update.callback_query;
+        const senderId = cq.from.id;
+        const chatId = cq.message?.chat.id || senderId;
+        const data = cq.data || '';
+        const isAdmin = isAdminUser(senderId, env.ADMIN_IDS);
 
-      // Notify admins if a new user initiates /start with the bot
-      if (update.message?.from && update.message.text?.startsWith('/start')) {
-        const parts = update.message.text.trim().split(/\s+/);
-        const startArg = parts.length > 1 ? parts[1] : undefined;
-        const startRoomId = parseTelegramStartParam(startArg);
-        const botToken = env.BOT_TOKEN ? env.BOT_TOKEN.trim().replace(/^["']|["']$/g, '') : undefined;
-        if (botToken) {
-          const notifyPromise = notifyAdminsOnBotStart(botToken, update.message.from, startRoomId, env.ADMIN_IDS);
-          if (ctx?.waitUntil) {
-            ctx.waitUntil(notifyPromise);
-          } else {
-            notifyPromise.catch(() => {});
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({
+              method: 'answerCallbackQuery',
+              callback_query_id: cq.id,
+              text: '⛔ شما دسترسی ادمین ندارید.',
+              show_alert: true,
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (data === 'admin_dashboard') {
+          const stats = await modGetStats(env);
+          return new Response(JSON.stringify(buildAdminDashboardPayload(chatId, stats)), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (data === 'admin_banned') {
+          const banned = await modListBanned(env);
+          if (banned.length === 0) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '🟢 <b>هیچ کاربری در لیست مسدودشده‌ها وجود ندارد.</b>',
+                parse_mode: 'HTML',
+                reply_markup: {
+                  inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const text =
+            `🚫 <b>لیست کاربران مسدودشده (${banned.length} نفر):</b>\n\n` +
+            banned
+              .slice(0, 10)
+              .map(
+                (b: any) =>
+                  `🆔 <code>${b.userId}</code>\n📝 علت: ${b.reason || 'تعیین‌نشده'}\n⏳ انقضا: ${
+                    b.expiresAt
+                      ? new Date(b.expiresAt).toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' })
+                      : 'دائم'
+                  }`
+              )
+              .join('\n\n');
+          const buttons = banned.slice(0, 10).map((b: any) => [
+            { text: `✅ رفع مسدودیت (${b.userId})`, callback_data: `unban_${b.userId}` },
+          ]);
+          buttons.push([{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]);
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text,
+              parse_mode: 'HTML',
+              reply_markup: { inline_keyboard: buttons },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (data === 'admin_search_help') {
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text:
+                `🔍 <b>راهنمای جستجوی کاربران</b>\n\n` +
+                `برای جستجو، دستور زیر را با آیدی عددی، نام یا یوزرنیم کاربر ارسال کنید:\n\n` +
+                `<code>/search 12345678</code>\n` +
+                `یا\n` +
+                `<code>/search alireza</code>`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (data.startsWith('unban_')) {
+          const targetId = data.slice('unban_'.length);
+          await modUnbanUser(env, targetId);
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `✅ کاربر <code>${targetId}</code> با موفقیت رفع مسدودیت (آن‌بن) شد.`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (data.startsWith('ban_perm_')) {
+          const targetId = data.slice('ban_perm_'.length);
+          await modBanUser(env, {
+            userId: targetId,
+            reason: 'مسدود دائم توسط ادمین',
+            bannedBy: String(senderId),
+          });
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `🚫 کاربر <code>${targetId}</code> به صورت دائم مسدود شد.`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        if (data.startsWith('ban_24h_')) {
+          const targetId = data.slice('ban_24h_'.length);
+          await modBanUser(env, {
+            userId: targetId,
+            reason: 'مسدود موقت ۲۴ ساعته',
+            durationHours: 24,
+            bannedBy: String(senderId),
+          });
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `⏳ کاربر <code>${targetId}</code> به مدت ۲۴ ساعت مسدود شد.`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // 3.2 Handle Messages
+      if (update.message?.from && update.message.text) {
+        const sender = update.message.from;
+        const senderId = sender.id;
+        const chatId = update.message.chat.id;
+        const text = update.message.text.trim();
+        const isAdmin = isAdminUser(senderId, env.ADMIN_IDS);
+
+        // Check if user is banned
+        if (!isAdmin) {
+          const banCheck = await modCheckBan(env, String(senderId));
+          if (banCheck.isBanned) {
+            const expiryText = banCheck.expiresAt
+              ? `\n⏳ تا تاریخ: ${new Date(banCheck.expiresAt).toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' })}`
+              : '\n⏳ مدت: دائمی';
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: `🚫 <b>دسترسی شما به بازی مسدود شده است.</b>\n\n📝 علت: ${banCheck.reason || 'نقض قوانین'}${expiryText}`,
+                parse_mode: 'HTML',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+
+        // Register user in background
+        const regPromise = modRegisterUser(env, {
+          userId: String(senderId),
+          firstName: sender.first_name,
+          lastName: sender.last_name,
+          username: sender.username,
+        });
+        if (ctx?.waitUntil) ctx.waitUntil(regPromise);
+        else regPromise.catch(() => {});
+
+        // /admin command
+        if (text === '/admin') {
+          if (!isAdmin) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⛔ شما دسترسی ادمین ندارید.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const stats = await modGetStats(env);
+          return new Response(JSON.stringify(buildAdminDashboardPayload(chatId, stats)), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // /search command
+        if (text.startsWith('/search')) {
+          if (!isAdmin) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⛔ شما دسترسی ادمین ندارید.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const query = text.slice('/search'.length).trim();
+          if (!query) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⚠️ لطفاً عبارت جستجو را وارد کنید:\n<code>/search &lt;آیدی یا نام&gt;</code>',
+                parse_mode: 'HTML',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const users = await modSearchUsers(env, query);
+          if (users.length === 0) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: `❌ هیچ کاربری با مشخصات "<code>${query}</code>" یافت نشد.`,
+                parse_mode: 'HTML',
+                reply_markup: {
+                  inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+                },
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const userRows = users.slice(0, 5);
+          let resultText = `🔍 <b>نتایج جستجو برای "${query}" (${users.length} مورد):</b>\n\n`;
+          const buttons: any[] = [];
+
+          userRows.forEach((u: any, idx: number) => {
+            const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || 'بی‌نام';
+            const uname = u.username ? `@${u.username}` : 'ندارد';
+            const status = u.isBanned ? `🚫 مسدود (${u.banReason || 'علت نامشخص'})` : '🟢 فعال';
+            resultText += `#${idx + 1} <b>${name}</b>\n` +
+              `🆔 <code>${u.userId}</code> | یوزرنیم: ${uname}\n` +
+              `وضعیت: ${status}\n\n`;
+
+            if (u.isBanned) {
+              buttons.push([{ text: `✅ رفع مسدودیت (${u.userId})`, callback_data: `unban_${u.userId}` }]);
+            } else {
+              buttons.push([
+                { text: `🚫 بن دائم (${u.userId})`, callback_data: `ban_perm_${u.userId}` },
+                { text: `⏳ بن ۲۴h (${u.userId})`, callback_data: `ban_24h_${u.userId}` },
+              ]);
+            }
+          });
+
+          buttons.push([{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]);
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: resultText.trim(),
+              parse_mode: 'HTML',
+              reply_markup: { inline_keyboard: buttons },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // /ban command
+        if (text.startsWith('/ban')) {
+          if (!isAdmin) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⛔ شما دسترسی ادمین ندارید.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const rawArgs = text.slice('/ban'.length).trim().split(/\s+/);
+          const targetId = rawArgs[0];
+          if (!targetId) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⚠️ فرمت دستور:\n<code>/ban &lt;آیدی&gt; [مدت به ساعت مثلا 24h] [علت]</code>\nمثال:\n<code>/ban 1234567 24h متقلب</code>',
+                parse_mode: 'HTML',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+
+          let durationHours: number | null = null;
+          let reason = 'مسدود توسط ادمین';
+
+          if (rawArgs.length > 1) {
+            const second = rawArgs[1].toLowerCase();
+            if (/^\d+h?$/.test(second)) {
+              durationHours = parseInt(second.replace('h', ''), 10);
+              reason = rawArgs.slice(2).join(' ') || reason;
+            } else {
+              reason = rawArgs.slice(1).join(' ');
+            }
+          }
+
+          await modBanUser(env, {
+            userId: targetId,
+            reason,
+            durationHours,
+            bannedBy: String(senderId),
+          });
+
+          const durLabel = durationHours ? `${durationHours} ساعت` : 'دائمی';
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `🚫 <b>کاربر مسدود شد.</b>\n\n🆔 آیدی: <code>${targetId}</code>\n⏳ مدت: ${durLabel}\n📝 علت: ${reason}`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // /unban command
+        if (text.startsWith('/unban')) {
+          if (!isAdmin) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⛔ شما دسترسی ادمین ندارید.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const targetId = text.slice('/unban'.length).trim().split(/\s+/)[0];
+          if (!targetId) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⚠️ لطفاً آیدی کاربر را وارد کنید:\n<code>/unban 12345678</code>',
+                parse_mode: 'HTML',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          await modUnbanUser(env, targetId);
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: `✅ کاربر <code>${targetId}</code> با موفقیت رفع مسدودیت (آن‌بن) شد.`,
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]],
+              },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // /banned command
+        if (text === '/banned') {
+          if (!isAdmin) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '⛔ شما دسترسی ادمین ندارید.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const banned = await modListBanned(env);
+          if (banned.length === 0) {
+            return new Response(
+              JSON.stringify({
+                method: 'sendMessage',
+                chat_id: chatId,
+                text: '🟢 هیچ کاربری در لیست مسدودشده‌ها نیست.',
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          const listText =
+            `🚫 <b>کاربران مسدودشده (${banned.length} نفر):</b>\n\n` +
+            banned
+              .map(
+                (b: any) =>
+                  `🆔 <code>${b.userId}</code> | علت: ${b.reason || 'تعیین‌نشده'} | ${
+                    b.expiresAt
+                      ? 'انقضا: ' + new Date(b.expiresAt).toLocaleString('fa-IR', { timeZone: 'Asia/Tehran' })
+                      : 'دائمی'
+                  }`
+              )
+              .join('\n\n');
+          const buttons = banned.map((b: any) => [
+            { text: `✅ رفع مسدودیت (${b.userId})`, callback_data: `unban_${b.userId}` },
+          ]);
+          buttons.push([{ text: '🔙 بازگشت به پنل', callback_data: 'admin_dashboard' }]);
+          return new Response(
+            JSON.stringify({
+              method: 'sendMessage',
+              chat_id: chatId,
+              text: listText,
+              parse_mode: 'HTML',
+              reply_markup: { inline_keyboard: buttons },
+            }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // /start command
+        if (text.startsWith('/start')) {
+          const parts = text.split(/\s+/);
+          const startArg = parts.length > 1 ? parts[1] : undefined;
+          const startRoomId = parseTelegramStartParam(startArg);
+          const botToken = env.BOT_TOKEN ? env.BOT_TOKEN.trim().replace(/^["']|["']$/g, '') : undefined;
+          if (botToken) {
+            const notifyPromise = notifyAdminsOnBotStart(botToken, sender, startRoomId, env.ADMIN_IDS);
+            if (ctx?.waitUntil) ctx.waitUntil(notifyPromise);
+            else notifyPromise.catch(() => {});
+          }
+
+          const defaultPayload = formatTelegramBotWebhookResponse(update, appUrl, botUsername, appName);
+          if (defaultPayload) {
+            // ONLY if user is admin, append the Admin Panel button to their keyboard!
+            if (isAdmin) {
+              defaultPayload.reply_markup = defaultPayload.reply_markup || { inline_keyboard: [] };
+              defaultPayload.reply_markup.inline_keyboard.push([
+                { text: '⚙️ پنل مدیریت (مخصوص ادمین)', callback_data: 'admin_dashboard' },
+              ]);
+            }
+            return new Response(JSON.stringify(defaultPayload), {
+              headers: { 'Content-Type': 'application/json' },
+            });
           }
         }
       }
 
+      const payload = formatTelegramBotWebhookResponse(update, appUrl, botUsername, appName);
       if (payload) {
         return new Response(JSON.stringify(payload), {
           headers: { 'Content-Type': 'application/json' },
@@ -138,6 +624,55 @@ export default {
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // 3.6. Admin Moderation Management Endpoints: /api/admin/*
+    if (pathname.startsWith('/api/admin/')) {
+      const auth = verifyAdminRequest(request, url, env);
+      if (!auth.authorized) {
+        return new Response(JSON.stringify({ error: auth.error }), {
+          status: auth.status || 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (pathname === '/api/admin/ban' && request.method === 'POST') {
+        const body = (await request.json()) as any;
+        await modBanUser(env, { ...body, bannedBy: auth.adminId || 'admin' });
+        return new Response(JSON.stringify({ ok: true, banned: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (pathname === '/api/admin/unban' && request.method === 'POST') {
+        const body = (await request.json()) as any;
+        await modUnbanUser(env, body.userId);
+        return new Response(JSON.stringify({ ok: true, unbanned: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (pathname === '/api/admin/search' && request.method === 'GET') {
+        const query = url.searchParams.get('query') || '';
+        const users = await modSearchUsers(env, query);
+        return new Response(JSON.stringify({ users }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (pathname === '/api/admin/banned' && request.method === 'GET') {
+        const banned = await modListBanned(env);
+        return new Response(JSON.stringify({ banned }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (pathname === '/api/admin/stats' && request.method === 'GET') {
+        const stats = await modGetStats(env);
+        return new Response(JSON.stringify(stats), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // 4. Room WebSocket Route: /room/:roomId/ws
@@ -216,6 +751,38 @@ export default {
             url.searchParams.get('playerName') ||
             request.headers.get('x-player-name') ||
             playerId;
+        }
+      }
+
+      // Enforcement: Reject connection if player is banned
+      if (playerId && !isAdminUser(playerId, env.ADMIN_IDS)) {
+        const banCheck = await modCheckBan(env, playerId);
+        if (banCheck.isBanned) {
+          return new Response(
+            JSON.stringify({
+              error: 'BANNED',
+              message: 'حساب کاربری شما از ورود به بازی مسدود شده است.',
+              reason: banCheck.reason || 'نقض قوانین',
+              expiresAt: banCheck.expiresAt,
+            }),
+            {
+              status: 403,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      }
+
+      // Register / update user in global user directory
+      if (playerId) {
+        const regPromise = modRegisterUser(env, {
+          userId: playerId,
+          firstName: playerName,
+        });
+        if (ctx?.waitUntil) {
+          ctx.waitUntil(regPromise);
+        } else {
+          regPromise.catch(() => {});
         }
       }
 

@@ -187,3 +187,169 @@ export async function notifyAdminsOnBotStart(
 
   await notifyAdmins(botToken, message, envAdminIds, fetchFn);
 }
+
+/**
+ * Accesses the global singleton moderation Durable Object.
+ */
+export function getModerationDO(env: { ROOM_DO: any }) {
+  const doId = env.ROOM_DO.idFromName('__system_moderation__');
+  return env.ROOM_DO.get(doId);
+}
+
+export async function modRegisterUser(
+  env: { ROOM_DO: any },
+  user: { userId: string; firstName?: string | null; lastName?: string | null; username?: string | null }
+): Promise<void> {
+  try {
+    const stub = getModerationDO(env);
+    await stub.fetch(
+      new Request('http://internal/moderation/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      })
+    );
+  } catch (err) {
+    console.error('Failed to register user in moderation DO:', err);
+  }
+}
+
+export async function modCheckBan(
+  env: { ROOM_DO: any },
+  userId: string
+): Promise<{ isBanned: boolean; reason?: string; expiresAt?: number | null; bannedAt?: number; bannedBy?: string }> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(
+      new Request(`http://internal/moderation/check-ban?userId=${encodeURIComponent(userId)}`)
+    );
+    if (resp.ok) {
+      return (await resp.json()) as any;
+    }
+  } catch (err) {
+    console.error('Failed to check ban status:', err);
+  }
+  return { isBanned: false };
+}
+
+export async function modBanUser(
+  env: { ROOM_DO: any },
+  ban: { userId: string; reason: string; durationHours?: number | null; bannedBy: string }
+): Promise<{ ok: boolean }> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(
+      new Request('http://internal/moderation/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ban),
+      })
+    );
+    return (await resp.json()) as any;
+  } catch (err) {
+    console.error('Failed to ban user:', err);
+    return { ok: false };
+  }
+}
+
+export async function modUnbanUser(
+  env: { ROOM_DO: any },
+  userId: string
+): Promise<{ ok: boolean }> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(
+      new Request('http://internal/moderation/unban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+    );
+    return (await resp.json()) as any;
+  } catch (err) {
+    console.error('Failed to unban user:', err);
+    return { ok: false };
+  }
+}
+
+export async function modSearchUsers(
+  env: { ROOM_DO: any },
+  query: string
+): Promise<Array<any>> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(
+      new Request(`http://internal/moderation/search?query=${encodeURIComponent(query)}`)
+    );
+    if (resp.ok) {
+      const data = (await resp.json()) as any;
+      return data.users || [];
+    }
+  } catch (err) {
+    console.error('Failed to search users:', err);
+  }
+  return [];
+}
+
+export async function modListBanned(
+  env: { ROOM_DO: any }
+): Promise<Array<any>> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(new Request('http://internal/moderation/banned-list'));
+    if (resp.ok) {
+      const data = (await resp.json()) as any;
+      return data.banned || [];
+    }
+  } catch (err) {
+    console.error('Failed to list banned users:', err);
+  }
+  return [];
+}
+
+export async function modGetStats(
+  env: { ROOM_DO: any }
+): Promise<{ totalUsers: number; totalBanned: number }> {
+  try {
+    const stub = getModerationDO(env);
+    const resp = await stub.fetch(new Request('http://internal/moderation/stats'));
+    if (resp.ok) {
+      return (await resp.json()) as any;
+    }
+  } catch (err) {
+    console.error('Failed to get stats:', err);
+  }
+  return { totalUsers: 0, totalBanned: 0 };
+}
+
+/**
+ * Builds the Admin Dashboard message payload with action buttons.
+ */
+export function buildAdminDashboardPayload(chatId: string | number, stats: { totalUsers: number; totalBanned: number }) {
+  return {
+    method: 'sendMessage',
+    chat_id: chatId,
+    text:
+      `⚙️ <b>پنل مدیریت Liar's Deck</b>\n\n` +
+      `👥 <b>کل بازیکنان ثبت‌شده:</b> ${stats.totalUsers} نفر\n` +
+      `🚫 <b>کاربران مسدودشده:</b> ${stats.totalBanned} نفر\n\n` +
+      `📌 <b>دستورات سریع در چت:</b>\n` +
+      `🔍 جستجو: <code>/search &lt;آیدی یا یوزرنیم&gt;</code>\n` +
+      `🚫 بن دائم: <code>/ban &lt;آیدی&gt; &lt;علت&gt;</code>\n` +
+      `⏳ بن موقت: <code>/ban &lt;آیدی&gt; &lt;ساعت&gt;h &lt;علت&gt;</code>\n` +
+      `✅ رفع بن: <code>/unban &lt;آیدی&gt;</code>`,
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: '🔍 راهنمای جستجو', callback_data: 'admin_search_help' },
+          { text: '🚫 لیست مسدودشده‌ها', callback_data: 'admin_banned' },
+        ],
+        [
+          { text: '🔄 به‌روزرسانی آمار', callback_data: 'admin_dashboard' },
+        ],
+      ],
+    },
+  };
+}
+

@@ -4,6 +4,14 @@ import {
   RoomCoordinator,
   parseGameplayActionEnvelope,
   deriveProviderAlarmSyncPlan,
+  initRoomSqliteSchema,
+  saveRegisteredUserSqlite,
+  checkUserBanSqlite,
+  banUserSqlite,
+  unbanUserSqlite,
+  searchUsersSqlite,
+  listBannedUsersSqlite,
+  getModerationStatsSqlite,
   type RecipientRoomProjection,
   type RoomClientCommand,
 } from '@liars-telegram-game/room-runtime';
@@ -125,6 +133,67 @@ export class RoomDurableObject {
 
   public async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+
+    // Moderation routes (global user directory and blacklisting)
+    if (url.pathname.startsWith('/moderation/')) {
+      initRoomSqliteSchema(this.state.storage.sql as any);
+
+      if (url.pathname === '/moderation/register' && request.method === 'POST') {
+        const body = (await request.json()) as any;
+        saveRegisteredUserSqlite(this.state.storage.sql as any, body);
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/check-ban' && request.method === 'GET') {
+        const userId = url.searchParams.get('userId') || '';
+        const banStatus = checkUserBanSqlite(this.state.storage.sql as any, userId);
+        return new Response(JSON.stringify(banStatus), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/ban' && request.method === 'POST') {
+        const body = (await request.json()) as any;
+        banUserSqlite(this.state.storage.sql as any, body);
+        return new Response(JSON.stringify({ ok: true, banned: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/unban' && request.method === 'POST') {
+        const body = (await request.json()) as any;
+        unbanUserSqlite(this.state.storage.sql as any, body.userId);
+        return new Response(JSON.stringify({ ok: true, unbanned: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/search' && request.method === 'GET') {
+        const query = url.searchParams.get('query') || '';
+        const users = searchUsersSqlite(this.state.storage.sql as any, query);
+        return new Response(JSON.stringify({ users }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/banned-list' && request.method === 'GET') {
+        const banned = listBannedUsersSqlite(this.state.storage.sql as any);
+        return new Response(JSON.stringify({ banned }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url.pathname === '/moderation/stats' && request.method === 'GET') {
+        const stats = getModerationStatsSqlite(this.state.storage.sql as any);
+        return new Response(JSON.stringify(stats), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response('Not Found', { status: 404 });
+    }
 
     // Diagnostics / test state inspection
     if (url.pathname.endsWith('/state')) {

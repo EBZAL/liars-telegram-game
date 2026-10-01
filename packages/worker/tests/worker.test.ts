@@ -663,5 +663,161 @@ describe('Cloudflare Worker and Durable Object Integration', () => {
       const adminBody2 = (await resAdmin2.json()) as any;
       expect(adminBody2.isAdmin).toBe(true);
     });
+
+    it('attaches admin keyboard ONLY to admin /start messages and hides it from regular users', async () => {
+      const envWithDO = {
+        ROOM_DO: mockNamespace,
+        BOT_TOKEN: 'token123',
+        BOT_USERNAME: 'LIRESBARBOT',
+        APP_URL: 'https://example.com',
+      };
+
+      // 1. Regular user sends /start
+      const regularWebhookReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 1,
+          message: {
+            message_id: 101,
+            from: { id: 999111, first_name: 'RegularPlayer', username: 'reg_user' },
+            chat: { id: 999111, type: 'private' },
+            text: '/start',
+          },
+        }),
+      });
+
+      const regResp = await workerDefault.fetch(regularWebhookReq, envWithDO as any);
+      expect(regResp.status).toBe(200);
+      const regData = (await regResp.json()) as any;
+      // Regular user should have 1 button (Play) and NO admin button
+      const allRegButtons = regData.reply_markup.inline_keyboard.flat();
+      expect(allRegButtons.some((b: any) => b.text.includes('پنل مدیریت'))).toBe(false);
+
+      // 2. Admin user 7833747178 sends /start
+      const adminWebhookReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 2,
+          message: {
+            message_id: 102,
+            from: { id: 7833747178, first_name: 'Alireza', username: 'ali_owner' },
+            chat: { id: 7833747178, type: 'private' },
+            text: '/start',
+          },
+        }),
+      });
+
+      const adminResp = await workerDefault.fetch(adminWebhookReq, envWithDO as any);
+      expect(adminResp.status).toBe(200);
+      const adminData = (await adminResp.json()) as any;
+      const allAdminButtons = adminData.reply_markup.inline_keyboard.flat();
+      expect(allAdminButtons.some((b: any) => b.text.includes('پنل مدیریت'))).toBe(true);
+    });
+
+    it('processes admin moderation commands and rejects non-admin attempts', async () => {
+      const envWithDO = {
+        ROOM_DO: mockNamespace,
+        BOT_TOKEN: 'token123',
+        BOT_USERNAME: 'LIRESBARBOT',
+        APP_URL: 'https://example.com',
+      };
+
+      // 1. Non-admin tries /admin => rejected
+      const nonAdminReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 3,
+          message: {
+            message_id: 103,
+            from: { id: 999111, first_name: 'Hacker' },
+            chat: { id: 999111, type: 'private' },
+            text: '/admin',
+          },
+        }),
+      });
+      const nonAdminResp = await workerDefault.fetch(nonAdminReq, envWithDO as any);
+      const nonAdminJson = (await nonAdminResp.json()) as any;
+      expect(nonAdminJson.text).toContain('دسترسی ادمین ندارید');
+
+      // 2. Admin sends /admin => receives dashboard
+      const adminDashReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 4,
+          message: {
+            message_id: 104,
+            from: { id: 7833747178, first_name: 'Admin' },
+            chat: { id: 7833747178, type: 'private' },
+            text: '/admin',
+          },
+        }),
+      });
+      const adminDashResp = await workerDefault.fetch(adminDashReq, envWithDO as any);
+      const adminDashJson = (await adminDashResp.json()) as any;
+      expect(adminDashJson.text).toContain('پنل مدیریت Liar');
+
+      // 3. Admin bans a user: /ban 555666 24h Cheating
+      const banReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 5,
+          message: {
+            message_id: 105,
+            from: { id: 7833747178, first_name: 'Admin' },
+            chat: { id: 7833747178, type: 'private' },
+            text: '/ban 555666 24h Cheating',
+          },
+        }),
+      });
+      const banResp = await workerDefault.fetch(banReq, envWithDO as any);
+      const banJson = (await banResp.json()) as any;
+      expect(banJson.text).toContain('کاربر مسدود شد');
+      expect(banJson.text).toContain('555666');
+
+      // 4. Banned user attempts WebSocket room connection => HTTP 403 BANNED
+      const wsReq = new Request('https://example.com/room/r_test_ban/ws?playerId=555666', {
+        headers: {
+          Upgrade: 'websocket',
+          'x-player-id': '555666',
+        },
+      });
+      const wsResp = await workerDefault.fetch(wsReq, { ...envWithDO, ALLOW_INSECURE_AUTH: 'true' } as any);
+      expect(wsResp.status).toBe(403);
+      const wsJson = (await wsResp.json()) as any;
+      expect(wsJson.error).toBe('BANNED');
+
+      // 5. Admin unbans the user: /unban 555666
+      const unbanReq = new Request('https://example.com/api/telegram-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          update_id: 6,
+          message: {
+            message_id: 106,
+            from: { id: 2131332245, first_name: 'Admin2' },
+            chat: { id: 2131332245, type: 'private' },
+            text: '/unban 555666',
+          },
+        }),
+      });
+      const unbanResp = await workerDefault.fetch(unbanReq, envWithDO as any);
+      const unbanJson = (await unbanResp.json()) as any;
+      expect(unbanJson.text).toContain('رفع مسدودیت');
+
+      // 6. Now the user can connect via WebSocket again
+      const wsReqAfter = new Request('https://example.com/room/r_test_ban/ws?playerId=555666', {
+        headers: {
+          Upgrade: 'websocket',
+          'x-player-id': '555666',
+        },
+      });
+      const wsRespAfter = await workerDefault.fetch(wsReqAfter, { ...envWithDO, ALLOW_INSECURE_AUTH: 'true' } as any);
+      expect(wsRespAfter.status).not.toBe(403);
+    });
   });
 });
