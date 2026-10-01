@@ -29,6 +29,7 @@
   "vars": {
     "BOT_USERNAME": "LIRESBARBOT",
     "APP_URL": "https://liars-deck-worker.aebzalian.workers.dev",
-    "ALLOW_INSECURE_AUTH": "true"
+    "ALLOW_INSECURE_AUTH": "true",
+    "ADMIN_IDS": "7833747178,2131332245"
   }
 }

@@ -9,6 +9,7 @@ export interface Env {
   APP_URL?: string;
   TELEGRAM_WEBHOOK_SECRET?: string;
   ALLOW_INSECURE_AUTH?: string;
+  ADMIN_IDS?: string;
   ASSETS?: Fetcher;
 }
 

@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createHmac } from 'node:crypto';
-import workerDefault, { RoomDurableObject, cryptoRandomSource } from '../src/index.js';
+import workerDefault, {
+  RoomDurableObject,
+  cryptoRandomSource,
+  isAdminUser,
+  getAdminIds,
+  notifyAdmins,
+  notifyAdminsOnUserEntry,
+  notifyAdminsOnBotStart,
+  clearNotificationCacheForTest,
+} from '../src/index.js';
 import type { Env } from '../src/types.js';
 import {
   createInMemorySqlStorage,
@@ -515,6 +524,144 @@ describe('Cloudflare Worker and Durable Object Integration', () => {
           expect(val).toBeLessThan(max);
         }
       }
+    });
+  });
+
+  describe('Admin Security and Notification Layer', () => {
+    beforeEach(() => {
+      clearNotificationCacheForTest?.();
+    });
+
+    it('authorizes only designated admin Telegram IDs (7833747178 and 2131332245)', () => {
+      expect(isAdminUser('7833747178')).toBe(true);
+      expect(isAdminUser(7833747178)).toBe(true);
+      expect(isAdminUser('2131332245')).toBe(true);
+      expect(isAdminUser(2131332245)).toBe(true);
+
+      // Random non-admin users must be strictly rejected
+      expect(isAdminUser('123456789')).toBe(false);
+      expect(isAdminUser('999999999')).toBe(false);
+      expect(isAdminUser(null)).toBe(false);
+      expect(isAdminUser(undefined)).toBe(false);
+      expect(isAdminUser('')).toBe(false);
+    });
+
+    it('sends Telegram Bot API notifications to both admin accounts', async () => {
+      const sentRequests: Array<{ url: string; body: any }> = [];
+      const mockFetch = (async (url: string, init: any) => {
+        sentRequests.push({ url, body: JSON.parse(init.body) });
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }) as any;
+
+      await notifyAdmins('fake_bot_token', 'Test Alert', undefined, mockFetch);
+
+      expect(sentRequests).toHaveLength(2);
+      expect(sentRequests.map((r) => String(r.body.chat_id))).toEqual(['7833747178', '2131332245']);
+      expect(sentRequests[0].body.text).toBe('Test Alert');
+    });
+
+    it('notifies admins on new user entry and debounces subsequent requests', async () => {
+      const sentRequests: Array<{ url: string; body: any }> = [];
+      const mockFetch = (async (url: string, init: any) => {
+        sentRequests.push({ url, body: JSON.parse(init.body) });
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }) as any;
+
+      // Regular user enters
+      await notifyAdminsOnUserEntry(
+        'fake_bot_token',
+        { id: 987654321, first_name: 'Reza', username: 'reza_test' },
+        'r_test_room',
+        undefined,
+        mockFetch
+      );
+
+      expect(sentRequests).toHaveLength(2);
+      expect(sentRequests[0].body.text).toContain('ورود کاربر به بازی');
+      expect(sentRequests[0].body.text).toContain('Reza');
+      expect(sentRequests[0].body.text).toContain('987654321');
+      expect(sentRequests[0].body.text).toContain('r_test_room');
+
+      // Immediate second entry by same user should be debounced (no new messages)
+      sentRequests.length = 0;
+      await notifyAdminsOnUserEntry(
+        'fake_bot_token',
+        { id: 987654321, first_name: 'Reza', username: 'reza_test' },
+        'r_test_room',
+        undefined,
+        mockFetch
+      );
+      expect(sentRequests).toHaveLength(0);
+
+      // Admin entering should not trigger notification to themselves
+      await notifyAdminsOnUserEntry(
+        'fake_bot_token',
+        { id: 7833747178, first_name: 'Admin' },
+        'r_admin_room',
+        undefined,
+        mockFetch
+      );
+      expect(sentRequests).toHaveLength(0);
+    });
+
+    it('handles /api/admin/verify endpoint strictly', async () => {
+      const authDate = Math.floor(Date.now() / 1000);
+
+      // 1. Missing initData => 401
+      const resMissing = await workerDefault.fetch(
+        new Request('https://example.com/api/admin/verify'),
+        { BOT_TOKEN: 'token123' } as any
+      );
+      expect(resMissing.status).toBe(401);
+
+      // 2. Non-admin valid user => 403 Forbidden
+      const nonAdminInit = createSignedInitData(
+        {
+          auth_date: String(authDate),
+          user: JSON.stringify({ id: 555555, first_name: 'NormalUser' }),
+        },
+        'token123'
+      );
+      const resNonAdmin = await workerDefault.fetch(
+        new Request(`https://example.com/api/admin/verify?initData=${encodeURIComponent(nonAdminInit)}`),
+        { BOT_TOKEN: 'token123' } as any
+      );
+      expect(resNonAdmin.status).toBe(403);
+      const nonAdminBody = (await resNonAdmin.json()) as any;
+      expect(nonAdminBody.isAdmin).toBe(false);
+
+      // 3. Admin user 7833747178 => 200 OK
+      const adminInit1 = createSignedInitData(
+        {
+          auth_date: String(authDate),
+          user: JSON.stringify({ id: 7833747178, first_name: 'Owner', username: 'owner_user' }),
+        },
+        'token123'
+      );
+      const resAdmin1 = await workerDefault.fetch(
+        new Request(`https://example.com/api/admin/verify?initData=${encodeURIComponent(adminInit1)}`),
+        { BOT_TOKEN: 'token123' } as any
+      );
+      expect(resAdmin1.status).toBe(200);
+      const adminBody1 = (await resAdmin1.json()) as any;
+      expect(adminBody1.isAdmin).toBe(true);
+      expect(adminBody1.adminId).toBe('7833747178');
+
+      // 4. Admin user 2131332245 => 200 OK
+      const adminInit2 = createSignedInitData(
+        {
+          auth_date: String(authDate),
+          user: JSON.stringify({ id: 2131332245, first_name: 'Owner2' }),
+        },
+        'token123'
+      );
+      const resAdmin2 = await workerDefault.fetch(
+        new Request(`https://example.com/api/admin/verify?initData=${encodeURIComponent(adminInit2)}`),
+        { BOT_TOKEN: 'token123' } as any
+      );
+      expect(resAdmin2.status).toBe(200);
+      const adminBody2 = (await resAdmin2.json()) as any;
+      expect(adminBody2.isAdmin).toBe(true);
     });
   });
 });
