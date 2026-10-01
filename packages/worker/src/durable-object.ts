@@ -100,6 +100,9 @@ export class RoomDurableObject {
 
   public broadcastProjections(projections: Map<string, RecipientRoomProjection>): void {
     const playerNamesObj = Object.fromEntries(this.playerNames);
+    const coordState = this.coordinator?.getRoomState();
+    const playerWinsObj = (coordState as any)?.playerWins ?? {};
+
     for (const [ws, info] of this.sockets) {
       const projection = projections.get(info.playerId);
       if (projection) {
@@ -108,6 +111,7 @@ export class RoomDurableObject {
           publicState: {
             ...projection.publicState,
             playerNames: playerNamesObj,
+            playerWins: projection.publicState.playerWins ?? playerWinsObj,
           },
         };
         try {

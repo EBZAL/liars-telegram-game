@@ -237,6 +237,7 @@ export class RoomCoordinator {
         }
 
         case 'START_MATCH': {
+          const prevWins = (this.roomState as any).playerWins;
           const matchRoom = startMatchFromLobby(
             this.roomState,
             playerId,
@@ -244,7 +245,7 @@ export class RoomCoordinator {
             nowMs,
             command.initialTurnId
           );
-          this.roomState = matchRoom;
+          this.roomState = { ...matchRoom, playerWins: prevWins } as any;
           saveRoomStateSqlite(this.sql, this.roomState, nowMs);
           break;
         }
@@ -255,6 +256,7 @@ export class RoomCoordinator {
               `Cannot play again: room lifecycle is '${this.roomState.lifecycle}' (expected 'MATCH_FINISHED')`
             );
           }
+          const prevWins = (this.roomState as any).playerWins;
           const nextRevision = nextRoomRevision(this.roomState.revision);
           this.roomState = {
             roomId: this.roomState.roomId,
@@ -266,7 +268,8 @@ export class RoomCoordinator {
             currentTurnId: null,
             currentTurnDeadline: null,
             activeAlarm: null,
-          };
+            playerWins: prevWins,
+          } as any;
           saveRoomStateSqlite(this.sql, this.roomState, nowMs);
           break;
         }
@@ -310,8 +313,16 @@ export class RoomCoordinator {
             this.roomState = result.roomState;
             this.processedRegistry = result.processedRegistry;
 
-            // If match finished, arm retention alarm
+            // If match finished, track winner and arm retention alarm
             if (this.roomState.lifecycle === 'MATCH_FINISHED') {
+              const winnerId = (this.roomState.match as any)?.winnerId;
+              if (winnerId) {
+                const prevWins = (this.roomState as any).playerWins ?? {};
+                (this.roomState as any).playerWins = {
+                  ...prevWins,
+                  [winnerId]: (prevWins[winnerId] ?? 0) + 1,
+                };
+              }
               this.roomState = armRoomRetentionAlarm(this.roomState, nowMs);
             }
 
@@ -405,6 +416,14 @@ export class RoomCoordinator {
         this.roomState = res.roomState;
 
         if (this.roomState.lifecycle === 'MATCH_FINISHED') {
+          const winnerId = (this.roomState.match as any)?.winnerId;
+          if (winnerId) {
+            const prevWins = (this.roomState as any).playerWins ?? {};
+            (this.roomState as any).playerWins = {
+              ...prevWins,
+              [winnerId]: (prevWins[winnerId] ?? 0) + 1,
+            };
+          }
           this.roomState = armRoomRetentionAlarm(this.roomState, nowMs);
         }
 

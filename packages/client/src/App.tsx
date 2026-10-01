@@ -111,7 +111,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     );
   }
 
-  const { lifecycle, roomId, memberPlayerIds, hostPlayerId, match, playerNames } = projection.publicState;
+  const { lifecycle, roomId, memberPlayerIds, hostPlayerId, match, playerNames, playerWins } = projection.publicState;
 
   if (lifecycle === 'LOBBY') {
     return (
@@ -122,6 +122,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         ownPlayerId={ownPlayerId}
         ownDisplayName={ownDisplayName}
         playerNames={playerNames}
+        playerWins={playerWins}
         botUsername="LIRESBARBOT"
         onStartMatch={onStartMatch}
         onLeaveRoom={onLeaveRoom}
@@ -181,6 +182,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           winnerId={winnerId}
           isOwnWin={winnerId === ownPlayerId}
           playerNames={playerNames}
+          winCount={winnerId ? playerWins?.[winnerId] : undefined}
           onPlayAgain={onPlayAgain}
           onReturnToLobby={() => {
             setProjection(null);

@@ -7,6 +7,7 @@ export interface OpponentSeatProps {
   isCurrentTurn: boolean;
   position: 'top' | 'left' | 'right';
   displayName?: string;
+  wins?: number;
 }
 
 export const OpponentSeat: React.FC<OpponentSeatProps> = ({
@@ -14,6 +15,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   isCurrentTurn,
   position,
   displayName,
+  wins,
 }) => {
   const isEliminated = player.lifeStatus === 'ELIMINATED';
 
@@ -43,7 +45,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         minWidth: '90px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
         <span style={{ fontSize: '14px' }}>
           {isEliminated ? '💀' : isCurrentTurn ? '🎯' : '👤'}
         </span>
@@ -52,7 +54,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
             fontSize: '13px',
             fontWeight: 700,
             color: isCurrentTurn ? 'var(--text-gold)' : 'var(--text-primary)',
-            maxWidth: '80px',
+            maxWidth: '75px',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -60,6 +62,21 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         >
           {displayName || player.playerId}
         </span>
+        {wins !== undefined && wins > 0 && (
+          <span
+            style={{
+              fontSize: '10px',
+              fontWeight: 800,
+              color: 'var(--text-gold)',
+              background: 'rgba(229, 169, 59, 0.22)',
+              border: '1px solid rgba(229, 169, 59, 0.4)',
+              borderRadius: '8px',
+              padding: '0 4px',
+            }}
+          >
+            🏆{wins}
+          </span>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>

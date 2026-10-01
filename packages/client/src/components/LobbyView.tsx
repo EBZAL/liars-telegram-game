@@ -9,6 +9,7 @@ export interface LobbyViewProps {
   ownPlayerId: string;
   ownDisplayName?: string;
   playerNames?: Record<string, string>;
+  playerWins?: Record<string, number>;
   botUsername?: string;
   onStartMatch: () => void;
   onLeaveRoom?: () => void;
@@ -22,6 +23,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
   ownPlayerId,
   ownDisplayName,
   playerNames,
+  playerWins,
   botUsername = 'LiarsDeckBot',
   onStartMatch,
   onLeaveRoom,
@@ -142,6 +144,24 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
         <p style={{ margin: '12px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
           Waiting for players (2 to 4 required)
         </p>
+        {playerWins && Object.values(playerWins).reduce((a, b) => a + b, 0) > 0 && (
+          <div
+            style={{
+              marginTop: '8px',
+              fontSize: '11px',
+              color: 'var(--text-gold)',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
+              background: 'rgba(229, 169, 59, 0.12)',
+              border: '1px solid rgba(229, 169, 59, 0.3)',
+              borderRadius: '12px',
+              padding: '3px 10px',
+              display: 'inline-block',
+            }}
+          >
+            🔥 ROOM SCOREBOARD: {Object.values(playerWins).reduce((a, b) => a + b, 0)} {Object.values(playerWins).reduce((a, b) => a + b, 0) === 1 ? 'MATCH' : 'MATCHES'} PLAYED
+          </div>
+        )}
       </div>
 
       {/* Member Slots (up to 4) */}
@@ -150,6 +170,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
           const memberId = members[index];
           const isMemberHost = memberId && memberId === hostPlayerId;
           const isSelf = memberId && memberId === ownPlayerId;
+          const wins = memberId && playerWins ? (playerWins[memberId] ?? 0) : 0;
 
           if (memberId) {
             return (
@@ -179,6 +200,26 @@ export const LobbyView: React.FC<LobbyViewProps> = ({
                     {getPlayerDisplayName(memberId, playerNames, ownPlayerId, ownDisplayName)}{' '}
                     {isSelf && <span style={{ fontSize: '12px', color: 'var(--accent-gold)' }}>(You)</span>}
                   </span>
+                  {wins > 0 && (
+                    <span
+                      data-testid={`lobby-member-wins-${memberId}`}
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(229, 169, 59, 0.25) 0%, rgba(184, 124, 30, 0.35) 100%)',
+                        border: '1px solid var(--accent-gold)',
+                        borderRadius: '12px',
+                        padding: '2px 8px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        color: 'var(--text-gold)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                      }}
+                    >
+                      🏆 {wins} {wins === 1 ? 'Win' : 'Wins'}
+                    </span>
+                  )}
                 </div>
 
                 {isMemberHost && (

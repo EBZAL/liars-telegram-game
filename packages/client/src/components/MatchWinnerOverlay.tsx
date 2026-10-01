@@ -6,6 +6,7 @@ export interface MatchWinnerOverlayProps {
   winnerId: string;
   isOwnWin: boolean;
   playerNames?: Record<string, string>;
+  winCount?: number;
   onPlayAgain?: () => void;
   onReturnToLobby: () => void;
 }
@@ -14,6 +15,7 @@ export const MatchWinnerOverlay: React.FC<MatchWinnerOverlayProps> = ({
   winnerId,
   isOwnWin,
   playerNames,
+  winCount,
   onPlayAgain,
   onReturnToLobby,
 }) => {
@@ -74,6 +76,26 @@ export const MatchWinnerOverlay: React.FC<MatchWinnerOverlayProps> = ({
           <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
             All other contenders have fallen to Russian Roulette.
           </p>
+          {winCount !== undefined && winCount > 0 && (
+            <div
+              data-testid="winner-total-wins"
+              style={{
+                marginTop: '10px',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: 'var(--text-gold)',
+                background: 'rgba(229, 169, 59, 0.2)',
+                border: '1px solid var(--border-gold)',
+                borderRadius: '12px',
+                padding: '4px 12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              🏆 Total Room Victories: {winCount}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', marginTop: '8px' }}>

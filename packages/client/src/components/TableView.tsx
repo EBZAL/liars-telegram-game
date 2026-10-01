@@ -39,6 +39,8 @@ export const TableView: React.FC<TableViewProps> = ({
 
   const currentTurnId = publicState.currentTurnId;
   const { selectedCardIds, toggleCard, clearSelection } = useCardSelection(currentTurnId);
+  const playerWins = publicState.playerWins;
+  const ownWins = playerWins?.[ownPlayerId] ?? 0;
 
   if (!match) {
     return (
@@ -123,6 +125,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
                 displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
+                wins={playerWins?.[o.player.playerId]}
               />
             ))}
         </div>
@@ -149,6 +152,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
                 displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
+                wins={playerWins?.[o.player.playerId]}
               />
             ))}
         </div>
@@ -170,6 +174,7 @@ export const TableView: React.FC<TableViewProps> = ({
                 isCurrentTurn={o.player.playerId === currentActorId}
                 position={o.position}
                 displayName={getPlayerDisplayName(o.player.playerId, publicState.playerNames)}
+                wins={playerWins?.[o.player.playerId]}
               />
             ))}
         </div>
@@ -209,6 +214,21 @@ export const TableView: React.FC<TableViewProps> = ({
                 ? `${ownDisplayName || 'You'} (Eliminated)`
                 : `${ownDisplayName || 'Your'} Revolver`}
             </span>
+            {ownWins > 0 && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  color: 'var(--text-gold)',
+                  background: 'rgba(229, 169, 59, 0.22)',
+                  border: '1px solid rgba(229, 169, 59, 0.4)',
+                  borderRadius: '8px',
+                  padding: '1px 5px',
+                }}
+              >
+                🏆 {ownWins} {ownWins === 1 ? 'Win' : 'Wins'}
+              </span>
+            )}
           </div>
 
           <RouletteChamber

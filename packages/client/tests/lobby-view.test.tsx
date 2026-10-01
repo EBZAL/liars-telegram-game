@@ -231,5 +231,22 @@ describe('T-039 Lobby View and App Routing', () => {
 
       expect(screen.getByTestId('match-winner-overlay')).toBeTruthy();
     });
+
+    it('renders room scoreboard and player win badges when playerWins provided', () => {
+      render(
+        <LobbyView
+          roomId="r_lobby_wins"
+          members={['alice', 'bob']}
+          hostPlayerId="alice"
+          ownPlayerId="bob"
+          playerWins={{ alice: 3, bob: 1 }}
+          onStartMatch={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText(/4 MATCHES PLAYED/i)).toBeTruthy();
+      expect(screen.getByTestId('lobby-member-wins-alice').textContent).toContain('3 Wins');
+      expect(screen.getByTestId('lobby-member-wins-bob').textContent).toContain('1 Win');
+    });
   });
 });

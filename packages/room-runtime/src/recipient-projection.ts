@@ -67,6 +67,7 @@ export interface PublicRoomProjection {
   match: PublicMatchProjection | null;
   lastChallenge?: PublicChallengeResolutionProjection | null;
   playerNames?: Record<string, string>;
+  playerWins?: Record<string, number>;
 }
 
 export interface RecipientRoomProjection {
@@ -384,6 +385,7 @@ export function deriveRecipientRoomProjection(
     match: publicMatch,
     lastChallenge,
     playerNames: (roomState as any).playerNames ?? ((match as any)?.playerNames ?? undefined),
+    playerWins: (roomState as any).playerWins ?? ((match as any)?.playerWins ?? undefined),
   };
 
   // 5. Derive private state for recipient
