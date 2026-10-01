@@ -168,6 +168,8 @@ export function executeSystemTimeoutDeadlineTransaction(
       resolvedAtRevision: resultingRevision,
     };
     (nextMatchState as any).lastChallenge = lastChallenge;
+  } else {
+    (nextMatchState as any).lastChallenge = null;
   }
 
   // Step 8 — Validate Core result consistency

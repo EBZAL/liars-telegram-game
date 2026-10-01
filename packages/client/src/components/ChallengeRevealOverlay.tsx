@@ -202,10 +202,10 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
         {/* Revealed Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Claimed Table Rank: <strong style={{ color: 'var(--text-gold)' }}>{tableRank}</strong>
+            Claimed: <strong style={{ color: 'var(--text-gold)' }}>{revealedCards.length} × {tableRank}</strong>
           </span>
           <div style={{ fontSize: '12px', color: 'var(--accent-gold)', fontWeight: 600 }}>
-            🃏 {accusedName}'s secret played {revealedCards.length === 1 ? 'card' : 'cards'}:
+            🃏 {accusedName}'s secret played {revealedCards.length === 1 ? 'card' : `${revealedCards.length} cards`}:
           </div>
           <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
             {revealedCards.map((card) => {

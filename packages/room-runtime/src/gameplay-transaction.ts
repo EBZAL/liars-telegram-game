@@ -116,6 +116,8 @@ export function executeClientGameplayTransaction(
         resolvedAtRevision: resultingRevision,
       };
       (nextMatchState as any).lastChallenge = lastChallenge;
+    } else {
+      (nextMatchState as any).lastChallenge = null;
     }
   } else if (envelope.actionType === 'CALL_LIAR') {
     const callResult = applyCallLiar(currentMatchState, actorPlayerId, random);
