@@ -23,48 +23,61 @@ export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
         justifyContent: 'center',
         background: 'radial-gradient(circle, #1a4332 0%, #0d2119 100%)',
         border: '1px solid var(--accent-velvet-green)',
-        borderRadius: '16px',
-        padding: '16px 20px',
-        minWidth: '220px',
-        maxWidth: '320px',
-        margin: '12px auto',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 16px rgba(0, 0, 0, 0.4)',
+        borderRadius: '12px',
+        padding: '8px 10px',
+        width: '100%',
+        maxWidth: '175px',
+        margin: '4px auto',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(0, 0, 0, 0.4)',
         textAlign: 'center',
+        boxSizing: 'border-box',
       }}
     >
       {previousPlay ? (
         <>
-          <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px' }}>
+          <span style={{ fontSize: '9px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.8px', fontWeight: 600 }}>
             Current Play
           </span>
-          <div style={{ margin: '6px 0', fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div
+            style={{
+              margin: '2px 0',
+              fontSize: '12px',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              maxWidth: '145px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             <span style={{ color: 'var(--accent-gold)' }}>
               {getPlayerDisplayName(previousPlay.playerId, playerNames)}
             </span>{' '}
             claimed
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-gold)', letterSpacing: '0.5px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-gold)', letterSpacing: '0.5px' }}>
             {previousPlay.count} × {previousPlay.claimedRank}
           </div>
           {centralPileCount > 0 && (
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
               Pile: {centralPileCount} cards
             </span>
           )}
           {/* Visual Face-down Card Backs */}
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', marginTop: '6px' }}>
             {Array.from({ length: previousPlay.count }).map((_, i) => (
               <div
                 key={i}
                 style={{
-                  width: '32px',
-                  height: '45px',
+                  width: '24px',
+                  height: '34px',
                   aspectRatio: '1060 / 1484',
-                  borderRadius: '4px',
+                  borderRadius: '3px',
                   border: '1px solid var(--border-gold)',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.6)',
                   overflow: 'hidden',
                   backgroundColor: '#1b1f2b',
+                  flexShrink: 0,
                 }}
               >
                 <picture style={{ width: '100%', height: '100%', display: 'block' }}>
@@ -86,17 +99,27 @@ export const CentralClaimBanner: React.FC<CentralClaimBannerProps> = ({
         </>
       ) : (
         <>
-          <div style={{ width: '36px', height: '50px', marginBottom: '8px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-gold)', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+          <div
+            style={{
+              width: '26px',
+              height: '36px',
+              marginBottom: '4px',
+              borderRadius: '3px',
+              overflow: 'hidden',
+              border: '1px solid var(--border-gold)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+            }}
+          >
             <picture style={{ width: '100%', height: '100%', display: 'block' }}>
               <source srcSet="/cards/card-back.webp" type="image/webp" />
               <img src="/cards/card-back.png" alt="Deck" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </picture>
           </div>
-          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-gold)' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-gold)' }}>
             First Turn of Round
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Play 1 to 3 cards matching table rank
+          <span style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            Play 1–3 cards matching rank
           </span>
         </>
       )}

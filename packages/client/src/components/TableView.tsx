@@ -115,7 +115,7 @@ export const TableView: React.FC<TableViewProps> = ({
         <TableRankBanner tableRank={tableRank} />
 
         {/* Top-seated opponents */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '4px' }}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '2px', width: '100%', padding: '0 4px' }}>
           {positionedOpponents
             .filter((o) => o.position === 'top')
             .map((o) => (
@@ -137,12 +137,15 @@ export const TableView: React.FC<TableViewProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          margin: '12px 0',
+          margin: '4px 0',
+          padding: '0 4px',
+          width: '100%',
+          boxSizing: 'border-box',
           position: 'relative',
         }}
       >
         {/* Left Opponent */}
-        <div style={{ minWidth: '95px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ flex: '0 0 auto', maxWidth: '96px', display: 'flex', justifyContent: 'center' }}>
           {positionedOpponents
             .filter((o) => o.position === 'left')
             .map((o) => (
@@ -158,13 +161,13 @@ export const TableView: React.FC<TableViewProps> = ({
         </div>
 
         {/* Central Claim & Turn Timer */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 4px' }}>
           <CentralClaimBanner previousPlay={previousPlay} playerNames={publicState.playerNames} />
           <TurnTimerBar deadline={publicState.currentTurnDeadline} onExpire={onTimeout} />
         </div>
 
         {/* Right Opponent */}
-        <div style={{ minWidth: '95px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ flex: '0 0 auto', maxWidth: '96px', display: 'flex', justifyContent: 'center' }}>
           {positionedOpponents
             .filter((o) => o.position === 'right')
             .map((o) => (

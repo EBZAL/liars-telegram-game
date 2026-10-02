@@ -3,13 +3,18 @@ import React from 'react';
 export interface RouletteChamberProps {
   shotsUsed: number;
   isEliminated?: boolean;
+  compact?: boolean;
 }
 
 export const RouletteChamber: React.FC<RouletteChamberProps> = ({
   shotsUsed,
   isEliminated = false,
+  compact = false,
 }) => {
   const totalChambers = 6;
+  const chamberSize = compact ? 8 : 12;
+  const chamberGap = compact ? 2 : 4;
+  const iconSize = compact ? '11px' : '14px';
 
   return (
     <div
@@ -17,18 +22,18 @@ export const RouletteChamber: React.FC<RouletteChamberProps> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: compact ? '4px' : '6px',
         background: 'rgba(0, 0, 0, 0.4)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '16px',
-        padding: '4px 10px',
+        borderRadius: compact ? '12px' : '16px',
+        padding: compact ? '2px 5px' : '4px 10px',
       }}
     >
-      <span style={{ fontSize: '14px', marginRight: '2px' }}>
+      <span style={{ fontSize: iconSize, marginRight: compact ? '0' : '2px' }}>
         {isEliminated ? '💀' : '🔫'}
       </span>
 
-      <div style={{ display: 'flex', gap: '4px' }}>
+      <div style={{ display: 'flex', gap: `${chamberGap}px` }}>
         {Array.from({ length: totalChambers }).map((_, index) => {
           const isSpent = index < shotsUsed;
           const isCurrent = index === shotsUsed && !isEliminated;
@@ -38,8 +43,8 @@ export const RouletteChamber: React.FC<RouletteChamberProps> = ({
               key={index}
               data-testid={`chamber-${index}`}
               style={{
-                width: '12px',
-                height: '12px',
+                width: `${chamberSize}px`,
+                height: `${chamberSize}px`,
                 borderRadius: '50%',
                 background: isSpent
                   ? '#4a5568'
@@ -47,7 +52,7 @@ export const RouletteChamber: React.FC<RouletteChamberProps> = ({
                   ? 'var(--accent-crimson)'
                   : '#1f2430',
                 border: isCurrent
-                  ? '2px solid #ff6b6b'
+                  ? `${compact ? 1.5 : 2}px solid #ff6b6b`
                   : isSpent
                   ? '1px solid #718096'
                   : '1px solid #2d3748',
@@ -59,7 +64,7 @@ export const RouletteChamber: React.FC<RouletteChamberProps> = ({
         })}
       </div>
 
-      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '2px', fontWeight: 600 }}>
+      <span style={{ fontSize: compact ? '9px' : '11px', color: 'var(--text-secondary)', marginLeft: compact ? '1px' : '2px', fontWeight: 600 }}>
         {shotsUsed}/6
       </span>
     </div>
