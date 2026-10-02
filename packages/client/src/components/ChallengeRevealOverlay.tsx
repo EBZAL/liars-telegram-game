@@ -87,11 +87,10 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       setAccusationShake(false);
     }, 450);
 
-    // 2. Wait for vocal audio (~1.54s) + split-second dramatic pause (~400ms) = 1950ms total
-    // Then proceed to reveal cards and spin revolver cylinder
+    // 2. Keep banner and shock visible for ~1.3 seconds, then proceed to reveal cards and spin revolver cylinder
     const toSuspenseTimer = setTimeout(() => {
       setStage('SUSPENSE');
-    }, 1950);
+    }, 1300);
 
     return () => {
       soundManager.restoreBgm();

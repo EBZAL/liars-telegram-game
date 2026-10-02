@@ -318,12 +318,12 @@ export const App: React.FC<AppProps> = (props) => {
     adapter.expand();
     adapter.enableClosingConfirmation();
 
-    // Attempt immediate background music playback on mount
-    soundManager.playBgm();
+    // Attempt immediate audio unlock & background music playback on mount
+    soundManager.unlockAudio();
 
-    // Catch ANY touch or click anywhere on screen to unlock audio immediately
+    // Catch ANY touch or click anywhere on screen to unlock audio and preload gunshot sound immediately
     const unlockAudio = () => {
-      soundManager.playBgm();
+      soundManager.unlockAudio();
     };
 
     const gestureEvents = ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'click'];

@@ -8,7 +8,8 @@ class SoundSystem {
   private muted: boolean = false;
   private bgmAudio: HTMLAudioElement | null = null;
   private shotAudio: HTMLAudioElement | null = null;
-  private liarAudio: HTMLAudioElement | null = null;
+  private shotAudioBuffer: AudioBuffer | null = null;
+  private shotBufferLoading: boolean = false;
   private bgmPlaying: boolean = true;
   private bgmVolume: number = 0.35; // Background volume (so SFX remain prominent)
 
@@ -117,22 +118,31 @@ class SoundSystem {
     return this.shotAudio;
   }
 
-  private getLiarAudio(url: string = '/liar.mp3'): HTMLAudioElement | null {
-    if (typeof window === 'undefined') return null;
-    if (!this.liarAudio) {
-      const existing = document.getElementById('liar-audio') as HTMLAudioElement | null;
-      if (existing) {
-        this.liarAudio = existing;
-      } else {
-        try {
-          this.liarAudio = new Audio(url);
-          this.liarAudio.preload = 'auto';
-        } catch {
-          return null;
-        }
+  public async preloadShotAudio(url: string = '/shot.wav'): Promise<void> {
+    if (typeof window === 'undefined' || this.shotAudioBuffer || this.shotBufferLoading) return;
+    this.shotBufferLoading = true;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const arrayBuffer = await resp.arrayBuffer();
+      const ctx = this.getContext();
+      if (ctx) {
+        this.shotAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
       }
+    } catch {
+      // Ignore
+    } finally {
+      this.shotBufferLoading = false;
     }
-    return this.liarAudio;
+  }
+
+  public unlockAudio(): void {
+    const ctx = this.getContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    this.preloadShotAudio().catch(() => {});
+    this.playBgm();
   }
 
   public setBgmVolume(volume: number): void {
@@ -220,28 +230,10 @@ class SoundSystem {
   }
 
   /**
-   * Dramatic CALL LIAR vocal shout (/liar.mp3) + tritone suspense chord
+   * Dramatic CALL LIAR suspense horn / chord
    */
-  public playLiarCall(url: string = '/liar.mp3'): void {
+  public playLiarCall(): void {
     if (this.muted) return;
-
-    // 1. Play authentic Liar vocal shout
-    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
-    if (!isTest) {
-      const audio = this.getLiarAudio(url);
-      if (audio && typeof audio.play === 'function') {
-        try {
-          audio.currentTime = 0;
-          audio.volume = 1.0;
-          const p = audio.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch(() => {});
-          }
-        } catch {}
-      }
-    }
-
-    // 2. Synthesize dramatic tritone suspense chord
     const ctx = this.getContext();
     if (!ctx) return;
 
@@ -330,14 +322,30 @@ class SoundSystem {
   }
 
   /**
-   * Revolver BANG: plays the authentic user gunshot sound (/shot.wav) + tinnitus ear ringing
+   * Revolver BANG: plays authentic gunshot sound (/shot.wav) via Web Audio API + HTMLAudio fallback + sub-bass + tinnitus
    */
   public playGunBang(url: string = '/shot.wav'): void {
     if (this.muted) return;
-
-    // 1. Play authentic gunshot audio file
+    const ctx = this.getContext();
     const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
-    if (!isTest) {
+
+    // 1. Play via preloaded Web Audio API Buffer (100% reliable on mobile, never blocked by autoplay)
+    let playedViaWebAudio = false;
+    if (ctx && this.shotAudioBuffer && !isTest) {
+      try {
+        const source = ctx.createBufferSource();
+        source.buffer = this.shotAudioBuffer;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(1.0, ctx.currentTime);
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(ctx.currentTime);
+        playedViaWebAudio = true;
+      } catch {}
+    }
+
+    // 2. Fallback to HTMLAudioElement
+    if (!playedViaWebAudio && !isTest) {
       const audio = this.getShotAudio(url);
       if (audio && typeof audio.play === 'function') {
         try {
@@ -351,22 +359,21 @@ class SoundSystem {
       }
     }
 
-    // 2. Synthesize sub-bass punch and tinnitus
-    const ctx = this.getContext();
+    // 3. Synthesize sub-bass punch and tinnitus
     if (ctx) {
       try {
         const now = ctx.currentTime;
         const sub = ctx.createOscillator();
         const subGain = ctx.createGain();
         sub.type = 'sine';
-        sub.frequency.setValueAtTime(100, now);
-        sub.frequency.exponentialRampToValueAtTime(25, now + 0.4);
-        subGain.gain.setValueAtTime(0.5, now);
-        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        sub.frequency.setValueAtTime(110, now);
+        sub.frequency.exponentialRampToValueAtTime(25, now + 0.45);
+        subGain.gain.setValueAtTime(0.6, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
         sub.connect(subGain);
         subGain.connect(ctx.destination);
         sub.start(now);
-        sub.stop(now + 0.4);
+        sub.stop(now + 0.45);
 
         this.playTinnitus();
       } catch {}
