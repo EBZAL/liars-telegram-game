@@ -76,9 +76,13 @@ export const TableView: React.FC<TableViewProps> = ({
   const playEligible = canPlayCards(projection, ownPlayerId, selectedCardIds);
   const challengeEligible = canCallLiar(projection, ownPlayerId);
 
+  const playFromPosition: 'bottom' | 'top' | 'left' | 'right' =
+    previousPlay?.playerId === ownPlayerId
+      ? 'bottom'
+      : positionedOpponents.find((o) => o.player.playerId === previousPlay?.playerId)?.position ?? 'top';
+
   const handlePlayClick = () => {
     if (playEligible) {
-      soundManager.playCardPlay();
       onPlayCards(selectedCardIds);
       clearSelection();
     }
@@ -162,7 +166,12 @@ export const TableView: React.FC<TableViewProps> = ({
 
         {/* Central Claim & Turn Timer */}
         <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 4px' }}>
-          <CentralClaimBanner previousPlay={previousPlay} playerNames={publicState.playerNames} />
+          <CentralClaimBanner
+            previousPlay={previousPlay}
+            playerNames={publicState.playerNames}
+            fromPosition={playFromPosition}
+            playRevision={publicState.revision}
+          />
           <TurnTimerBar deadline={publicState.currentTurnDeadline} onExpire={onTimeout} />
         </div>
 
