@@ -8,7 +8,6 @@ import { PlayerHand } from './PlayerHand.js';
 import { ActionControls } from './ActionControls.js';
 import { RouletteChamber } from './RouletteChamber.js';
 import { getPlayerDisplayName } from '../player-names.js';
-import { soundManager } from '../sound.js';
 import {
   useCardSelection,
   isOwnTurn,
@@ -90,7 +89,6 @@ export const TableView: React.FC<TableViewProps> = ({
 
   const handleChallengeClick = () => {
     if (challengeEligible) {
-      soundManager.playLiarCall();
       onCallLiar();
       clearSelection();
     }

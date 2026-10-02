@@ -190,6 +190,19 @@ export function triggerLethalShotHaptic(): void {
 }
 
 /**
+ * Triggers an intense warning shock vibration on CALL LIAR accusation
+ */
+export function triggerLiarCallHaptic(): void {
+  try {
+    const haptic = typeof window !== 'undefined' ? window.Telegram?.WebApp?.HapticFeedback : undefined;
+    if (haptic && typeof haptic.notificationOccurred === 'function') {
+      haptic.notificationOccurred('warning');
+    } else if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate([80, 40, 120]);
+    }
+  } catch {}
+}
+/**
  * Triggers a light relief vibration on empty blank chamber
  */
 export function triggerBlankShotHaptic(): void {

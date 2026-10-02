@@ -8,6 +8,7 @@ class SoundSystem {
   private muted: boolean = false;
   private bgmAudio: HTMLAudioElement | null = null;
   private shotAudio: HTMLAudioElement | null = null;
+  private liarAudio: HTMLAudioElement | null = null;
   private bgmPlaying: boolean = true;
   private bgmVolume: number = 0.35; // Background volume (so SFX remain prominent)
 
@@ -116,6 +117,24 @@ class SoundSystem {
     return this.shotAudio;
   }
 
+  private getLiarAudio(url: string = '/liar.mp3'): HTMLAudioElement | null {
+    if (typeof window === 'undefined') return null;
+    if (!this.liarAudio) {
+      const existing = document.getElementById('liar-audio') as HTMLAudioElement | null;
+      if (existing) {
+        this.liarAudio = existing;
+      } else {
+        try {
+          this.liarAudio = new Audio(url);
+          this.liarAudio.preload = 'auto';
+        } catch {
+          return null;
+        }
+      }
+    }
+    return this.liarAudio;
+  }
+
   public setBgmVolume(volume: number): void {
     this.bgmVolume = Math.max(0, Math.min(1, volume));
     const audio = this.getBgmAudio();
@@ -201,10 +220,28 @@ class SoundSystem {
   }
 
   /**
-   * Dramatic CALL LIAR suspense horn / chord
+   * Dramatic CALL LIAR vocal shout (/liar.mp3) + tritone suspense chord
    */
-  public playLiarCall(): void {
+  public playLiarCall(url: string = '/liar.mp3'): void {
     if (this.muted) return;
+
+    // 1. Play authentic Liar vocal shout
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
+    if (!isTest) {
+      const audio = this.getLiarAudio(url);
+      if (audio && typeof audio.play === 'function') {
+        try {
+          audio.currentTime = 0;
+          audio.volume = 1.0;
+          const p = audio.play();
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+          }
+        } catch {}
+      }
+    }
+
+    // 2. Synthesize dramatic tritone suspense chord
     const ctx = this.getContext();
     if (!ctx) return;
 
@@ -224,7 +261,7 @@ class SoundSystem {
         filter.frequency.setValueAtTime(800, now);
         filter.frequency.exponentialRampToValueAtTime(250, now + 0.45);
 
-        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.setValueAtTime(0.2, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
         osc.connect(filter);

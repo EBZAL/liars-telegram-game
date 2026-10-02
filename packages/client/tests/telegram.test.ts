@@ -3,6 +3,7 @@ import {
   getTelegramAdapter,
   triggerLethalShotHaptic,
   triggerBlankShotHaptic,
+  triggerLiarCallHaptic,
   type TelegramWebApp,
 } from '../src/telegram.js';
 
@@ -99,11 +100,15 @@ describe('T-035 Telegram Adapter', () => {
 
     triggerBlankShotHaptic();
     expect(impactMock).toHaveBeenCalledWith('light');
+
+    triggerLiarCallHaptic();
+    expect(notificationMock).toHaveBeenCalledWith('warning');
   });
 
   it('safely falls back without throwing when Telegram or HapticFeedback is undefined', () => {
     delete (window as { Telegram?: unknown }).Telegram;
     expect(() => triggerLethalShotHaptic()).not.toThrow();
     expect(() => triggerBlankShotHaptic()).not.toThrow();
+    expect(() => triggerLiarCallHaptic()).not.toThrow();
   });
 });

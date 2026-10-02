@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { RouletteChamber } from './RouletteChamber.js';
 import { soundManager } from '../sound.js';
 import { getPlayerDisplayName } from '../player-names.js';
-import { triggerLethalShotHaptic, triggerBlankShotHaptic } from '../telegram.js';
+import {
+  triggerLethalShotHaptic,
+  triggerBlankShotHaptic,
+  triggerLiarCallHaptic,
+} from '../telegram.js';
 
 export interface RevealedCard {
   id: string;
@@ -46,12 +50,16 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
     (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
     (typeof window !== 'undefined' && Boolean((window as any).__VITEST__));
 
-  const [stage, setStage] = useState<'SUSPENSE' | 'SHOT'>(() => (isTestEnv ? 'SHOT' : 'SUSPENSE'));
+  const [stage, setStage] = useState<'ACCUSATION' | 'SUSPENSE' | 'SHOT'>(() =>
+    isTestEnv ? 'SHOT' : 'ACCUSATION'
+  );
   const [flash, setFlash] = useState(false);
+  const [crimsonFlash, setCrimsonFlash] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
+  const [accusationShake, setAccusationShake] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
-  // Suspense phase orchestration
+  // Phase 1: ACCUSATION phase orchestration (vocal shout "Liar!" + crimson flash + micro shake + pause)
   useEffect(() => {
     if (isTestEnv) {
       if (isLethal) {
@@ -64,12 +72,42 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       return;
     }
 
-    // 1. Initial spin and first heartbeat + duck background music
+    // 1. Duck BGM, play dramatic vocal shout "LIAR!", and trigger haptic warning
     soundManager.duckBgm(0.04);
+    soundManager.playLiarCall();
+    triggerLiarCallHaptic();
+    setCrimsonFlash(true);
+    setAccusationShake(true);
+
+    const flashTimer = setTimeout(() => {
+      setCrimsonFlash(false);
+    }, 450);
+
+    const shakeTimer = setTimeout(() => {
+      setAccusationShake(false);
+    }, 450);
+
+    // 2. Wait for vocal audio (~1.54s) + split-second dramatic pause (~400ms) = 1950ms total
+    // Then proceed to reveal cards and spin revolver cylinder
+    const toSuspenseTimer = setTimeout(() => {
+      setStage('SUSPENSE');
+    }, 1950);
+
+    return () => {
+      soundManager.restoreBgm();
+      clearTimeout(flashTimer);
+      clearTimeout(shakeTimer);
+      clearTimeout(toSuspenseTimer);
+    };
+  }, [isTestEnv]);
+
+  // Phase 2: SUSPENSE phase orchestration (cards revealed + cylinder spinning + heartbeats + countdown)
+  useEffect(() => {
+    if (stage !== 'SUSPENSE' || isTestEnv) return;
+
     soundManager.playCylinderSpin();
     soundManager.playHeartbeat();
 
-    // 2. Heartbeat rhythm during suspense
     const hb1 = setTimeout(() => {
       soundManager.playHeartbeat();
       setCountdown(2);
@@ -80,24 +118,21 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
       setCountdown(1);
     }, 1800);
 
-    // 3. Hammer cocking sound
     const hammerTimer = setTimeout(() => {
       soundManager.playHammerCock();
     }, 2300);
 
-    // 4. Trigger pull (The Shot!)
     const shotTimer = setTimeout(() => {
       fireShot();
     }, 2900);
 
     return () => {
-      soundManager.restoreBgm();
       clearTimeout(hb1);
       clearTimeout(hb2);
       clearTimeout(hammerTimer);
       clearTimeout(shotTimer);
     };
-  }, [isTestEnv]);
+  }, [stage, isTestEnv]);
 
   const fireShot = () => {
     setStage('SHOT');
@@ -177,10 +212,32 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
         />
       )}
 
+      {/* Crimson Alert Flash Vignette */}
+      {crimsonFlash && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1250,
+            animation: 'crimsonVignetteFlash 0.5s ease-out forwards',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
       <div
         style={{
           background: 'linear-gradient(180deg, #1f2535 0%, #10141e 100%)',
-          border: `2px solid ${isLie ? 'var(--accent-gold, #e5a93b)' : 'var(--accent-crimson, #c93b3b)'}`,
+          border: `2px solid ${
+            stage === 'ACCUSATION'
+              ? 'var(--accent-crimson, #c93b3b)'
+              : isLie
+              ? 'var(--accent-gold, #e5a93b)'
+              : 'var(--accent-crimson, #c93b3b)'
+          }`,
           borderRadius: '18px',
           padding: '24px 20px',
           maxWidth: '380px',
@@ -191,7 +248,11 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           gap: '14px',
-          animation: screenShake ? 'screenRecoil 0.4s ease-out' : 'none',
+          animation: screenShake
+            ? 'screenRecoil 0.4s ease-out'
+            : accusationShake
+            ? 'liarScreenShake 0.45s ease-out'
+            : 'none',
         }}
       >
         {/* Header */}
@@ -199,101 +260,162 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           👁️ LIAR CHALLENGE RESOLUTION
         </div>
 
-        <div data-testid="challenge-title" style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600 }}>
-          <span style={{ color: 'var(--accent-gold)' }}>{callerName}</span> challenged{' '}
-          <span style={{ color: 'var(--accent-gold)' }}>{accusedName}</span>
-        </div>
+        {stage === 'ACCUSATION' ? (
+          <div
+            onClick={() => setStage('SUSPENSE')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '16px 8px',
+              width: '100%',
+              cursor: 'pointer',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '52px',
+                lineHeight: 1,
+                filter: 'drop-shadow(0 0 20px #ef4444)',
+                animation: 'liarBadgeSlam 0.4s cubic-bezier(0.18, 0.9, 0.28, 1)',
+              }}
+            >
+              🚨
+            </div>
 
-        {/* Revealed Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Claimed: <strong style={{ color: 'var(--text-gold)' }}>{revealedCards.length} × {tableRank}</strong>
-          </span>
-          <div style={{ fontSize: '12px', color: 'var(--accent-gold)', fontWeight: 600 }}>
-            🃏 {accusedName}'s secret played {revealedCards.length === 1 ? 'card' : `${revealedCards.length} cards`}:
+            <div
+              style={{
+                fontSize: '44px',
+                fontWeight: 900,
+                color: '#ef4444',
+                letterSpacing: '4px',
+                textTransform: 'uppercase',
+                textShadow: '0 0 20px rgba(239, 68, 68, 0.95), 0 0 45px rgba(220, 38, 38, 0.7)',
+                margin: '2px 0',
+                animation: 'liarBadgeSlam 0.4s cubic-bezier(0.18, 0.9, 0.28, 1)',
+              }}
+            >
+              LIAR!
+            </div>
+
+            <div data-testid="challenge-title" style={{ fontSize: '16px', color: 'var(--text-primary)', fontWeight: 700 }}>
+              <span style={{ color: 'var(--accent-gold)' }}>{callerName}</span> called out{' '}
+              <span style={{ color: '#ef4444' }}>{accusedName}</span>!
+            </div>
+
+            <div
+              style={{
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '16px',
+                padding: '4px 14px',
+                marginTop: '4px',
+                fontWeight: 600,
+              }}
+            >
+              Checking played cards...
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
-            {revealedCards.map((card) => {
-              const matchesClaim = card.rank === tableRank || card.rank === 'JOKER';
-              const rank = card.rank.toLowerCase();
-              return (
-                <div
-                  key={card.id}
-                  data-testid={`revealed-card-${card.id}`}
-                  style={{
-                    width: '68px',
-                    height: '95px',
-                    aspectRatio: '1060 / 1484',
-                    borderRadius: '8px',
-                    position: 'relative',
-                    border: `2.5px solid ${matchesClaim ? '#22c55e' : '#ef4444'}`,
-                    boxShadow: matchesClaim
-                      ? '0 0 16px rgba(34, 197, 94, 0.6), 0 4px 12px rgba(0,0,0,0.5)'
-                      : '0 0 16px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0,0,0,0.5)',
-                    backgroundColor: '#1b1f2b',
-                    overflow: 'visible',
-                  }}
-                >
-                  <picture style={{ width: '100%', height: '100%', display: 'block' }}>
-                    <source srcSet={`/cards/${rank}.webp`} type="image/webp" />
-                    <img
-                      src={`/cards/${rank}.png`}
-                      alt={card.rank}
+        ) : (
+          <>
+            <div data-testid="challenge-title" style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600 }}>
+              <span style={{ color: 'var(--accent-gold)' }}>{callerName}</span> challenged{' '}
+              <span style={{ color: 'var(--accent-gold)' }}>{accusedName}</span>
+            </div>
+
+            {/* Revealed Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                Claimed: <strong style={{ color: 'var(--text-gold)' }}>{revealedCards.length} × {tableRank}</strong>
+              </span>
+              <div style={{ fontSize: '12px', color: 'var(--accent-gold)', fontWeight: 600 }}>
+                🃏 {accusedName}'s secret played {revealedCards.length === 1 ? 'card' : `${revealedCards.length} cards`}:
+              </div>
+              <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+                {revealedCards.map((card) => {
+                  const matchesClaim = card.rank === tableRank || card.rank === 'JOKER';
+                  const rank = card.rank.toLowerCase();
+                  return (
+                    <div
+                      key={card.id}
+                      data-testid={`revealed-card-${card.id}`}
                       style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '5px',
-                        display: 'block',
+                        width: '68px',
+                        height: '95px',
+                        aspectRatio: '1060 / 1484',
+                        borderRadius: '8px',
+                        position: 'relative',
+                        border: `2.5px solid ${matchesClaim ? '#22c55e' : '#ef4444'}`,
+                        boxShadow: matchesClaim
+                          ? '0 0 16px rgba(34, 197, 94, 0.6), 0 4px 12px rgba(0,0,0,0.5)'
+                          : '0 0 16px rgba(239, 68, 68, 0.6), 0 4px 12px rgba(0,0,0,0.5)',
+                        backgroundColor: '#1b1f2b',
+                        overflow: 'visible',
                       }}
-                    />
-                  </picture>
+                    >
+                      <picture style={{ width: '100%', height: '100%', display: 'block' }}>
+                        <source srcSet={`/cards/${rank}.webp`} type="image/webp" />
+                        <img
+                          src={`/cards/${rank}.png`}
+                          alt={card.rank}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '5px',
+                            display: 'block',
+                          }}
+                        />
+                      </picture>
 
-                  {/* Verdict Badge */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: matchesClaim ? '#166534' : '#991b1b',
-                      color: '#fff',
-                      borderRadius: '10px',
-                      padding: '2px 8px',
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      letterSpacing: '0.5px',
-                      border: `1px solid ${matchesClaim ? '#4ade80' : '#f87171'}`,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {matchesClaim ? '✔ TRUTH' : `✖ LIE (${card.rank})`}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                      {/* Verdict Badge */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-10px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: matchesClaim ? '#166534' : '#991b1b',
+                          color: '#fff',
+                          borderRadius: '10px',
+                          padding: '2px 8px',
+                          fontSize: '10px',
+                          fontWeight: 800,
+                          letterSpacing: '0.5px',
+                          border: `1px solid ${matchesClaim ? '#4ade80' : '#f87171'}`,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {matchesClaim ? '✔ TRUTH' : `✖ LIE (${card.rank})`}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Verdict Badge */}
-        <div
-          data-testid="challenge-verdict"
-          style={{
-            padding: '10px 16px',
-            borderRadius: '10px',
-            fontWeight: 800,
-            fontSize: '16px',
-            background: isLie ? 'rgba(229, 169, 59, 0.18)' : 'rgba(59, 130, 246, 0.18)',
-            color: isLie ? 'var(--text-gold)' : '#60a5fa',
-            border: `1px solid ${isLie ? 'var(--border-gold)' : '#3b82f6'}`,
-            width: '100%',
-            letterSpacing: '0.5px',
-            animation: 'stampIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-          }}
-        >
-          {isLie ? '🚨 BLUFF CAUGHT! (LIE)' : '🛡️ HONEST PLAY! (TRUTH)'}
-        </div>
+            {/* Verdict Badge */}
+            <div
+              data-testid="challenge-verdict"
+              style={{
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontWeight: 800,
+                fontSize: '16px',
+                background: isLie ? 'rgba(229, 169, 59, 0.18)' : 'rgba(59, 130, 246, 0.18)',
+                color: isLie ? 'var(--text-gold)' : '#60a5fa',
+                border: `1px solid ${isLie ? 'var(--border-gold)' : '#3b82f6'}`,
+                width: '100%',
+                letterSpacing: '0.5px',
+                animation: 'stampIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              }}
+            >
+              {isLie ? '🚨 BLUFF CAUGHT! (LIE)' : '🛡️ HONEST PLAY! (TRUTH)'}
+            </div>
 
         {/* Suspense Phase */}
         {stage === 'SUSPENSE' && (
@@ -543,23 +665,25 @@ export const ChallengeRevealOverlay: React.FC<ChallengeRevealOverlayProps> = ({
           </div>
         </div>
 
-        {/* Dismiss Button */}
-        <button
-          data-testid="btn-dismiss-reveal"
-          className="btn-primary"
-          onClick={onDismiss}
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontWeight: 700,
-            fontSize: '14px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-          }}
-        >
-          CONTINUE ➔
-        </button>
-      </div>
+          {/* Dismiss Button */}
+          <button
+            data-testid="btn-dismiss-reveal"
+            className="btn-primary"
+            onClick={onDismiss}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontWeight: 700,
+              fontSize: '14px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+            }}
+          >
+            CONTINUE ➔
+          </button>
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 };
