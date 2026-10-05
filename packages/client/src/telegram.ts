@@ -111,39 +111,152 @@ function extractStartParam(webApp?: TelegramWebApp): string | null {
   return null;
 }
 
+function safeGetStorage(type: 'session' | 'local', key: string): string | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const store = type === 'session' ? window.sessionStorage : window.localStorage;
+    if (store && typeof store.getItem === 'function') {
+      return store.getItem(key);
+    }
+  } catch {}
+  return null;
+}
+
+function safeSetStorage(type: 'session' | 'local', key: string, value: string): void {
+  try {
+    if (typeof window === 'undefined') return;
+    const store = type === 'session' ? window.sessionStorage : window.localStorage;
+    if (store && typeof store.setItem === 'function') {
+      store.setItem(key, value);
+    }
+  } catch {}
+}
+
+function extractRawInitData(webApp?: TelegramWebApp): string {
+  if (webApp?.initData && webApp.initData.trim().length > 0) {
+    return webApp.initData.trim();
+  }
+
+  if (typeof window !== 'undefined') {
+    if (window.location.hash) {
+      try {
+        const hashStr = window.location.hash.replace(/^#/, '');
+        const hashParams = new URLSearchParams(hashStr);
+        const tgData = hashParams.get('tgWebAppData');
+        if (tgData && tgData.trim().length > 0) {
+          return tgData.trim();
+        }
+      } catch {}
+    }
+
+    if (window.location.search) {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const tgData = searchParams.get('tgWebAppData') || searchParams.get('initData');
+        if (tgData && tgData.trim().length > 0) {
+          return tgData.trim();
+        }
+      } catch {}
+    }
+
+    const storedSession = safeGetStorage('session', 'liars_deck_tg_init_data');
+    if (storedSession && storedSession.trim().length > 0) {
+      return storedSession.trim();
+    }
+
+    const storedLocal = safeGetStorage('local', 'liars_deck_tg_init_data');
+    if (storedLocal && storedLocal.trim().length > 0) {
+      return storedLocal.trim();
+    }
+  }
+
+  return '';
+}
+
+function extractTelegramUser(webApp?: TelegramWebApp, rawInitData?: string): TelegramUser | null {
+  if (webApp?.initDataUnsafe?.user?.id) {
+    return webApp.initDataUnsafe.user;
+  }
+
+  if (rawInitData && rawInitData.length > 0) {
+    try {
+      const params = new URLSearchParams(rawInitData);
+      const userStr = params.get('user');
+      if (userStr) {
+        const parsed = JSON.parse(userStr);
+        if (parsed && parsed.id) {
+          return parsed as TelegramUser;
+        }
+      }
+    } catch {}
+  }
+
+  if (typeof window !== 'undefined') {
+    const storedSession = safeGetStorage('session', 'liars_deck_tg_user');
+    if (storedSession) {
+      try {
+        const parsed = JSON.parse(storedSession);
+        if (parsed && parsed.id) return parsed as TelegramUser;
+      } catch {}
+    }
+
+    const storedLocal = safeGetStorage('local', 'liars_deck_tg_user');
+    if (storedLocal) {
+      try {
+        const parsed = JSON.parse(storedLocal);
+        if (parsed && parsed.id) return parsed as TelegramUser;
+      } catch {}
+    }
+  }
+
+  return null;
+}
+
 /**
  * Initializes and provides a safe abstraction over window.Telegram.WebApp.
  * Supports running inside Telegram or in standalone web browsers with mock fallback.
  */
 export function getTelegramAdapter(): TelegramAdapterContext {
   const webApp = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
+  const rawInitData = extractRawInitData(webApp);
+  const telegramUser = extractTelegramUser(webApp, rawInitData);
 
-  if (webApp && webApp.initData) {
+  // Cache in storage if available
+  if (rawInitData) {
+    safeSetStorage('session', 'liars_deck_tg_init_data', rawInitData);
+    safeSetStorage('local', 'liars_deck_tg_init_data', rawInitData);
+  }
+  if (telegramUser) {
+    safeSetStorage('session', 'liars_deck_tg_user', JSON.stringify(telegramUser));
+    safeSetStorage('local', 'liars_deck_tg_user', JSON.stringify(telegramUser));
+  }
+
+  if (rawInitData || telegramUser || (webApp && webApp.initData)) {
     return {
       isAvailable: true,
-      initData: webApp.initData,
+      initData: rawInitData,
       startParam: extractStartParam(webApp),
-      user: webApp.initDataUnsafe?.user ?? null,
-      colorScheme: webApp.colorScheme ?? 'dark',
-      viewportHeight: webApp.viewportHeight ?? (typeof window !== 'undefined' ? window.innerHeight : 800),
-      isExpanded: Boolean(webApp.isExpanded),
+      user: telegramUser,
+      colorScheme: webApp?.colorScheme ?? 'dark',
+      viewportHeight: webApp?.viewportHeight ?? (typeof window !== 'undefined' ? window.innerHeight : 800),
+      isExpanded: Boolean(webApp?.isExpanded ?? true),
       expand: () => {
         try {
-          webApp.expand();
+          webApp?.expand();
         } catch {
           // Ignore
         }
       },
       ready: () => {
         try {
-          webApp.ready();
+          webApp?.ready();
         } catch {
           // Ignore
         }
       },
       enableClosingConfirmation: () => {
         try {
-          webApp.enableClosingConfirmation();
+          webApp?.enableClosingConfirmation();
         } catch {
           // Ignore
         }

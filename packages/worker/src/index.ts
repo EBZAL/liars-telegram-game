@@ -9,6 +9,7 @@ import {
 import type { Env } from './types.js';
 import {
   isAdminUser,
+  isMockOrTestUserId,
   notifyAdminsOnBotStart,
   notifyAdminsOnUserEntry,
   modRegisterUser,
@@ -717,16 +718,18 @@ export default {
           if (!playerId) {
             return new Response('Unauthorized: Missing credentials', { status: 401 });
           }
-          const notifyPromise = notifyAdminsOnUserEntry(
-            botToken,
-            { id: playerId, first_name: playerName },
-            roomId,
-            env.ADMIN_IDS
-          );
-          if (ctx?.waitUntil) {
-            ctx.waitUntil(notifyPromise);
-          } else {
-            notifyPromise.catch(() => {});
+          if (!isMockOrTestUserId(playerId)) {
+            const notifyPromise = notifyAdminsOnUserEntry(
+              botToken,
+              { id: playerId, first_name: playerName },
+              roomId,
+              env.ADMIN_IDS
+            );
+            if (ctx?.waitUntil) {
+              ctx.waitUntil(notifyPromise);
+            } else {
+              notifyPromise.catch(() => {});
+            }
           }
         } else {
           return new Response('Unauthorized: initData required', { status: 401 });
@@ -773,8 +776,8 @@ export default {
         }
       }
 
-      // Register / update user in global user directory
-      if (playerId) {
+      // Register / update user in global user directory (skip mock/dev IDs)
+      if (playerId && !isMockOrTestUserId(playerId)) {
         const regPromise = modRegisterUser(env, {
           userId: playerId,
           firstName: playerName,

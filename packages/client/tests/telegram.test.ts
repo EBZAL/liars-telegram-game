@@ -111,4 +111,45 @@ describe('T-035 Telegram Adapter', () => {
     expect(() => triggerBlankShotHaptic()).not.toThrow();
     expect(() => triggerLiarCallHaptic()).not.toThrow();
   });
+
+  it('extracts Telegram user and initData from window.location.hash when webApp.initData is empty', () => {
+    delete (window as { Telegram?: unknown }).Telegram;
+    window.location.hash = '#tgWebAppData=user%3D%257B%2522id%2522%253A778899%252C%2522first_name%2522%253A%2522Hassan%2522%257D%26auth_date%3D1700000000%26hash%3Dabcdef123456';
+
+    const adapter = getTelegramAdapter();
+    expect(adapter.isAvailable).toBe(true);
+    expect(adapter.user?.id).toBe(778899);
+    expect(adapter.user?.first_name).toBe('Hassan');
+    expect(adapter.initData).toContain('778899');
+
+    // Clean up
+    window.location.hash = '';
+    try {
+      window.sessionStorage?.clear();
+      window.localStorage?.clear();
+    } catch {}
+  });
+
+  it('restores Telegram user and initData from storage across page reloads', () => {
+    delete (window as { Telegram?: unknown }).Telegram;
+    window.location.hash = '';
+    const mockStorage: Record<string, string> = {
+      'liars_deck_tg_init_data': 'query_id=test&user=%7B%22id%22%3A554433%2C%22first_name%22%3A%22Sara%22%7D',
+      'liars_deck_tg_user': JSON.stringify({ id: 554433, first_name: 'Sara' }),
+    };
+
+    window.sessionStorage = {
+      getItem: (key: string) => mockStorage[key] || null,
+      setItem: (key: string, val: string) => { mockStorage[key] = val; },
+      removeItem: (key: string) => { delete mockStorage[key]; },
+      clear: () => {},
+      key: () => null,
+      length: Object.keys(mockStorage).length,
+    };
+
+    const adapter = getTelegramAdapter();
+    expect(adapter.isAvailable).toBe(true);
+    expect(adapter.user?.id).toBe(554433);
+    expect(adapter.user?.first_name).toBe('Sara');
+  });
 });

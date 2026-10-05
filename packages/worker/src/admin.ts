@@ -10,6 +10,25 @@ export function getAdminIds(envAdminIds?: string): string[] {
   return [...DEFAULT_ADMIN_IDS];
 }
 
+export function isMockOrTestUserId(userId: string | number | null | undefined): boolean {
+  if (userId === null || userId === undefined) return true;
+  const idStr = String(userId).trim();
+  if (
+    idStr.length === 0 ||
+    idStr === '999999' ||
+    idStr === '0' ||
+    idStr === 'null' ||
+    idStr === 'undefined' ||
+    idStr.startsWith('dev_') ||
+    idStr.startsWith('mock_') ||
+    idStr.startsWith('guest_') ||
+    idStr === 'player-standalone'
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function isAdminUser(
   userId: string | number | null | undefined,
   envAdminIds?: string
@@ -117,6 +136,11 @@ export async function notifyAdminsOnUserEntry(
   if (!botToken) return;
   const userIdStr = String(user.id);
 
+  // Do not notify for mock or test users (e.g. 999999 or standalone browser hits)
+  if (isMockOrTestUserId(userIdStr)) {
+    return;
+  }
+
   // Do not spam admins when they themselves enter
   if (isAdminUser(userIdStr, envAdminIds)) {
     return;
@@ -157,6 +181,11 @@ export async function notifyAdminsOnBotStart(
 ): Promise<void> {
   if (!botToken) return;
   const userIdStr = String(user.id);
+
+  // Do not notify for mock or test users
+  if (isMockOrTestUserId(userIdStr)) {
+    return;
+  }
 
   // Do not spam admins when they themselves start the bot
   if (isAdminUser(userIdStr, envAdminIds)) {

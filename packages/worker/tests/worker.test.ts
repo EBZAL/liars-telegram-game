@@ -602,6 +602,25 @@ describe('Cloudflare Worker and Durable Object Integration', () => {
         mockFetch
       );
       expect(sentRequests).toHaveLength(0);
+
+      // Mock user 999999 or standalone/dev IDs should NEVER trigger notifications
+      await notifyAdminsOnUserEntry(
+        'fake_bot_token',
+        { id: 999999, first_name: 'Player' },
+        'r_mock_room',
+        undefined,
+        mockFetch
+      );
+      expect(sentRequests).toHaveLength(0);
+
+      await notifyAdminsOnUserEntry(
+        'fake_bot_token',
+        { id: 'player-standalone', first_name: 'Player' },
+        'r_mock_room',
+        undefined,
+        mockFetch
+      );
+      expect(sentRequests).toHaveLength(0);
     });
 
     it('handles /api/admin/verify endpoint strictly', async () => {
